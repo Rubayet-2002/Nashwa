@@ -22,13 +22,13 @@ const NavButton = ({ userProfile }: { userProfile: User | null }) => {
         </button>
       </Link>
 
-      <Link href="/notification">
+       <Link href="/notification">
         <button className="text-[#1a1a1a] text-xs cursor-pointer hover:text-[#BA5B55] transition-colors duration-300 flex flex-col items-start justify-center gap-1">
           <div className="flex justify-center items-center gap-1 leading-none">
             <Bell stroke={1} size={20} />
             <div>{"(0)"}</div>
           </div>
-         
+          <p className="leading-none">Notifications</p>
         </button>
       </Link>
 
