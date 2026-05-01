@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { RegisterInputCheck } from "../../lib/inputValidation";
 import pool from "@/database/pool";
 import bcrypt from "bcryptjs";
-import { sendAndSaveOTP } from "../../lib/sendAndSaveOTP";
+import { sendAndSaveOTP } from "../../lib/sendOTPUtils";
 import { issueJWT, setTokenCookie } from "../../lib/jwtUtils";
 
 export async function POST(request: Request) {
