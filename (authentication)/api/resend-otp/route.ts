@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sendAndSaveOTP } from "../../lib/sendAndSaveOTP"; // Your new utility
+import { sendAndSaveOTP } from "../../lib/sendOTPUtils"; // Your new utility
 import { issueJWT, setTokenCookie } from "../../lib/jwtUtils";
 
 export async function POST(request: Request) {
