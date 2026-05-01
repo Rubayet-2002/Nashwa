@@ -26,7 +26,16 @@ const DeleteAccountButton = () => {
       }
     });
   };
-
+  return (
+    <button
+      onClick={handleDelete}
+      disabled={isPending}
+      className="flex justify-center items-center border w-fit px-4 py-1 text-sm leading-none gap-2 border-[#ba5b55] bg-[#ba5b55] text-white hover:bg-white hover:text-[#ba5b55] cursor-pointer"
+    >
+      <Trash size={24}/>
+      <p>Delete account</p>
+    </button>
+  );
 
 };
 
