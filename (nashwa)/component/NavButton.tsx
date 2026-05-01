@@ -28,7 +28,7 @@ const NavButton = ({ userProfile }: { userProfile: User | null }) => {
             <Bell stroke={1} size={20} />
             <div>{"(0)"}</div>
           </div>
-          <p className="leading-none">Notifications</p>
+         
         </button>
       </Link>
 
