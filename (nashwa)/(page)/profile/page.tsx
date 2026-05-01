@@ -1,3 +1,15 @@
+import {
+  Mail,
+  Telephone,
+  User,
+  CalendarArrowDown,
+  Monitor,
+  Mobile,
+  Tablet,
+  Globe,
+  ShieldCheck,
+  ShieldX,
+} from "@mynaui/icons-react";
 
 import LogoutButton from "../../component/LogoutButton";
 import DeleteAccountButton from "../../component/DeleteAccountButton";
