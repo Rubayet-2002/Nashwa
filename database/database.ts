@@ -1,15 +1,14 @@
 import pool from "./pool";
-import { UserTable, ShopTable, SessionTable, OTPTable } from "./tables";
+import { CreateTableStatements } from "./tables";
 
 async function createTable() {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
-    await client.query(UserTable);
-    await client.query(ShopTable);
-    await client.query(SessionTable);
-    await client.query(OTPTable);
+    for (const statement of CreateTableStatements) {
+      await client.query(statement);
+    }
     await client.query("COMMIT");
     console.log("Tables created successfully");
   } catch (error) {
@@ -18,7 +17,6 @@ async function createTable() {
   } finally {
     client.release();
     await pool.end(); 
-    process.exit(0);
   }
 }
 

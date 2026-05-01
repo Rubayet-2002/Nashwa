@@ -1,10 +1,10 @@
-export const DropTables = `
-    DROP TABLE IF EXISTS seller_profiles CASCADE;
-    DROP TABLE IF EXISTS shops CASCADE;
-    DROP TABLE IF EXISTS sessions CASCADE;
-    DROP TABLE IF EXISTS otp CASCADE;
-    DROP TABLE IF EXISTS users CASCADE;
-`;
+export const DropTableStatements = [
+    "DROP TABLE IF EXISTS seller_profiles CASCADE;",
+    "DROP TABLE IF EXISTS shops CASCADE;",
+    "DROP TABLE IF EXISTS sessions CASCADE;",
+    "DROP TABLE IF EXISTS otp CASCADE;",
+    "DROP TABLE IF EXISTS users CASCADE;",
+];
 
 
 export const UserTable = `
@@ -89,3 +89,11 @@ CREATE TABLE IF NOT EXISTS otp (
     expires_at TIMESTAMPTZ NOT NULL
 );
 `;
+
+export const CreateTableStatements = [
+    UserTable,
+    SellerProfileTable,
+    ShopTable,
+    SessionTable,
+    OTPTable,
+];

@@ -3,7 +3,7 @@ import pool from "../../../../database/pool";
 import bcrypt from "bcryptjs";
 import { passwordCheck } from "../../lib/inputValidation";
 import { issueJWT, setTokenCookie } from "../../lib/jwtUtils";
-import { sendAndSaveOTP } from "../../lib/sendAndSaveOTP";
+import { sendAndSaveOTP } from "../../lib/sendOTPUtils"; // Import your utility
 
 export async function POST(request: Request) {
   const client = await pool.connect();
@@ -39,8 +39,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Invalid email or password" }, { status: 401 });
     }
 
+    // --- REFACTORED UNVERIFIED USER BLOCK ---
     if (!user.is_verified) {
-
+      // Use the utility! It handles BEGIN, DELETE, INSERT, and EMAIL.
       await sendAndSaveOTP(email, "verify-account");
 
       const payload = { email, purpose: "verify-account" };
@@ -57,9 +58,7 @@ export async function POST(request: Request) {
       );
 
       setTokenCookie(response, "auth-email-token", emailToken, 15 * 60);
-
       return response;
-      
     }
 
     // --- VERIFIED USER SESSION BLOCK ---
@@ -93,14 +92,12 @@ export async function POST(request: Request) {
     await client.query("COMMIT");
     transactionActive = false;
 
-    const redirectPath = user.role === "seller" ? "/shop-dashboard" : "/";
-
     const response = NextResponse.json({
       success: true,
       is_verified: true,
       message: "Login successful!",
       user: { uid: user.uid, username: user.username, role: user.role, is_verified: true },
-      redirect: redirectPath,
+      redirect: "/",
     });
 
     setTokenCookie(response, "access-token", accessToken, 15 * 60);

@@ -16,9 +16,8 @@ const OTP = async () => {
 
   const isVerifyAccount = payload?.purpose === "verify-account";
   const isPasswordReset = payload?.purpose === "password-reset";
-  const isSellerRegistration = payload?.purpose === "seller-registration";
 
-  if (!payload || (!isVerifyAccount && !isPasswordReset && !isSellerRegistration)) {
+  if (!payload || (!isVerifyAccount && !isPasswordReset)) {
     redirect("/account-email");
   }
 
@@ -27,8 +26,6 @@ const OTP = async () => {
     headerText = "Please check your email to find Email verification OTP.";
   } else if (isPasswordReset) {
     headerText = "Please check your email to find password reset OTP.";
-  }else if (isSellerRegistration) {
-    headerText = "Please check your email to find shop registration OTP.";
   }
 
   return (

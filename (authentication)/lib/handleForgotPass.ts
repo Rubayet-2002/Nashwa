@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { verifyJWT, issueJWT } from "./jwtUtils";
-import { sendAndSaveOTP } from "./sendAndSaveOTP";
+import { sendAndSaveOTP } from "./sendOTPUtils";
 
 export async function handleForgotPassOTP(prevState: any, formData: FormData) {
   try {
