@@ -1,12 +1,14 @@
 import pool from "./pool";
-import { DropTables } from "./tables";
+import { DropTableStatements } from "./tables";
 
 async function createTable() {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
-    await client.query(DropTables);
+    for (const statement of DropTableStatements) {
+      await client.query(statement);
+    }
     await client.query("COMMIT");
 
     console.log("Tables deleted successfully");
