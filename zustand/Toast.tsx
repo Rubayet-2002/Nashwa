@@ -4,11 +4,6 @@ import { CheckCircle, DangerCircle, X } from "@mynaui/icons-react";
 import { useToastStore } from "./toastStore";
 
 export function Toast() {
-  const { activeToast, removeToast } = useToastStore();
-
-  if (!activeToast) return null;
-
-  const isSuccess = activeToast.type === "success";
 
   return (
     <div className="fixed top-5 left-1/2 -translate-x-1/2 z-100 flex flex-col gap-2 w-full items-center pointer-events-none">

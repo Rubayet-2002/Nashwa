@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useUserStore, User } from "./userStore";
 
-export default function UserStoreSetup({ user }: { user: User | null }) {
-  const setup = useRef(false);
 
   useEffect(() => {
     if (!setup.current) {

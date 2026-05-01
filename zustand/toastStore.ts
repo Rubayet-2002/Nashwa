@@ -1,12 +1,5 @@
 import { create } from "zustand";
 
-export type ToastType = "success" | "error";
-
-interface Toast {
-  id: string;
-  message: string;
-  type: ToastType;
-}
 
 interface ToastStore {
   activeToast: Toast | null;
