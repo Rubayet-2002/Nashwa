@@ -1,0 +1,22 @@
+npm install -D tsx
+
+npm install @mynaui/icons-react
+
+npm install dotenv
+
+npm install pg
+npm install -D @types/pg
+
+npm install zustand
+
+npm install zod
+
+npm install jose
+
+npm install bcryptjs
+
+npm install nodemailer
+
+npm install -D @types/nodemailer
+
+npm install cloudinary
