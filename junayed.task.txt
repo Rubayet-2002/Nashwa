@@ -1,1 +1,11 @@
 tomar kaj akhn tumi UI enhanch korba, products upload korba, profile pictture and cover photo for shop and profile picture for user, eigula upload and edit korte parbe.
+
+task for my agents - UI enhanch
+Products upload
+FOR SHOP
+profile picture upload
+cover photo upload
+
+FOR user
+profile picture
+I can upload and edit them
