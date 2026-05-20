@@ -1,12 +1,12 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { verifyJWT } from "../../lib/jwtUtils";
-import ForgotPassForm from "../../component/ForgotPassForm";
+import ForgotPass from "./ForgotPass";
+import { verifyJWT } from "@/app/(authentication)/lib/jwtUtils";
 
-const ForgotPass = async () => {
+const Forgot = async () => {
   const cookieStore = await cookies();
-  const token = cookieStore.get("auth-email-token")?.value;
-  if (!token) redirect("/account-email");
+  const token = cookieStore.get("auth-intent-token")?.value;
+  if (!token) redirect("/email");
 
   const payload = await verifyJWT(token);
 
@@ -14,10 +14,12 @@ const ForgotPass = async () => {
   const isPasswordReset = payload?.purpose === "password-reset";
 
   if (!payload || (!isEnterPassword && !isPasswordReset)) {
-    redirect("/account-email");
+    redirect("/email");
   }
 
-  return <ForgotPassForm email={payload.email as string} />;
+  return (
+    <ForgotPass email={payload.email as string} uid={payload.uid as string} />
+  );
 };
 
-export default ForgotPass;
+export default Forgot;

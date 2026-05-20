@@ -1,9 +1,10 @@
-import { Toast } from "@/zustand/Toast";
 import "./globals.css";
-import { authMe } from "./(authentication)/lib/authMe";
-import { redirect } from "next/navigation";
-import UserStoreSetup from "../zustand/userSetup";
 import { Metadata } from "next";
+import { authMe } from "@/app/(authentication)/lib/authMe";
+import { redirect } from "next/navigation";
+import { Toast } from "@/zustand/Toast";
+import AuthStoreSetup from "@/zustand/authSetup";
+
 
 export const metadata: Metadata = {
   title: "Nashwa - Bangladesh",
@@ -16,14 +17,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  
-  const { user, clearCookies } = await authMe();
-  if (clearCookies) redirect("/api/delete-cookie");
+    const { user, activeShopUid, clearCookies } = await authMe();
+  if (clearCookies) redirect("/api/clear-cookie");
+
 
   return (
     <html lang="en">
       <body>
-        <UserStoreSetup user={user} />
+        <AuthStoreSetup user={user} activeShopUid={activeShopUid} />
         {children}
         <Toast />
       </body>

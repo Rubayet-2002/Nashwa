@@ -5,75 +5,78 @@ import { jwtVerify } from "jose";
 const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
 
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon.ico") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/admin/api") ||
+    pathname.startsWith("/shop/api")
+  ) {
+    return;
+  }
+
   const accessToken = request.cookies.get("access-token")?.value;
   const refreshToken = request.cookies.get("refresh-token")?.value;
 
-  let isLikelyAuthenticated = false;
-  let userRole: string | null = null;
+  let payload: any = null;
 
-  if (accessToken) {
-    try {
-      const { payload } = await jwtVerify(accessToken, secret);
-      isLikelyAuthenticated = true;
-      userRole = payload.role as string;
-    } catch {}
-  }
+  try {
+    const availableToken = accessToken || refreshToken;
 
-  if (!isLikelyAuthenticated && refreshToken) {
-    try {
-      const { payload } = await jwtVerify(refreshToken, secret);
-      isLikelyAuthenticated = true;
-      userRole = payload.role as string;
-    } catch {}
-  }
-
-  const { pathname } = request.nextUrl;
-
-  const protectedRoutes = ["/profile", "/shop-dashboard"];
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route),
-  );
-
-  if (isProtectedRoute && !isLikelyAuthenticated) {
-    return NextResponse.redirect(new URL("/account-email", request.url));
-  }
-
-  // Role based redirection for protected routes
-  if (isLikelyAuthenticated) {
-    if (pathname.startsWith("/shop-dashboard") && userRole !== "seller") {
-      return NextResponse.redirect(new URL("/", request.url));
+    if (availableToken) {
+      const decoded = await jwtVerify(availableToken, secret);
+      payload = decoded.payload;
     }
-    
-    // Exact match for homepage
-    if (pathname === "/" && userRole === "seller") {
-      return NextResponse.redirect(new URL("/shop-dashboard", request.url));
+  } catch (error) {}
+
+  const isAuthenticated = !!payload;
+  const activeShopUid = payload?.activeShopUid;
+  const role = payload?.role;
+  const isAdminAuthenticated = isAuthenticated && role === "admin";
+
+  if (isAdminAuthenticated) {
+    if (pathname === "/admin/login") {
+      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+    }
+    if (!pathname.startsWith("/admin/dashboard") && !pathname.startsWith("/admin/api")) {
+      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+    }
+  } else {
+    if (pathname.startsWith("/admin/dashboard")) {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
     }
   }
 
   const authRoutes = [
-    "/account-email",
-    "/account-password",
-    "/account-register",
-    "/proceed-to-create",
+    "/email",
+    "/password",
+    "/registration",
+    "/proceed",
     "/forgot-password",
-    "/verify-otp",
-    "/new-password",
-    "/seller-register"
+    "/otp-verification",
+    "/change-password",
   ];
-  
-  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+  const protectedRoutes = ["/profile", "/shop/dashboard", "/shop/create-shop"];
 
-  if (isAuthRoute && isLikelyAuthenticated) {
-    if (userRole === "seller") {
-      return NextResponse.redirect(new URL("/shop-dashboard", request.url));
-    } else {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
+  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    pathname.startsWith(route),
+  );
+
+  if (isProtectedRoute && !isAuthenticated) {
+    return NextResponse.redirect(new URL("/email", request.url));
   }
 
-  return NextResponse.next();
-}
+  if (isAuthenticated) {
+    if (isAuthRoute) {
+      const destination = activeShopUid ? "/shop/dashboard" : "/";
+      return NextResponse.redirect(new URL(destination, request.url));
+    }
 
-export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
-};
+    if (pathname === "/" && activeShopUid) {
+      return NextResponse.redirect(new URL("/shop/dashboard", request.url));
+    }
+  }
+}

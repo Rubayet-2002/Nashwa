@@ -2,7 +2,8 @@ import { NextResponse, userAgent } from "next/server";
 import { cookies } from "next/headers";
 import pool from "@/database/pool";
 import bcrypt from "bcryptjs";
-import { issueJWT, setTokenCookie } from "../../lib/jwtUtils";
+import { issueJWT, setTokenCookie } from "@/app/(authentication)/lib/jwtUtils";
+
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -12,24 +13,25 @@ export async function GET(request: Request) {
   const cookieStore = await cookies();
   const stateCookie = cookieStore.get("oauth_state")?.value;
 
-  let errorRedirect = "/account-email";
+  let errorRedirect = "/email";
   let stateSecret = "";
 
   try {
     if (stateCookie) {
       const parsedState = JSON.parse(stateCookie);
       stateSecret = parsedState.secret;
-      errorRedirect = parsedState.from || "/account-email";
+      errorRedirect = parsedState.from || "/email";
     }
-    if (!stateFromGoogle || stateFromGoogle !== stateSecret)
-      throw new Error("CSRF");
+    if (!stateFromGoogle || stateFromGoogle !== stateSecret) {
+      throw new Error("invalid_session");
+    }
   } catch (e) {
     return NextResponse.redirect(
       new URL(errorRedirect + "?error=invalid_session", request.url),
     );
   }
 
-  (await cookieStore).delete("oauth_state");
+  cookieStore.delete("oauth_state");
   const client = await pool.connect();
   let transactionActive = false;
 
@@ -64,7 +66,7 @@ export async function GET(request: Request) {
     transactionActive = true;
 
     const userResult = await client.query(
-      "SELECT uid, username, email, role, google_id, is_verified, auth_type FROM users WHERE google_id = $1 OR email = $2",
+      "SELECT uid, username, email, role, is_verified, auth_type FROM users WHERE google_id = $1 OR email = $2",
       [google_id, email],
     );
 
@@ -73,56 +75,65 @@ export async function GET(request: Request) {
     if (userResult.rowCount === 0) {
       const uid = crypto.randomUUID();
       const newUser = await client.query(
-        "INSERT INTO users (uid, email, google_id, username, auth_type, is_verified) " +
-          "VALUES ($1, $2, $3, $4, 'google', TRUE) RETURNING uid, username, role",
+        `INSERT INTO users (uid, email, google_id, username, auth_type, is_verified) 
+         VALUES ($1, $2, $3, $4, 'google', TRUE) RETURNING uid, username, role`,
         [uid, email, google_id, name],
       );
       user = newUser.rows[0];
     } else {
-      user = userResult.rows[0];
+      const existingUser = userResult.rows[0];
 
-      if (!user.is_verified) {
-        await client.query(
-          "UPDATE users SET google_id = $1, auth_type = 'google', password_hash = NULL, is_verified = TRUE, last_login = NOW() WHERE uid = $2",
-          [google_id, user.uid],
+      if (!existingUser.is_verified) {
+        const updatedUser = await client.query(
+          `UPDATE users 
+           SET google_id = $1, auth_type = 'google', password_hash = NULL, is_verified = TRUE, last_login = NOW() 
+           WHERE uid = $2 RETURNING uid, username, role`,
+          [google_id, existingUser.uid],
         );
+        user = updatedUser.rows[0];
       } else {
-        await client.query(
-          "UPDATE users SET google_id = $1, email = $2, last_login = NOW() WHERE uid = $3",
-          [google_id, email, user.uid],
+        const updatedUser = await client.query(
+          `UPDATE users SET google_id = $1, email = $2, last_login = NOW() 
+           WHERE uid = $3 RETURNING uid, username, role`,
+          [google_id, email, existingUser.uid],
         );
+        user = updatedUser.rows[0];
       }
     }
 
     const sessionId = crypto.randomUUID();
     const { device, browser, os } = userAgent(request);
-    const device_ip = (
-      request.headers.get("x-forwarded-for") || "127.0.0.1"
-    ).split(",")[0];
+
+    const device_type = device.type || "desktop";
+    const browser_name = browser.name || "Unknown Browser";
+    const os_name = os.name || "Unknown OS";
+    const device_ip = request.headers.get("x-forwarded-for")?.split(",")[0];
 
     const payload = {
       uid: user.uid,
-      username: user.username,
       role: user.role,
       sessionId: sessionId,
+      activeShopUid: null,
     };
+
     const accessToken = await issueJWT(payload, "15m");
     const refreshToken = await issueJWT(payload, "10d");
-    const hashedRefresh = await bcrypt.hash(refreshToken, 12);
-    const refreshExp = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
+
+    const token_exp = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
+    const hashedToken = await bcrypt.hash(refreshToken, 12);
 
     await client.query(
-      "INSERT INTO sessions (session_id, user_id, token_hash, expires_at, device_type, device_ip, browser_name, os_name) " +
-        "VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+      `INSERT INTO session (session_id, user_uid, token_hash, expires_at, device_type, device_ip, browser_name, os_name) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
         sessionId,
         user.uid,
-        hashedRefresh,
-        refreshExp,
-        device.type || "desktop",
+        hashedToken,
+        token_exp,
+        device_type,
         device_ip,
-        browser.name,
-        os.name,
+        browser_name,
+        os_name,
       ],
     );
 
@@ -133,8 +144,7 @@ export async function GET(request: Request) {
     setTokenCookie(response, "access-token", accessToken, 15 * 60);
     setTokenCookie(response, "refresh-token", refreshToken, 10 * 24 * 60 * 60);
 
-    response.cookies.delete("auth-email-token");
-    response.cookies.delete("password-reset-token");
+    response.cookies.delete("auth-intent-token");
 
     return response;
   } catch (error) {

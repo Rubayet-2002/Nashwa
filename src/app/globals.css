@@ -10,16 +10,16 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #ffffff;
+  background: #f2f4f7;
+
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #C77F70;
+  background: #f3deda;
+  border-radius: 50px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #BA5B55;
+  background: #ba5b55;
   cursor: pointer;
-  
 }
-

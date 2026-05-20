@@ -1,15 +1,14 @@
-import { authMe } from "../(authentication)/lib/authMe";
+import Navbar from "./navbar/Navbar";
+import { authMe } from "@/app/(authentication)/lib/authMe";
 import { redirect } from "next/navigation";
-import Navbar from "./component/Navbar";
 
 export default async function NashwaLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-
-  const { user, clearCookies } = await authMe();
-  if (clearCookies) redirect("/api/delete-cookie");
+    const { user, clearCookies } = await authMe();
+  if (clearCookies) redirect("/api/clear-cookie");
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -18,4 +17,3 @@ export default async function NashwaLayout({
     </div>
   );
 }
-
