@@ -76,6 +76,39 @@ CREATE TABLE IF NOT EXISTS product_image (
 );
 `;
 
+export const OrderRequest = `
+CREATE TABLE IF NOT EXISTS order_request (
+    order_uid VARCHAR(50) PRIMARY KEY,
+    shop_uid VARCHAR(50) REFERENCES shop(shop_uid) ON DELETE CASCADE,
+    buyer_uid VARCHAR(50) REFERENCES users(uid) ON DELETE SET NULL,
+
+    customer_name VARCHAR(100) NOT NULL,
+    customer_email VARCHAR(255) NOT NULL,
+    customer_phone VARCHAR(30) NOT NULL,
+    delivery_address TEXT NOT NULL,
+    note TEXT DEFAULT NULL,
+
+    total_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+    currency VARCHAR(10) DEFAULT 'BDT',
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed')),
+
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+`;
+
+export const OrderRequestItem = `
+CREATE TABLE IF NOT EXISTS order_request_item (
+    id SERIAL PRIMARY KEY,
+    order_uid VARCHAR(50) REFERENCES order_request(order_uid) ON DELETE CASCADE,
+    product_uid VARCHAR(50) REFERENCES product(product_uid) ON DELETE SET NULL,
+
+    product_title VARCHAR(255) NOT NULL,
+    unit_price NUMERIC(12,2) NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    line_total NUMERIC(12,2) NOT NULL DEFAULT 0
+);
+`;
+
 
 export const PartnerUniversity = `
 CREATE TABLE IF NOT EXISTS partner_university(
