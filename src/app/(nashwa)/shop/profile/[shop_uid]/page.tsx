@@ -15,7 +15,6 @@ interface ShopProfileProps {
 
 export default async function ShopProfilePage({ params }: ShopProfileProps) {
   const { shop_uid } = await params;
-
   const { user } = await authMe();
 
   let shop: any = null;
@@ -68,10 +67,6 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
         </div>
       </div>
     );
-  }
-
-  if (user && shop.owner_uid === user.uid) {
-    redirect(`/api/switch-shop-redirect?shop_uid=${shop_uid}`);
   }
 
   const joinedDate = new Date(shop.created_at).toLocaleDateString("en-US", {
@@ -165,7 +160,14 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
             </div>
           </div>
 
-          <ShopOrderSystem shopUid={shop.shop_uid} shopName={shop.shop_name} products={products} currentUser={user ? { username: user.username, email: user.email, phone: user.phone } : null} />
+          <div className="lg:col-span-2">
+            <ShopOrderSystem
+              shopUid={shop.shop_uid}
+              shopName={shop.shop_name}
+              products={products}
+              currentUser={user ? { username: user.username, email: user.email, phone: user.phone } : null}
+            />
+          </div>
 
         </div>
       </div>

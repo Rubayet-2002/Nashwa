@@ -11,7 +11,7 @@ export default async function NashwaLayout({
   if (clearCookies) redirect("/api/clear-cookie");
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden" suppressHydrationWarning>
       <Navbar user={user} />
       <main className="flex-1 flex min-h-0 px-5 py-4">{children}</main>
     </div>

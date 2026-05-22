@@ -102,7 +102,7 @@ export default function ShopOrderSystem({
   };
 
   return (
-    <div className="flex flex-col gap-6 bg-white border border-[#eaeaea] p-6 shadow-sm min-h-100">
+    <div className="flex h-full flex-col gap-6 bg-white border border-[#eaeaea] p-6 shadow-sm min-h-100">
       <div className="border-b border-[#f4f4f4] pb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <Package size={18} className="text-[#BA5B55]" />
@@ -112,9 +112,9 @@ export default function ShopOrderSystem({
       </div>
 
       {products.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
           {products.map((product) => (
-            <article key={product.product_uid} className="border border-[#eaeaea] bg-[#fcfcfd] overflow-hidden shadow-sm flex flex-col">
+            <article key={product.product_uid} className="border border-[#eaeaea] bg-[#fcfcfd] overflow-hidden shadow-sm flex flex-col rounded-sm">
               <div className="relative aspect-[4/3] bg-[#f3f4f6]">
                 {product.image_url ? (
                   <Image src={product.image_url} alt={product.title} fill className="object-cover" />
@@ -128,7 +128,7 @@ export default function ShopOrderSystem({
               <div className="p-4 flex flex-col gap-3 flex-1">
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="text-sm font-semibold text-[#1a1a1a] leading-snug">{product.title}</h3>
-                  <span className="shrink-0 text-xs font-medium text-[#BA5B55]">{product.currency} {Number(product.price).toFixed(2)}</span>
+                  <span className="shrink-0 text-xs font-medium text-[#BA5B55] whitespace-nowrap">{product.currency} {Number(product.price).toFixed(2)}</span>
                 </div>
 
                 <p className="text-xs text-[#787878] font-light leading-relaxed line-clamp-3 flex-1">
