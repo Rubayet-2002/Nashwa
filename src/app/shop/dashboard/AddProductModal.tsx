@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import ImageUpload from "@/(nashwa)/component/ImageUpload";
+import ImageUpload from "../../(nashwa)/component/ImageUpload";
 import { useToastStore } from "@/zustand/toastStore";
 
 export default function AddProductModal({ shopUid, onClose, onCreated }: { shopUid: string; onClose: () => void; onCreated?: () => void; }) {

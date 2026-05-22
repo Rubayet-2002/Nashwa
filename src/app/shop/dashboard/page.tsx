@@ -24,7 +24,7 @@ export default async function ShopDashboardPage() {
   let shop = null;
   try {
     const shopRes = await pool.query(
-      "SELECT shop_uid, owner_uid, shop_name, shop_email, shop_phone, shop_location, shop_description, shop_bio FROM shop WHERE shop_uid = $1",
+      "SELECT shop_uid, owner_uid, shop_name, shop_email, shop_phone, shop_location, shop_description, shop_bio, cover_photo_url, profile_photo_url FROM shop WHERE shop_uid = $1",
       [activeShopUid]
     );
 

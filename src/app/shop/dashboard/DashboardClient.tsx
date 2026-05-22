@@ -34,6 +34,8 @@ interface DashboardClientProps {
     shop_location: string;
     shop_description: string;
     shop_bio: string | null;
+    cover_photo_url?: string | null;
+    profile_photo_url?: string | null;
   };
   user: {
     username: string;
@@ -110,59 +112,71 @@ export default function DashboardClient({ shop, user }: DashboardClientProps) {
   return (
     <div className="flex flex-col lg:flex-row w-full h-full min-h-screen bg-[#f7f7f9] text-[#1a1a1a]">
       {/* LEFT COLUMN: Profile & Settings */}
-      <aside className="w-full lg:w-96 bg-white border-r border-[#eef0f3] flex flex-col shrink-0 overflow-y-auto">
-        
-        {/* Cover & Profile Images */}
-        <div className="relative">
-          <div className="h-32 w-full bg-[#f3f4f6] relative overflow-hidden">
-            <Image
-              src={shopCover}
-              alt="Shop Cover"
-              fill
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-black/10" />
-          </div>
+      <aside className="w-full lg:w-[27rem] bg-[#fafafb] border-r border-[#eef0f3] flex flex-col shrink-0 overflow-y-auto">
+        <div className="p-5 border-b border-[#eef0f3] bg-white">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-[#BA5B55] font-semibold">Shop identity</p>
+          <h2 className="mt-1 text-xl font-bold tracking-tight text-[#1a1a1a]">{shop.shop_name}</h2>
+          <p className="text-xs text-[#787878] mt-1">Owned by <span className="font-medium text-[#1a1a1a]">{user.username}</span></p>
+        </div>
 
-            <div className="px-5 pb-4 relative flex flex-col items-center">
-            {/* Profile image overlapping cover */}
-            <div className="w-24 h-24 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden -mt-12 flex justify-center items-center">
+        <div className="p-5 flex flex-col gap-4">
+          <section className="bg-white border border-[#eef0f3] shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#f2f4f7]">
+              <div>
+                <p className="text-xs font-semibold text-[#BA5B55] uppercase tracking-wider">Cover photo</p>
+                <p className="text-[11px] text-[#787878] mt-0.5">Banner shown at the top of your shop.</p>
+              </div>
+            </div>
+            <div className="relative h-44 w-full bg-[#f3f4f6] overflow-hidden">
               <Image
-                src={shopProfile}
-                alt="Shop Profile"
+                src={shop.cover_photo_url || shopCover}
+                alt="Shop Cover"
+                fill
                 className="object-cover"
               />
             </div>
-            
-            <h2 className="mt-2 text-xl font-bold tracking-tight text-center">{shop.shop_name}</h2>
-            <p className="text-xs text-[#787878] font-light mt-0.5">
-              Owned by <span className="font-medium text-[#1a1a1a]">{user.username}</span>
-            </p>
-            <div className="mt-3 w-full flex justify-center gap-4">
+            <div className="p-4">
+              <ImageUpload
+                label="Replace cover image"
+                folder="nashwa_shop_covers"
+                saveEndpoint="/shop/api/update-cover"
+                extraBody={{ shopUid: shop.shop_uid }}
+                onUploaded={() => router.refresh()}
+              />
+            </div>
+          </section>
+
+          <section className="bg-white border border-[#eef0f3] shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#f2f4f7]">
               <div>
-                <ImageUpload
-                  label="Change cover"
-                  folder="nashwa_shop_covers"
-                  saveEndpoint="/shop/api/update-cover"
-                  extraBody={{ shopUid: shop.shop_uid }}
-                  onUploaded={() => location.reload()}
-                />
+                <p className="text-xs font-semibold text-[#BA5B55] uppercase tracking-wider">Profile photo</p>
+                <p className="text-[11px] text-[#787878] mt-0.5">Avatar shown beside your shop name.</p>
               </div>
-              <div>
-                <ImageUpload
-                  label="Change profile"
-                  folder="nashwa_shop_profiles"
-                  saveEndpoint="/shop/api/update-profile"
-                  extraBody={{ shopUid: shop.shop_uid }}
-                  onUploaded={() => location.reload()}
+            </div>
+            <div className="flex items-center justify-center py-6 bg-[#fcfcfd]">
+              <div className="relative h-28 w-28 rounded-full overflow-hidden border-4 border-white shadow-lg bg-white">
+                <Image
+                  src={shop.profile_photo_url || shopProfile}
+                  alt="Shop Profile"
+                  fill
+                  className="object-cover"
                 />
               </div>
             </div>
-          </div>
+            <div className="p-4">
+              <ImageUpload
+                label="Replace profile image"
+                folder="nashwa_shop_profiles"
+                saveEndpoint="/shop/api/update-profile"
+                extraBody={{ shopUid: shop.shop_uid }}
+                onUploaded={() => router.refresh()}
+              />
+            </div>
+          </section>
         </div>
 
         {/* Bio Section */}
-        <div className="px-6 py-5 border-t border-[#f4f5f7] flex flex-col gap-3">
+        <div className="px-6 py-5 border-t border-[#f4f5f7] flex flex-col gap-3 bg-white">
           <div className="flex justify-between items-center">
             <span className="text-xs font-semibold text-[#BA5B55] uppercase tracking-wider">Bio</span>
             {!isEditingBio && (
@@ -217,7 +231,7 @@ export default function DashboardClient({ shop, user }: DashboardClientProps) {
         </div>
 
         {/* About Info Section */}
-        <div className="px-6 py-5 border-t border-[#f4f5f7] flex flex-col gap-4 flex-1">
+        <div className="px-6 py-5 border-t border-[#f4f5f7] flex flex-col gap-4 flex-1 bg-white">
           <div className="flex justify-between items-center">
             <span className="text-xs font-semibold text-[#BA5B55] uppercase tracking-wider">About Info</span>
             <button
