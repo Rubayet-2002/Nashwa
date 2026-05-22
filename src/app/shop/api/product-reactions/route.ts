@@ -31,7 +31,16 @@ export async function GET(request: Request) {
       [productUid],
     );
     let reacted = false;
+    let isOwner = false;
     if (user) {
+      // determine if current user is the owner of the product's shop
+      const ownerRes = await pool.query(
+        `SELECT s.owner_uid FROM product p JOIN shop s ON s.shop_uid = p.shop_uid WHERE p.product_uid = $1 LIMIT 1`,
+        [productUid],
+      );
+      if (ownerRes.rowCount > 0) {
+        isOwner = ownerRes.rows[0].owner_uid === user.uid;
+      }
       const myReaction = await pool.query(
         `SELECT 1 FROM product_reaction WHERE product_uid = $1 AND user_uid = $2 LIMIT 1`,
         [productUid, user.uid],
@@ -39,7 +48,7 @@ export async function GET(request: Request) {
       reacted = myReaction.rowCount > 0;
     }
 
-    return NextResponse.json({ success: true, count: countRes.rows[0].count, reacted });
+    return NextResponse.json({ success: true, count: countRes.rows[0].count, reacted, isOwner });
   } catch (error) {
     console.error("product-reactions GET error:", error);
     return NextResponse.json({ message: "Failed to load reactions" }, { status: 500 });
@@ -62,6 +71,19 @@ export async function POST(request: Request) {
     const { user } = await authMe();
     if (!user) {
       return NextResponse.json({ message: "Please log in first." }, { status: 401 });
+    }
+
+    // prevent shop owners from reacting to their own product
+    const ownerRes = await pool.query(
+      `SELECT s.owner_uid FROM product p JOIN shop s ON s.shop_uid = p.shop_uid WHERE p.product_uid = $1 LIMIT 1`,
+      [productUid],
+    );
+    if (ownerRes.rowCount > 0 && ownerRes.rows[0].owner_uid === user.uid) {
+      const countRes = await pool.query(
+        `SELECT COUNT(*)::int AS count FROM product_reaction WHERE product_uid = $1`,
+        [productUid],
+      );
+      return NextResponse.json({ success: true, reacted: false, count: countRes.rows[0].count, message: "Owners cannot react to their own product" }, { status: 403 });
     }
 
     const existing = await pool.query(

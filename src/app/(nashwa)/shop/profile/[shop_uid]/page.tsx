@@ -4,6 +4,8 @@ import pool from "@/database/pool";
 import { authMe } from "@/app/(authentication)/lib/authMe";
 import { Mail, Telephone, Pin, User, CalendarArrowDown, Bookmark, ChatMessages, Package } from "@mynaui/icons-react";
 import ShopOrderSystem from "../ShopOrderSystem";
+import { ensureShopFollowTable } from "@/app/(nashwa)/lib/ensureShopFollowTable";
+import FollowShopButton from "@/app/(nashwa)/component/FollowShopButton";
 
 export const dynamic = "force-dynamic";
 
@@ -21,16 +23,26 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
   let shop: any = null;
   let products: Array<{ product_uid: string; title: string; description: string | null; price: string; currency: string; image_url: string | null; }> = [];
   try {
+    await ensureShopFollowTable();
+
     const shopRes = await pool.query(
           `SELECT s.shop_uid, s.owner_uid, s.shop_name, s.shop_email, s.shop_phone, s.shop_location, s.shop_description, s.shop_bio, s.created_at,
             s.cover_photo_url, s.profile_photo_url, pu.university_name,
-              u.username as owner_username, u.email as owner_email
+              u.username as owner_username, u.email as owner_email,
+              COALESCE(fc.followers_count, 0)::int AS followers_count,
+              CASE WHEN $2::text IS NOT NULL AND sf.user_uid IS NOT NULL THEN TRUE ELSE FALSE END AS is_following
        FROM shop s
        JOIN users u ON s.owner_uid = u.uid
        LEFT JOIN shop_join_university sju ON sju.shop_uid = s.shop_uid
        LEFT JOIN partner_university pu ON pu.university_uid = sju.university_uid
+       LEFT JOIN shop_follow sf ON sf.shop_uid = s.shop_uid AND sf.user_uid = $2
+       LEFT JOIN LATERAL (
+         SELECT COUNT(*)::int AS followers_count
+         FROM shop_follow fs
+         WHERE fs.shop_uid = s.shop_uid
+       ) fc ON true
        WHERE s.shop_uid = $1 AND s.status = 'approved'`,
-      [shop_uid]
+      [shop_uid, user?.uid ?? null]
     );
     if (shopRes.rowCount && shopRes.rowCount > 0) {
       shop = shopRes.rows[0];
@@ -76,6 +88,7 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
     year: "numeric",
     month: "long",
   });
+  const canFollow = Boolean(user?.uid) && user?.uid !== shop.owner_uid;
 
   return (
     <div className="flex-1 bg-[#fbfbfb] flex flex-col items-center justify-start min-h-0 overflow-y-auto">
@@ -126,15 +139,24 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <button className="px-4 py-2 border border-[#eaeaea] hover:border-[#BA5B55] hover:text-[#BA5B55] transition-all text-xs font-medium text-[#787878] flex items-center gap-1.5">
-                    <Bookmark size={14} />
-                    <span>Follow Shop</span>
-                  </button>
+                  {user?.uid === shop.owner_uid ? (
+                    <span className="px-4 py-2 text-xs font-medium text-[#8a8a8a]">Your shop</span>
+                  ) : (
+                    <FollowShopButton
+                      shopUid={shop.shop_uid}
+                      initialIsFollowing={Boolean(shop.is_following)}
+                      canFollow={canFollow}
+                      className="flex items-center gap-1.5 px-4 py-2"
+                    />
+                  )}
                   <button className="px-4 py-2 bg-[#BA5B55] border border-[#BA5B55] hover:bg-white hover:text-[#BA5B55] text-white transition-all text-xs font-medium flex items-center gap-1.5">
                     <ChatMessages size={14} />
                     <span>Contact Seller</span>
                   </button>
                 </div>
+              </div>
+              <div className="mt-1 text-xs text-[#8a8a8a]">
+                {shop.followers_count} Followers
               </div>
             </div>
           </div>

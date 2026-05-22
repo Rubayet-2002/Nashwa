@@ -94,16 +94,13 @@ export async function POST(request: Request) {
     const commentUid = crypto.randomUUID();
 
     if (action === "reply") {
-      if (!isOwner) {
-        return NextResponse.json({ message: "Only the shop owner can reply." }, { status: 403 });
-      }
       if (!parentCommentUid) {
         return NextResponse.json({ message: "parentCommentUid is required" }, { status: 400 });
       }
 
       await client.query("BEGIN");
       const parentRes = await client.query(
-        `SELECT comment_uid FROM product_comment WHERE comment_uid = $1 AND product_uid = $2`,
+        `SELECT comment_uid, author_role, parent_comment_uid FROM product_comment WHERE comment_uid = $1 AND product_uid = $2`,
         [parentCommentUid, productUid],
       );
       if (parentRes.rowCount === 0) {
@@ -111,6 +108,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: "Parent comment not found" }, { status: 404 });
       }
 
+      const parentAuthorRole = parentRes.rows[0].author_role;
+
+      // Allow replies when: user is shop owner, OR user is a customer replying to a seller/owner comment
+      if (!isOwner) {
+        if (parentAuthorRole !== "seller") {
+          await client.query("ROLLBACK");
+          return NextResponse.json({ message: "Only the shop owner can reply to customer comments" }, { status: 403 });
+        }
+      }
+
+      // Insert reply (attach to the provided parent)
       await client.query(
         `INSERT INTO product_comment (
           comment_uid, product_uid, author_uid, author_role, author_name, comment_text, parent_comment_uid
@@ -119,7 +127,7 @@ export async function POST(request: Request) {
           commentUid,
           productUid,
           user.uid,
-          user.role || "seller",
+          user.role || "customer",
           user.username,
           commentText,
           parentCommentUid,

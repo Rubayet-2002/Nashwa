@@ -10,6 +10,7 @@ import {
   ProductReaction,
   PartnerUniversity,
   ShopJoinUniversity,
+  ShopFollow,
   OTP,
   Session,
   AdminKey,
@@ -32,6 +33,7 @@ async function createTable() {
     await client.query(ProductReaction);
     await client.query(PartnerUniversity);
     await client.query(ShopJoinUniversity);
+    await client.query(ShopFollow);
     await client.query(OTP);
     await client.query(Session);
     await client.query(AdminKey);

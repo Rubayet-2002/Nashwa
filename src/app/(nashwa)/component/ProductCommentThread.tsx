@@ -27,6 +27,15 @@ export default function ProductCommentThread({ productUid, mode = "customer" }: 
   const [replyOpen, setReplyOpen] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showComments, setShowComments] = useState<boolean>(() => {
+    try {
+      if (typeof window === "undefined") return true;
+      const v = localStorage.getItem(`nashwa:commentsVisible:${productUid}`);
+      return v === null ? true : v === "true";
+    } catch (e) {
+      return true;
+    }
+  });
 
   const loadComments = async () => {
     setLoading(true);
@@ -114,13 +123,31 @@ export default function ProductCommentThread({ productUid, mode = "customer" }: 
     }
   };
 
+  // persist visibility changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(`nashwa:commentsVisible:${productUid}`, showComments ? "true" : "false");
+    } catch (e) {}
+  }, [showComments, productUid]);
+
   return (
     <div className="rounded-2xl border border-[#eee] bg-[#fcfcfd] p-4">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#787878]">Comments</p>
-        <button type="button" onClick={loadComments} className="text-[11px] font-medium text-[#BA5B55] hover:underline">
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={loadComments} className="text-[11px] font-medium text-[#BA5B55] hover:underline">
+            Refresh
+          </button>
+          {mode === "customer" && (
+            <button
+              type="button"
+              onClick={() => setShowComments((s) => !s)}
+              className="text-[11px] font-medium text-[#BA5B55] hover:underline"
+            >
+              {showComments ? "Hide comments" : "Show comments"}
+            </button>
+          )}
+        </div>
       </div>
 
       {mode === "customer" && (
@@ -148,7 +175,9 @@ export default function ProductCommentThread({ productUid, mode = "customer" }: 
       )}
 
       {error && <p className="mt-3 text-xs text-red-500">{error}</p>}
-      {loading ? (
+      {!showComments ? (
+        <div className="mt-4 text-sm text-[#787878]">Comments hidden. Click "Show comments" to view.</div>
+      ) : loading ? (
         <p className="mt-4 text-xs text-[#8b8b8b]">Loading comments...</p>
       ) : threadedComments.length === 0 ? (
         <p className="mt-4 text-xs text-[#8b8b8b]">No comments yet. Be the first one.</p>
@@ -163,7 +192,7 @@ export default function ProductCommentThread({ productUid, mode = "customer" }: 
                 </div>
               </div>
 
-              {mode === "owner" && comment.author_role !== "seller" && (
+              {(mode === "owner" || (mode === "customer" && comment.author_role === "seller")) && (
                 <div className="mt-3 space-y-2 border-t border-[#f3f3f3] pt-3">
                   <button
                     type="button"
@@ -205,6 +234,45 @@ export default function ProductCommentThread({ productUid, mode = "customer" }: 
                     <div key={reply.comment_uid} className="rounded-lg bg-[#fafafa] px-3 py-2 text-xs text-[#4f4f4f]">
                       <p className="font-medium text-[#1a1a1a]">{reply.author_name}</p>
                       <p className="mt-1">{reply.comment_text}</p>
+
+                      {mode === "customer" && reply.author_role === "seller" && (
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReplyOpen((current) => ({ ...current, [reply.comment_uid]: !current[reply.comment_uid] }));
+                              setReplyDrafts((current) => ({ ...current, [reply.comment_uid]: current[reply.comment_uid] || "" }));
+                            }}
+                            className="text-xs font-medium text-[#BA5B55] hover:underline"
+                          >
+                            {replyOpen[reply.comment_uid] ? "Hide reply" : "Reply"}
+                          </button>
+
+                          {replyOpen[reply.comment_uid] && (
+                            <div className="mt-2 flex gap-2">
+                              <input
+                                value={replyDrafts[reply.comment_uid] || ""}
+                                onChange={(e) => setReplyDrafts((current) => ({ ...current, [reply.comment_uid]: e.target.value }))}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    submitReply(reply.comment_uid);
+                                  }
+                                }}
+                                placeholder="Write a reply..."
+                                className="min-w-0 flex-1 rounded-full border border-[#e8e1df] bg-white px-4 py-2 text-sm outline-none focus:border-[#BA5B55]"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => submitReply(reply.comment_uid)}
+                                className="rounded-full bg-[#BA5B55] px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-[#a94d48]"
+                              >
+                                Send
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

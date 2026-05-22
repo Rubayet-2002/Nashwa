@@ -1,6 +1,7 @@
 export const DropTable = `
     DROP TABLE IF EXISTS session;
     DROP TABLE IF EXISTS otp;
+    DROP TABLE IF EXISTS shop_follow;
     DROP TABLE IF EXISTS shop_join_university;
     DROP TABLE IF EXISTS partner_university;
     DROP TABLE IF EXISTS selling_permit;
@@ -153,6 +154,15 @@ CREATE TABLE IF NOT EXISTS shop_join_university (
 
     created_at TIMESTAMPTZ DEFAULT NOW(),
     approved_at TIMESTAMPTZ DEFAULT NULL
+);
+`;
+
+export const ShopFollow = `
+CREATE TABLE IF NOT EXISTS shop_follow (
+    shop_uid VARCHAR(50) REFERENCES shop(shop_uid) ON DELETE CASCADE,
+    user_uid VARCHAR(50) REFERENCES users(uid) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (shop_uid, user_uid)
 );
 `;
 
