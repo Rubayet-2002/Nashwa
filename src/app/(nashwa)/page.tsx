@@ -11,7 +11,7 @@ const Homepage = async () => {
   let shops: any[] = [];
   try {
     const shopsRes = await pool.query(
-      "SELECT shop_uid, owner_uid, shop_name, shop_location, shop_description FROM shop WHERE status = 'approved' ORDER BY created_at DESC"
+      "SELECT shop_uid, owner_uid, shop_name, shop_location, shop_description, cover_photo_url, profile_photo_url FROM shop WHERE status = 'approved' ORDER BY created_at DESC"
     );
     shops = shopsRes.rows;
   } catch (error) {
@@ -65,7 +65,7 @@ const Homepage = async () => {
                   {/* Cover Photo */}
                   <div className="relative h-32 w-full bg-[#f3f4f6] overflow-hidden">
                     <Image
-                      src={shopCover}
+                      src={shop.cover_photo_url || shopCover}
                       alt="Shop Cover"
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -78,8 +78,9 @@ const Homepage = async () => {
                     {/* Shop Profile Image */}
                     <div className="relative -mt-10 mb-3 w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden flex justify-center items-center">
                       <Image
-                        src={shopProfile}
+                        src={shop.profile_photo_url || shopProfile}
                         alt="Shop Profile"
+                        fill
                         className="object-cover"
                       />
                     </div>

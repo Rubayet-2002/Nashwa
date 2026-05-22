@@ -21,7 +21,8 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
   let products: Array<{ product_uid: string; title: string; description: string | null; price: string; currency: string; image_url: string | null; }> = [];
   try {
     const shopRes = await pool.query(
-      `SELECT s.shop_uid, s.owner_uid, s.shop_name, s.shop_email, s.shop_phone, s.shop_location, s.shop_description, s.shop_bio, s.created_at,
+          `SELECT s.shop_uid, s.owner_uid, s.shop_name, s.shop_email, s.shop_phone, s.shop_location, s.shop_description, s.shop_bio, s.created_at,
+            s.cover_photo_url, s.profile_photo_url,
               u.username as owner_username, u.email as owner_email
        FROM shop s
        JOIN users u ON s.owner_uid = u.uid
@@ -84,7 +85,7 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
         <div className="bg-white border border-[#eaeaea] shadow-sm relative">
           <div className="h-48 md:h-64 relative bg-[#f3f4f6]">
             <Image
-              src={shopCover}
+              src={shop.cover_photo_url || shopCover}
               alt={`${shop.shop_name} Cover`}
               fill
               className="object-cover"
@@ -96,8 +97,9 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
 
             <div className="relative -mt-16 sm:-mt-20 w-32 h-32 rounded-full border-4 border-white bg-white shadow-md overflow-hidden flex justify-center items-center shrink-0">
               <Image
-                src={shopProfile}
+                src={shop.profile_photo_url || shopProfile}
                 alt={`${shop.shop_name} Profile`}
+                fill
                 className="object-cover"
               />
             </div>
