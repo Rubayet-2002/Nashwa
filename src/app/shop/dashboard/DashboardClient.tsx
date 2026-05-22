@@ -127,12 +127,11 @@ export default function DashboardClient({ shop, user }: DashboardClientProps) {
                 <p className="text-[11px] text-[#787878] mt-0.5">Banner shown at the top of your shop.</p>
               </div>
             </div>
-            <div className="relative h-44 w-full bg-[#f3f4f6] overflow-hidden">
-              <Image
-                src={shop.cover_photo_url || shopCover}
+            <div className="relative h-52 w-full bg-[#f3f4f6] overflow-hidden">
+              <img
+                src={shop.cover_photo_url || shopCover.src}
                 alt="Shop Cover"
-                fill
-                className="object-cover"
+                className="absolute inset-0 h-full w-full object-cover"
               />
             </div>
             <div className="p-4">
