@@ -6,6 +6,8 @@ import {
   ProductImage,
   OrderRequest,
   OrderRequestItem,
+  ProductComment,
+  ProductReaction,
   PartnerUniversity,
   ShopJoinUniversity,
   OTP,
@@ -26,6 +28,8 @@ async function createTable() {
     await client.query(ProductImage);
     await client.query(OrderRequest);
     await client.query(OrderRequestItem);
+    await client.query(ProductComment);
+    await client.query(ProductReaction);
     await client.query(PartnerUniversity);
     await client.query(ShopJoinUniversity);
     await client.query(OTP);

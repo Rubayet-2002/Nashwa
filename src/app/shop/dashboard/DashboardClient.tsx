@@ -8,6 +8,8 @@ import { useAuthStore } from "@/zustand/authStore";
 import { updateShopBio, updateShopInfo } from "./actions";
 import ImageUpload from "../../(nashwa)/component/ImageUpload";
 import AddProductModal from "./AddProductModal";
+import ProductCommentThread from "../../(nashwa)/component/ProductCommentThread";
+import ProductReactionButton from "../../(nashwa)/component/ProductReactionButton";
 import {
   Mail,
   Telephone,
@@ -49,9 +51,21 @@ interface DashboardClientProps {
     currency: string;
     image_url: string | null;
   }>;
+  recentOrders: Array<{
+    order_uid: string;
+    customer_name: string;
+    customer_email: string;
+    customer_phone: string;
+    note: string | null;
+    total_amount: string;
+    currency: string;
+    status: string;
+    created_at: string;
+    product_title: string | null;
+  }>;
 }
 
-export default function DashboardClient({ shop, user, products = [] }: DashboardClientProps) {
+export default function DashboardClient({ shop, user, products = [], recentOrders = [] }: DashboardClientProps) {
   const router = useRouter();
   const addToast = useToastStore((s) => s.addToast);
   const { setActiveShop } = useAuthStore();
@@ -426,53 +440,53 @@ export default function DashboardClient({ shop, user, products = [] }: Dashboard
             </div>
           </div>
 
-          {/* Quick Actions & Recent Activity layout */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-            
-            {/* Quick Actions */}
-            <div className="xl:col-span-1 bg-white border border-[#eef0f3] p-5 shadow-sm flex flex-col gap-4">
-              <h3 className="text-sm font-semibold text-[#1a1a1a]">Quick Actions</h3>
-              <div className="flex flex-col gap-2">
-                <button onClick={() => setIsAddProductOpen(true)} className="flex items-center gap-2.5 p-3 border border-[#eaeaea] hover:border-[#BA5B55] hover:text-[#BA5B55] transition-all text-xs font-medium text-left bg-white">
+          {/* Owner Feed + Messaging */}
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.35fr)_420px] gap-6 items-start">
+            <section className="bg-white border border-[#eef0f3] p-5 shadow-sm flex flex-col gap-4 min-h-62.5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-[#1a1a1a]">Shop Feed</h3>
+                  <p className="text-xs text-[#787878] mt-1">Your posts, product activity, reactions, and customer comments.</p>
+                </div>
+                <button onClick={() => setIsAddProductOpen(true)} className="inline-flex items-center gap-2 px-3 py-2 border border-[#eaeaea] hover:border-[#BA5B55] hover:text-[#BA5B55] transition-all text-xs font-medium bg-white">
                   <PlusCircle size={16} className="text-[#BA5B55]" />
-                  Add New Product
-                </button>
-                <button className="flex items-center gap-2.5 p-3 border border-[#eaeaea] hover:border-[#BA5B55] hover:text-[#BA5B55] transition-all text-xs font-medium text-left bg-white">
-                  <ListCheck size={16} className="text-[#BA5B55]" />
-                  Manage Orders
-                </button>
-                <button className="flex items-center gap-2.5 p-3 border border-[#eaeaea] hover:border-[#BA5B55] hover:text-[#BA5B55] transition-all text-xs font-medium text-left bg-white">
-                  <Cog size={16} className="text-[#BA5B55]" />
-                  Shop Settings
+                  Add Product
                 </button>
               </div>
-            </div>
-
-            {/* Recent Products / Activity Placeholder */}
-            <div className="xl:col-span-2 bg-white border border-[#eef0f3] p-5 shadow-sm flex flex-col gap-4 min-h-62.5">
-              <h3 className="text-sm font-semibold text-[#1a1a1a]">Recent Products</h3>
 
               {products.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-4">
                   {products.map((product) => (
-                    <div key={product.product_uid} className="flex gap-3 border border-[#eef0f3] bg-[#fcfcfd] p-3">
-                      <div className="h-20 w-20 shrink-0 overflow-hidden border border-[#eaeaea] bg-white">
-                        {product.image_url ? (
-                          <img src={product.image_url} alt={product.title} className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-[#787878]/30">
-                            <Package size={22} />
-                          </div>
-                        )}
+                    <div key={product.product_uid} className="rounded-2xl border border-[#eef0f3] bg-[#fcfcfd] p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[11px] uppercase tracking-[0.2em] text-[#BA5B55]">Product post</p>
+                          <h4 className="mt-1 truncate text-base font-semibold text-[#1a1a1a]">{product.title}</h4>
+                          <p className="mt-1 text-xs text-[#787878] line-clamp-2">{product.description || "No description added."}</p>
+                        </div>
+                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-[#eaeaea] bg-white">
+                          {product.image_url ? (
+                            <img src={product.image_url} alt={product.title} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-[#787878]/30">
+                              <Package size={20} />
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-[#1a1a1a] truncate">{product.title}</p>
-                        <p className="mt-1 text-xs text-[#787878] line-clamp-2">
-                          {product.description || "No description added."}
-                        </p>
-                        <p className="mt-2 text-xs font-medium text-[#BA5B55]">
-                          {product.currency} {Number(product.price).toFixed(2)}
-                        </p>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[#787878]">
+                        <span className="rounded-full border border-[#efe4e2] bg-white px-2.5 py-1 text-[#BA5B55] font-medium">{product.currency} {Number(product.price).toFixed(2)}</span>
+                        <span className="rounded-full border border-[#eaeaea] bg-white px-2.5 py-1">Reacts from customers</span>
+                        <span className="rounded-full border border-[#eaeaea] bg-white px-2.5 py-1">Comments from customers</span>
+                      </div>
+
+                      <div className="mt-3">
+                        <ProductReactionButton productUid={product.product_uid} />
+                      </div>
+
+                      <div className="mt-4 rounded-xl border border-[#eef0f3] bg-white p-3">
+                        <ProductCommentThread productUid={product.product_uid} mode="owner" />
                       </div>
                     </div>
                   ))}
@@ -486,7 +500,45 @@ export default function DashboardClient({ shop, user, products = [] }: Dashboard
                   </button>
                 </div>
               )}
-            </div>
+            </section>
+
+            <aside className="bg-white border border-[#eef0f3] p-5 shadow-sm flex flex-col gap-4 sticky top-6">
+              <div>
+                <h3 className="text-sm font-semibold text-[#1a1a1a]">Customer Messages</h3>
+                <p className="text-xs text-[#787878] mt-1">Customers who ordered from you show up here.</p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {recentOrders.length > 0 ? (
+                  recentOrders.map((order) => (
+                    <div key={order.order_uid} className="rounded-2xl border border-[#eef0f3] bg-[#fcfcfd] p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-[#1a1a1a]">{order.customer_name}</p>
+                          <p className="text-xs text-[#787878] mt-0.5">{order.product_title || "Order item"}</p>
+                        </div>
+                        <span className="rounded-full border border-[#eaeaea] px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[#BA5B55]">{order.status}</span>
+                      </div>
+
+                      <p className="mt-3 text-xs text-[#787878]">{order.note || "No note from the customer."}</p>
+
+                      <div className="mt-3 flex gap-2">
+                        <input
+                          disabled
+                          placeholder="Message customer..."
+                          className="min-w-0 flex-1 rounded-full border border-[#e8e1df] bg-white px-3 py-2 text-xs outline-none"
+                        />
+                        <button disabled className="rounded-full bg-[#BA5B55]/70 px-3 py-2 text-xs font-medium text-white">Reply</button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-[#e8e1df] bg-[#fcfcfd] p-5 text-center text-xs text-[#787878]">
+                    No orders yet. Customer messages will appear here.
+                  </div>
+                )}
+              </div>
+            </aside>
           </div>
         </div>
       </main>

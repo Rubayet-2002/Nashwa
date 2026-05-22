@@ -23,6 +23,18 @@ export default async function ShopDashboardPage() {
   // Fetch active shop details
   let shop = null;
   let products: Array<{ product_uid: string; title: string; description: string | null; price: string; currency: string; image_url: string | null; }> = [];
+  let recentOrders: Array<{
+    order_uid: string;
+    customer_name: string;
+    customer_email: string;
+    customer_phone: string;
+    note: string | null;
+    total_amount: string;
+    currency: string;
+    status: string;
+    created_at: string;
+    product_title: string | null;
+  }> = [];
   try {
     const shopRes = await pool.query(
       `SELECT s.shop_uid, s.owner_uid, s.shop_name, s.shop_email, s.shop_phone, s.shop_location,
@@ -55,6 +67,25 @@ export default async function ShopDashboardPage() {
     );
 
     products = productsRes.rows;
+
+    const ordersRes = await pool.query(
+      `SELECT o.order_uid, o.customer_name, o.customer_email, o.customer_phone, o.note,
+              o.total_amount, o.currency, o.status, o.created_at,
+              (
+                SELECT ori.product_title
+                FROM order_request_item ori
+                WHERE ori.order_uid = o.order_uid
+                ORDER BY ori.id ASC
+                LIMIT 1
+              ) AS product_title
+       FROM order_request o
+       WHERE o.shop_uid = $1
+       ORDER BY o.created_at DESC
+       LIMIT 10`,
+      [activeShopUid],
+    );
+
+    recentOrders = ordersRes.rows;
   } catch (error) {
     console.error("Error fetching shop for dashboard:", error);
   }
@@ -63,5 +94,5 @@ export default async function ShopDashboardPage() {
     redirect("/profile");
   }
 
-  return <DashboardClient shop={shop} user={user} products={products} />;
+  return <DashboardClient shop={shop} user={user} products={products} recentOrders={recentOrders} />;
 }

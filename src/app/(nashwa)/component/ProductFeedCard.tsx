@@ -3,7 +3,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChatMessages, Bookmark, Heart } from "@mynaui/icons-react";
+import { ChatMessages, Bookmark } from "@mynaui/icons-react";
+import ProductCommentThread from "./ProductCommentThread";
+import ProductReactionButton from "./ProductReactionButton";
 
 export type FeedProduct = {
   product_uid: string;
@@ -23,20 +25,6 @@ interface ProductFeedCardProps {
 }
 
 export default function ProductFeedCard({ product }: ProductFeedCardProps) {
-  const [reactCount, setReactCount] = useState(0);
-  const [hasReacted, setHasReacted] = useState(false);
-  const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState<Array<{ id: number; text: string }>>([]);
-
-  const handleAddComment = () => {
-    const text = commentText.trim();
-    if (!text) return;
-    setComments((current) => [...current, { id: Date.now(), text }]);
-    setCommentText("");
-    setShowComments(true);
-  };
-
   return (
     <article className="rounded-2xl border border-[#e8e1df] bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
       <div className="min-w-0 flex-1">
@@ -80,68 +68,23 @@ export default function ProductFeedCard({ product }: ProductFeedCardProps) {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              <ProductReactionButton productUid={product.product_uid} />
               <button
                 type="button"
                 onClick={() => {
-                  setHasReacted((value) => !value);
-                  setReactCount((value) => (hasReacted ? Math.max(0, value - 1) : value + 1));
+                  const commentsElement = document.getElementById(`comments-${product.product_uid}`);
+                  commentsElement?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
-                className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
-                  hasReacted
-                    ? "border-[#BA5B55] bg-[#BA5B55]/10 text-[#BA5B55]"
-                    : "border-[#e8e1df] text-[#4f4f4f] hover:border-[#BA5B55] hover:text-[#BA5B55]"
-                }`}
-              >
-                <Heart size={14} fill={hasReacted ? "currentColor" : "none"} />
-                React ({reactCount})
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowComments((value) => !value)}
                 className="inline-flex items-center gap-2 rounded-full border border-[#e8e1df] px-3 py-2 text-xs font-medium text-[#4f4f4f] transition-colors hover:border-[#BA5B55] hover:text-[#BA5B55]"
               >
                 <ChatMessages size={14} />
-                Comment ({comments.length})
+                Comment
               </button>
             </div>
 
-            {showComments && (
-              <div className="rounded-2xl border border-[#eee] bg-[#fcfcfd] p-4">
-                <div className="flex gap-2">
-                  <input
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddComment();
-                      }
-                    }}
-                    placeholder="Write a comment..."
-                    className="min-w-0 flex-1 rounded-full border border-[#e8e1df] bg-white px-4 py-2 text-sm outline-none focus:border-[#BA5B55]"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddComment}
-                    className="rounded-full bg-[#BA5B55] px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-[#a94d48]"
-                  >
-                    Post
-                  </button>
-                </div>
-
-                <div className="mt-4 space-y-2">
-                  {comments.length === 0 ? (
-                    <p className="text-xs text-[#8b8b8b]">No comments yet. Be the first one.</p>
-                  ) : (
-                    comments.map((comment) => (
-                      <div key={comment.id} className="rounded-xl border border-[#eee] bg-white px-3 py-2 text-sm text-[#4f4f4f]">
-                        <p>{comment.text}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
+            <div id={`comments-${product.product_uid}`} className="scroll-mt-6">
+              <ProductCommentThread productUid={product.product_uid} mode="customer" />
+            </div>
           </div>
         </div>
       </div>

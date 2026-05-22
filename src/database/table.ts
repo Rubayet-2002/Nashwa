@@ -110,6 +110,30 @@ CREATE TABLE IF NOT EXISTS order_request_item (
 );
 `;
 
+export const ProductComment = `
+CREATE TABLE IF NOT EXISTS product_comment (
+    comment_uid VARCHAR(50) PRIMARY KEY,
+    product_uid VARCHAR(50) REFERENCES product(product_uid) ON DELETE CASCADE,
+    author_uid VARCHAR(50) REFERENCES users(uid) ON DELETE SET NULL,
+    author_role VARCHAR(20) NOT NULL,
+    author_name VARCHAR(255) NOT NULL,
+    comment_text TEXT NOT NULL,
+    parent_comment_uid VARCHAR(50) REFERENCES product_comment(comment_uid) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+`;
+
+export const ProductReaction = `
+CREATE TABLE IF NOT EXISTS product_reaction (
+    reaction_uid VARCHAR(50) PRIMARY KEY,
+    product_uid VARCHAR(50) REFERENCES product(product_uid) ON DELETE CASCADE,
+    user_uid VARCHAR(50) REFERENCES users(uid) ON DELETE CASCADE,
+    reaction_type VARCHAR(20) NOT NULL DEFAULT 'like',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (product_uid, user_uid)
+);
+`;
+
 
 export const PartnerUniversity = `
 CREATE TABLE IF NOT EXISTS partner_university(
