@@ -18,7 +18,6 @@ const RegisterForm = ({ email }: RegisterFormProps) => {
   const searchParams = useSearchParams();
   const addToast = useToastStore((s) => s.addToast);
   const [showPassword, setShowPassword] = useState(false);
-  const [showUniversityModal, setShowUniversityModal] = useState(false);
 
   useEffect(() => {
     const error = searchParams.get("error");
@@ -42,11 +41,13 @@ const RegisterForm = ({ email }: RegisterFormProps) => {
     const username = (formData.get("username") as string).trim();
     const email = (formData.get("email") as string).trim();
     const password = (formData.get("password") as string);
+    const universityUid = (formData.get("universityUid") as string).trim();
 
     const validation = RegisterInputCheck.safeParse({
       username,
       email,
       password,
+      universityUid,
     });
 
     if (!validation.success) {
@@ -85,8 +86,7 @@ const RegisterForm = ({ email }: RegisterFormProps) => {
   useEffect(() => {
     if (state?.success) {
       addToast(state.message, "success");
-      // Show university picker modal before redirecting to verification
-      setShowUniversityModal(true);
+      router.replace("/verify-otp");
     } else if (state?.error) {
       addToast(state.error, "error");
     }
@@ -95,57 +95,6 @@ const RegisterForm = ({ email }: RegisterFormProps) => {
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <input type="hidden" name="email" value={email} />
-
-      {/* University picker shown after successful registration */}
-      {showUniversityModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => { setShowUniversityModal(false); router.replace('/verify-otp'); }} />
-          <div className="relative z-10 w-full max-w-md overflow-hidden border border-[#eef0f3] bg-white shadow-2xl rounded-sm">
-            <div className="border-b border-[#eef0f3] px-6 py-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#BA5B55]">University</p>
-              <h3 className="mt-1 text-xl font-bold tracking-tight text-[#1a1a1a]">Select your university</h3>
-            </div>
-
-            <div className="p-4 max-h-80 overflow-y-auto">
-              <div className="grid gap-2">
-                {UNIVERSITIES.map((u) => (
-                  <button
-                    key={u.uid}
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        const res = await fetch('/api/set-user-university', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                          body: JSON.stringify({ universityUid: u.uid }),
-                        });
-                        const j = await res.json();
-                        if (res.ok) {
-                          addToast('University saved', 'success');
-                        } else {
-                          addToast(j.message || 'Failed to save university', 'error');
-                        }
-                      } catch (err) {
-                        addToast('Network error', 'error');
-                      } finally {
-                        setShowUniversityModal(false);
-                        router.replace('/verify-otp');
-                      }
-                    }}
-                    className="w-full text-left px-3 py-2 border border-[#eaeaea] hover:border-[#BA5B55]"
-                  >
-                    {u.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 border-t border-[#eef0f3] bg-white px-6 py-4">
-              <button type="button" onClick={() => { setShowUniversityModal(false); router.replace('/verify-otp'); }} className="px-3 py-1 text-xs border border-[#eaeaea] hover:bg-gray-50 text-[#787878]">Skip</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="flex items-center gap-2 px-3 py-2 border border-[#787878] focus-within:border-[#BA5B55]">
         <User color="#787878" size={20} stroke={1.5} className="min-w-4.5" />
@@ -157,6 +106,22 @@ const RegisterForm = ({ email }: RegisterFormProps) => {
           required
           className="w-full bg-white text-sm outline-none placeholder:text-[#787878]"
         />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="universityUid" className="text-xs font-medium text-[#787878]">University</label>
+        <select
+          id="universityUid"
+          name="universityUid"
+          required
+          defaultValue=""
+          className="w-full px-3 py-2 border border-[#787878] bg-white text-sm outline-none focus:border-[#BA5B55]"
+        >
+          <option value="" disabled>Select your university</option>
+          {UNIVERSITIES.map((u) => (
+            <option key={u.uid} value={u.uid}>{u.name}</option>
+          ))}
+        </select>
       </div>
 
       <div className="flex items-center gap-2 px-3 py-2 border border-[#787878] focus-within:border-[#BA5B55]">

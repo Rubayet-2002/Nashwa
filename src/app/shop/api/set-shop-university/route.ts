@@ -34,16 +34,16 @@ export async function POST(request: Request) {
 
     await pool.query(
       `INSERT INTO shop_join_university (shop_uid, university_uid, sid_pdf_url, status)
-       VALUES ($1, $2, NULL, 'pending')
+       VALUES ($1, $2, $3, 'pending')
        ON CONFLICT (shop_uid) DO UPDATE SET university_uid = EXCLUDED.university_uid, sid_pdf_url = EXCLUDED.sid_pdf_url, status = 'pending'`,
-      [shopUid, university.uid],
+      [shopUid, university.uid, ''],
     );
 
     await pool.query("COMMIT");
     return NextResponse.json({ success: true, universityName: university.name });
   } catch (error) {
-    await pool.query("ROLLBACK");
-    console.error("set-shop-university error:", error);
+    try { await pool.query("ROLLBACK"); } catch (e) {}
+    console.error("set-shop-university error:", error instanceof Error ? error.message : error, error instanceof Error ? error.stack : null);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }

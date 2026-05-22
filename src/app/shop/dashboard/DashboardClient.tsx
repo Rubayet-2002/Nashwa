@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useToastStore } from "@/zustand/toastStore";
@@ -22,6 +22,8 @@ import {
   Cog,
   ListCheck
 } from "@mynaui/icons-react";
+
+import { UNIVERSITIES as UNI_LIST } from "@/app/shop/lib/universities";
 
 interface DashboardClientProps {
   shop: {
@@ -65,7 +67,13 @@ export default function DashboardClient({ shop, user, products = [] }: Dashboard
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [showAssignUniversity, setShowAssignUniversity] = useState(false);
   const [selectedUniversityUid, setSelectedUniversityUid] = useState("");
-  const UNIVERSITIES = require("../lib/universities").UNIVERSITIES as { uid: string; name: string }[];
+
+  // Auto-open the assign-university modal for shops missing university
+  useEffect(() => {
+    if (!shop.university_name) {
+      setShowAssignUniversity(true);
+    }
+  }, [shop.university_name]);
 
   const handleSwitchToCustomer = () => {
     startTransition(async () => {
@@ -305,7 +313,7 @@ export default function DashboardClient({ shop, user, products = [] }: Dashboard
 
             <div className="p-4 max-h-80 overflow-y-auto">
               <div className="grid gap-2">
-                {UNIVERSITIES.map((u) => (
+                {UNI_LIST.map((u) => (
                   <button
                     key={u.uid}
                     type="button"
@@ -364,6 +372,14 @@ export default function DashboardClient({ shop, user, products = [] }: Dashboard
             <Refresh size={14} />
             <span>Switch to Customer</span>
           </button>
+          {!shop.university_name && (
+            <button
+              onClick={() => setShowAssignUniversity(true)}
+              className="ml-3 flex items-center gap-2 px-3.5 py-1.5 border border-[#eaeaea] hover:border-[#BA5B55] hover:text-[#BA5B55] text-xs font-medium text-[#787878] transition-all bg-white cursor-pointer"
+            >
+              <span>Set University</span>
+            </button>
+          )}
         </header>
 
         {/* Dashboard Content Area */}

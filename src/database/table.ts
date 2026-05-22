@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(20) DEFAULT NULL,
+    university_uid VARCHAR(50) DEFAULT NULL,
     role VARCHAR(20) DEFAULT 'customer' CHECK (role IN ('customer', 'seller', 'admin')),
 
     auth_type VARCHAR(20) DEFAULT 'local' CHECK (auth_type IN ('local', 'google')),

@@ -7,3 +7,8 @@ cover photo upload
 FOR user
 profile picture
 I can upload and edit them
+
+
+new task
+university wise filtering 
+done - when creating a shop you need to enter you university

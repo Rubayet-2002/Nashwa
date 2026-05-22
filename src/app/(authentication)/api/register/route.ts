@@ -4,6 +4,7 @@ import pool from "@/database/pool";
 import bcrypt from "bcryptjs";
 import { sendAndSaveOTP } from "../../lib/sendAndSaveOTP";
 import { issueJWT, setTokenCookie } from "../../lib/jwtUtils";
+import { getUniversityByUid } from "@/app/shop/lib/universities";
 
 export async function POST(request: Request) {
   const client = await pool.connect();
@@ -22,16 +23,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: validation.error.issues[0].message }, { status: 400 });
     }
 
-    const { username, email, password } = validation.data;
+    const { username, email, password, universityUid } = validation.data;
     const uid = crypto.randomUUID();
     const hashedPassword = await bcrypt.hash(password, 12);
+    const university = getUniversityByUid(universityUid);
+
+    if (!university) {
+      return NextResponse.json({ message: "Please select a valid university." }, { status: 400 });
+    }
 
     await client.query("BEGIN");
     transactionActive = true;
 
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS university_uid VARCHAR(50)`);
+
     await client.query(
-      `INSERT INTO users (uid, username, email, password_hash) VALUES ($1, $2, $3, $4)`,
-      [uid, username, email, hashedPassword],
+      `INSERT INTO partner_university (university_uid, university_name)
+       VALUES ($1, $2)
+       ON CONFLICT (university_uid) DO UPDATE SET university_name = EXCLUDED.university_name`,
+      [university.uid, university.name],
+    );
+
+    await client.query(
+      `INSERT INTO users (uid, username, email, password_hash, university_uid) VALUES ($1, $2, $3, $4, $5)`,
+      [uid, username, email, hashedPassword, university.uid],
     );
 
     await client.query("COMMIT");

@@ -32,6 +32,13 @@ export async function POST(request: Request) {
       [university.uid, university.name],
     );
 
+    // Ensure users.university_uid column exists (for older DBs)
+    try {
+      await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS university_uid VARCHAR(50)`);
+    } catch (e) {
+      // ignore - if this fails, the subsequent update will surface an error
+    }
+
     // Update the user row by email from token payload
     await pool.query(`UPDATE users SET university_uid = $1 WHERE email = $2`, [university.uid, payload.email]);
 

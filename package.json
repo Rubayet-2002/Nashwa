@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "db": "tsx src/database/database.ts",
+    "db:migrate": "tsx src/database/migrations/001_add_user_university.ts",
     "ddb": "tsx src/database/dropDB.ts",
     "sa": "tsx src/database/seedAdmin.ts",
     "dev": "next dev",

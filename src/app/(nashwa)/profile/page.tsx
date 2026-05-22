@@ -6,6 +6,7 @@ import LogoutButton from "./logout/LogoutButton";
 import DeleteAccountButton from "./deleteAccount/DeleteAccountButton";
 import ShopListItem from "./lib/ShopListItem";
 import ProfilePhotoEditor from "./ProfilePhotoEditor";
+import CustomerUniversityPopup from "./CustomerUniversityPopup";
 import {
   CalendarArrowDown,
   CogFour,
@@ -25,9 +26,12 @@ const ProfilePage = async () => {
   if (!userData) {
     redirect("/email");
   }
+  const showCustomerUniversityPopup = !userData.university_uid;
   const hasShops = userData.shops && userData.shops.length > 0;
   return (
     
+    <>
+    <CustomerUniversityPopup show={showCustomerUniversityPopup} />
     <div className="flex w-full gap-5 h-full overflow-hidden">
       {/* left section */}
       <div className="w-95 shrink-0 flex flex-col justify-between overflow-hidden gap-4 overflow-y-auto custom-scrollbar">
@@ -112,6 +116,13 @@ const ProfilePage = async () => {
             <Mail stroke={1.5} size={16} />
             <p className="leading-none mb-0.5">{userData.email}</p>
           </div>
+
+          {userData.university_name && (
+            <div className="flex justify-center items-center gap-3 text-[#787878] text-sm">
+              <Store stroke={1.5} size={16} />
+              <p className="leading-none mb-0.5">{userData.university_name}</p>
+            </div>
+          )}
 
           {userData.phone && (
             <div className="flex justify-center items-center gap-3 text-[#787878] text-sm">
@@ -214,6 +225,7 @@ const ProfilePage = async () => {
         <div className="flex-1 flex flex-col bg-white overflow-hidden min-w-0"></div>
       </div>
     </div>
+    </>
   );
 };
 

@@ -2,11 +2,15 @@ import Image from "next/image";
 import Link from "next/link";
 import pool from "@/database/pool";
 import { Store, Pin } from "@mynaui/icons-react";
+import { authMe } from "@/app/(authentication)/lib/authMe";
+import ProductFeedCard, { FeedProduct } from "./component/ProductFeedCard";
 
 export const dynamic = "force-dynamic";
 
 const Homepage = async () => {
+  const { user } = await authMe();
   let shops: any[] = [];
+  let products: FeedProduct[] = [];
   try {
     const shopsRes = await pool.query(
       `SELECT s.shop_uid, s.owner_uid, s.shop_name, s.shop_location, s.shop_description,
@@ -18,8 +22,95 @@ const Homepage = async () => {
        ORDER BY pu.university_name ASC NULLS LAST, s.created_at DESC`
     );
     shops = shopsRes.rows;
+
+    const productsRes = await pool.query(
+      `SELECT p.product_uid, p.title, p.description, p.price, p.currency,
+              (
+                SELECT pi.image_url
+                FROM product_image pi
+                WHERE pi.product_uid = p.product_uid
+                ORDER BY pi.position ASC, pi.id ASC
+                LIMIT 1
+              ) AS image_url,
+              s.shop_uid, s.shop_name, s.shop_location, pu.university_name AS shop_university_name
+       FROM product p
+       JOIN shop s ON s.shop_uid = p.shop_uid
+       LEFT JOIN shop_join_university sju ON sju.shop_uid = s.shop_uid
+       LEFT JOIN partner_university pu ON pu.university_uid = sju.university_uid
+       WHERE s.status = 'approved'
+       ORDER BY p.created_at DESC
+       LIMIT 20`
+    );
+    products = productsRes.rows;
   } catch (error) {
     console.error("Error fetching approved shops:", error);
+  }
+
+  if (user) {
+    return (
+      <div className="flex-1 min-h-0 overflow-y-auto bg-[#f6f4f2] px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto grid w-full max-w-[1500px] gap-6 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
+          <aside className="space-y-4">
+            <div className="rounded-3xl border border-[#eadfdb] bg-white p-5 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#BA5B55]">Top Shops</p>
+              <h2 className="mt-2 text-2xl font-semibold text-[#1a1a1a]">Campus favorites</h2>
+              <p className="mt-2 text-sm leading-relaxed text-[#6f6f6f]">
+                Shops sorted by university first so your campus network stays at the top.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {shops.slice(0, 6).map((shop) => (
+                <Link
+                  key={shop.shop_uid}
+                  href={`/shop/profile/${shop.shop_uid}`}
+                  className="flex gap-3 rounded-2xl border border-[#e8e1df] bg-white p-3 shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-[#f3f4f6]">
+                    {shop.profile_photo_url ? (
+                      <Image src={shop.profile_photo_url} alt={shop.shop_name} fill className="object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-[#BA5B55]">
+                        <Store size={18} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="truncate text-sm font-semibold text-[#1a1a1a]">{shop.shop_name}</h3>
+                    </div>
+                    {shop.university_name && (
+                      <p className="mt-0.5 truncate text-[11px] uppercase tracking-[0.18em] text-[#BA5B55]">{shop.university_name}</p>
+                    )}
+                    <p className="mt-1 truncate text-xs text-[#7f7f7f]">{shop.shop_location}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </aside>
+
+          <main className="min-w-0 space-y-4">
+            <div className="rounded-3xl border border-[#eadfdb] bg-white p-5 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#BA5B55]">Feed</p>
+              <h1 className="mt-2 text-3xl font-semibold text-[#1a1a1a]">Fresh products from shops you follow</h1>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[#6f6f6f]">
+                React, comment, and jump into a shop profile like a social feed. Feast and events are skipped for now.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {products.length === 0 ? (
+                <div className="rounded-3xl border border-[#e8e1df] bg-white p-10 text-center text-sm text-[#7f7f7f] shadow-sm">
+                  No products published yet.
+                </div>
+              ) : (
+                products.map((product) => <ProductFeedCard key={product.product_uid} product={product} />)
+              )}
+            </div>
+          </main>
+        </div>
+      </div>
+    );
   }
 
   return (
