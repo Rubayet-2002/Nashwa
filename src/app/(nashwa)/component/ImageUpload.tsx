@@ -148,6 +148,7 @@ export default function ImageUpload({
             <div key={p} className="relative w-24 h-24 rounded-sm overflow-hidden border border-[#eaeaea]">
               <img src={p} alt={`preview-${i}`} className="object-cover w-full h-full" />
               <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); handleRemove(i); }}
                 className="absolute top-1 right-1 bg-white/90 rounded-full p-0.5 text-xs border"
                 title="Remove"
@@ -161,6 +162,7 @@ export default function ImageUpload({
 
       <div className="flex gap-2 mt-2">
         <button
+          type="button"
           onClick={handleUpload}
           disabled={files.length === 0 || isUploading}
           className="px-3 py-2 text-sm bg-[#BA5B55] border border-[#BA5B55] hover:bg-white hover:text-[#BA5B55] text-white disabled:opacity-70"

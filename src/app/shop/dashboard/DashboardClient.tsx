@@ -40,9 +40,17 @@ interface DashboardClientProps {
   user: {
     username: string;
   };
+  products: Array<{
+    product_uid: string;
+    title: string;
+    description: string | null;
+    price: string;
+    currency: string;
+    image_url: string | null;
+  }>;
 }
 
-export default function DashboardClient({ shop, user }: DashboardClientProps) {
+export default function DashboardClient({ shop, user, products = [] }: DashboardClientProps) {
   const router = useRouter();
   const addToast = useToastStore((s) => s.addToast);
   const { setActiveShop } = useAuthStore();
@@ -300,7 +308,7 @@ export default function DashboardClient({ shop, user }: DashboardClientProps) {
               </div>
               <div>
                 <p className="text-xs text-[#787878] font-light uppercase tracking-wider">Total Products</p>
-                <h3 className="text-2xl font-bold mt-0.5">0</h3>
+                <h3 className="text-2xl font-bold mt-0.5">{products.length}</h3>
               </div>
             </div>
 
@@ -350,14 +358,41 @@ export default function DashboardClient({ shop, user }: DashboardClientProps) {
             {/* Recent Products / Activity Placeholder */}
             <div className="xl:col-span-2 bg-white border border-[#eef0f3] p-5 shadow-sm flex flex-col gap-4 min-h-62.5">
               <h3 className="text-sm font-semibold text-[#1a1a1a]">Recent Products</h3>
-              
-              <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
-                <Package stroke={1} size={40} className="text-[#787878]/30 mb-2" />
-                <p className="text-xs text-[#787878] font-light">No products uploaded yet.</p>
-                <button className="text-xs text-[#BA5B55] font-medium hover:underline mt-1">
-                  Upload your first product
-                </button>
-              </div>
+
+              {products.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {products.map((product) => (
+                    <div key={product.product_uid} className="flex gap-3 border border-[#eef0f3] bg-[#fcfcfd] p-3">
+                      <div className="h-20 w-20 shrink-0 overflow-hidden border border-[#eaeaea] bg-white">
+                        {product.image_url ? (
+                          <img src={product.image_url} alt={product.title} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-[#787878]/30">
+                            <Package size={22} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-[#1a1a1a] truncate">{product.title}</p>
+                        <p className="mt-1 text-xs text-[#787878] line-clamp-2">
+                          {product.description || "No description added."}
+                        </p>
+                        <p className="mt-2 text-xs font-medium text-[#BA5B55]">
+                          {product.currency} {Number(product.price).toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
+                  <Package stroke={1} size={40} className="text-[#787878]/30 mb-2" />
+                  <p className="text-xs text-[#787878] font-light">No products uploaded yet.</p>
+                  <button onClick={() => setIsAddProductOpen(true)} className="text-xs text-[#BA5B55] font-medium hover:underline mt-1">
+                    Upload your first product
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

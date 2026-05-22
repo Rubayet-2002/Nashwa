@@ -3,6 +3,7 @@ import pool from "@/database/pool";
 import { authMe } from "@/app/(authentication)/lib/authMe";
 
 export async function POST(request: Request) {
+  const client = await pool.connect();
   try {
     if (request.headers.get("x-requested-with") !== "XMLHttpRequest") {
       return NextResponse.json({ message: "Security check failed." }, { status: 403 });
@@ -24,26 +25,28 @@ export async function POST(request: Request) {
 
     const productUid = crypto.randomUUID();
 
-    await pool.query("BEGIN");
-    await pool.query(
+    await client.query("BEGIN");
+    await client.query(
       `INSERT INTO product (product_uid, shop_uid, title, description, price, currency) VALUES ($1,$2,$3,$4,$5,$6)`,
       [productUid, shopUid, title, description || null, price, currency || 'BDT'],
     );
 
     let pos = 0;
     for (const img of images) {
-      await pool.query(
+      await client.query(
         `INSERT INTO product_image (product_uid, image_url, position) VALUES ($1,$2,$3)`,
         [productUid, img, pos++],
       );
     }
 
-    await pool.query("COMMIT");
+    await client.query("COMMIT");
 
     return NextResponse.json({ success: true, message: "Product created", productUid });
   } catch (error) {
-    await pool.query("ROLLBACK");
+    await client.query("ROLLBACK");
     console.error("create-product error:", error);
     return NextResponse.json({ message: "Failed to create product" }, { status: 500 });
+  } finally {
+    client.release();
   }
 }
