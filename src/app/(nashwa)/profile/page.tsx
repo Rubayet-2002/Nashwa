@@ -6,6 +6,7 @@ import userPP from "@/image/userProfile.png";
 import LogoutButton from "./logout/LogoutButton";
 import DeleteAccountButton from "./deleteAccount/DeleteAccountButton";
 import ShopListItem from "./lib/ShopListItem";
+import ProfilePhotoEditor from "./ProfilePhotoEditor";
 import {
   CalendarArrowDown,
   CogFour,
@@ -41,10 +42,12 @@ const ProfilePage = async () => {
             />
           </div>
 
-          <button className="flex items-center cursor-pointer hover:bg-[rgba(40,37,37,0.69)] justify-center px-3 py-1.5 gap-1 bg-[rgba(103,101,101,0.56)] rounded-xl text-white text-xs">
-            <ImageRectangle size={18} stroke={1.5} />
-            <p className="leading-none mt-px">Change photo</p>
-          </button>
+          {/* Profile photo upload */}
+          {/* Client component handles upload and refresh */}
+          <div className="w-full flex justify-center">
+            {/* @ts-expect-error Server component importing client */}
+            <ProfilePhotoEditor />
+          </div>
 
           <p className="leading-none font-medium text-[#4f4f4f]">
             {userData.username}

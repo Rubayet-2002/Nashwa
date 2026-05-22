@@ -2,6 +2,8 @@ import pool from "./pool";
 import {
   Users,
   Shop,
+  Product,
+  ProductImage,
   PartnerUniversity,
   ShopJoinUniversity,
   OTP,
@@ -18,6 +20,8 @@ async function createTable() {
 
     await client.query(Users);
     await client.query(Shop);
+    await client.query(Product);
+    await client.query(ProductImage);
     await client.query(PartnerUniversity);
     await client.query(ShopJoinUniversity);
     await client.query(OTP);

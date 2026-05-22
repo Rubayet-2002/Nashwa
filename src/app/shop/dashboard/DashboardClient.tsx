@@ -8,6 +8,8 @@ import shopProfile from "@/image/shopProfile.png";
 import { useToastStore } from "@/zustand/toastStore";
 import { useAuthStore } from "@/zustand/authStore";
 import { updateShopBio, updateShopInfo } from "./actions";
+import ImageUpload from "../../(nashwa)/component/ImageUpload";
+import AddProductModal from "./AddProductModal";
 import {
   Mail,
   Telephone,
@@ -51,6 +53,7 @@ export default function DashboardClient({ shop, user }: DashboardClientProps) {
   const [infoEmail, setInfoEmail] = useState(shop.shop_email);
   const [infoPhone, setInfoPhone] = useState(shop.shop_phone);
   const [infoLocation, setInfoLocation] = useState(shop.shop_location);
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
 
   const handleSwitchToCustomer = () => {
     startTransition(async () => {
@@ -121,7 +124,7 @@ export default function DashboardClient({ shop, user }: DashboardClientProps) {
             <div className="absolute inset-0 bg-black/10" />
           </div>
 
-          <div className="px-5 pb-4 relative flex flex-col items-center">
+            <div className="px-5 pb-4 relative flex flex-col items-center">
             {/* Profile image overlapping cover */}
             <div className="w-24 h-24 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden -mt-12 flex justify-center items-center">
               <Image
@@ -135,6 +138,26 @@ export default function DashboardClient({ shop, user }: DashboardClientProps) {
             <p className="text-xs text-[#787878] font-light mt-0.5">
               Owned by <span className="font-medium text-[#1a1a1a]">{user.username}</span>
             </p>
+            <div className="mt-3 w-full flex justify-center gap-4">
+              <div>
+                <ImageUpload
+                  label="Change cover"
+                  folder="nashwa_shop_covers"
+                  saveEndpoint="/shop/api/update-cover"
+                  extraBody={{ shopUid: shop.shop_uid }}
+                  onUploaded={() => location.reload()}
+                />
+              </div>
+              <div>
+                <ImageUpload
+                  label="Change profile"
+                  folder="nashwa_shop_profiles"
+                  saveEndpoint="/shop/api/update-profile"
+                  extraBody={{ shopUid: shop.shop_uid }}
+                  onUploaded={() => location.reload()}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -296,7 +319,7 @@ export default function DashboardClient({ shop, user }: DashboardClientProps) {
             <div className="xl:col-span-1 bg-white border border-[#eef0f3] p-5 shadow-sm flex flex-col gap-4">
               <h3 className="text-sm font-semibold text-[#1a1a1a]">Quick Actions</h3>
               <div className="flex flex-col gap-2">
-                <button className="flex items-center gap-2.5 p-3 border border-[#eaeaea] hover:border-[#BA5B55] hover:text-[#BA5B55] transition-all text-xs font-medium text-left bg-white">
+                <button onClick={() => setIsAddProductOpen(true)} className="flex items-center gap-2.5 p-3 border border-[#eaeaea] hover:border-[#BA5B55] hover:text-[#BA5B55] transition-all text-xs font-medium text-left bg-white">
                   <PlusCircle size={16} className="text-[#BA5B55]" />
                   Add New Product
                 </button>
@@ -395,6 +418,13 @@ export default function DashboardClient({ shop, user }: DashboardClientProps) {
             </form>
           </div>
         </div>
+      )}
+      {isAddProductOpen && (
+        <AddProductModal
+          shopUid={shop.shop_uid}
+          onClose={() => setIsAddProductOpen(false)}
+          onCreated={() => location.reload()}
+        />
       )}
     </div>
   );

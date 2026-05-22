@@ -53,6 +53,29 @@ CREATE TABLE IF NOT EXISTS shop (
 );
 `;
 
+export const Product = `
+CREATE TABLE IF NOT EXISTS product (
+    product_uid VARCHAR(50) PRIMARY KEY,
+    shop_uid VARCHAR(50) REFERENCES shop(shop_uid) ON DELETE CASCADE,
+
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    price NUMERIC(12,2) NOT NULL DEFAULT 0,
+    currency VARCHAR(10) DEFAULT 'BDT',
+
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+`;
+
+export const ProductImage = `
+CREATE TABLE IF NOT EXISTS product_image (
+    id SERIAL PRIMARY KEY,
+    product_uid VARCHAR(50) REFERENCES product(product_uid) ON DELETE CASCADE,
+    image_url TEXT NOT NULL,
+    position INT DEFAULT 0
+);
+`;
+
 
 export const PartnerUniversity = `
 CREATE TABLE IF NOT EXISTS partner_university(
