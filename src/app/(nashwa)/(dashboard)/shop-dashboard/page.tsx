@@ -36,9 +36,9 @@ const ShopDashboard = async () => {
       <aside className="w-90 shrink-0 flex flex-col bg-white overflow-hidden">
         <div className="flex flex-col items-center gap-2 p-4 border-b border-gray-100">
           <div className="relative h-24 w-24 shadow-sm overflow-hidden bg-[#f0f2f4] flex items-center justify-center">
-            {user.avatar_url ? (
+            {user.profile_photo_url ? (
               <Image
-                src={user.avatar_url}
+                src={user.profile_photo_url}
                 alt={user.username ?? "Avatar"}
                 fill
                 className="object-cover"

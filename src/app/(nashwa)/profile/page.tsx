@@ -34,12 +34,24 @@ const ProfilePage = async () => {
       <div className="w-95 shrink-0 flex flex-col justify-between overflow-hidden gap-4 overflow-y-auto custom-scrollbar">
         {/* profile photo */}
         <div className="flex flex-col justify-center items-center gap-3 bg-[#ffffff] p-3">
-          <div className="relative p-1 border-4 w-22 h-22 flex justify-center items-center rounded-full border-[rgba(103,101,101,0.56)] cursor-pointer hover:border-[rgba(40,37,37,0.69)]  bg-white">
-            <Image
-              src={userPP}
-              alt="profile"
-              className="object-cover rounded-full"
-            />
+          <div className="relative p-1 border-4 w-24 h-24 flex justify-center items-center rounded-full border-[rgba(103,101,101,0.56)] cursor-pointer hover:border-[rgba(40,37,37,0.69)] bg-white">
+            <div className="relative w-full h-full rounded-full overflow-hidden">
+              {userData.profile_photo_url ? (
+                <Image
+                  src={userData.profile_photo_url}
+                  alt={userData.username ?? 'profile'}
+                  fill
+                  className="object-cover rounded-full"
+                />
+              ) : (
+                <Image
+                  src={userPP}
+                  alt="profile"
+                  fill
+                  className="object-cover rounded-full"
+                />
+              )}
+            </div>
           </div>
 
           {/* Profile photo upload */}

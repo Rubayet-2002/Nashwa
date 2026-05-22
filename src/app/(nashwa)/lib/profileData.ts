@@ -7,7 +7,7 @@ export const profileData = async () => {
     if (!authUser) return null;
 
     const result = await pool.query(
-      `SELECT username, email, phone, role, avatar_url, created_at FROM users WHERE uid = $1`,
+      `SELECT username, email, phone, role, profile_photo_url, created_at FROM users WHERE uid = $1`,
       [authUser.uid],
     );
 
@@ -20,7 +20,7 @@ export const profileData = async () => {
       email: user.email,
       phone: user.phone,
       role: user.role,
-      avatar_url: user.avatar_url ?? null,
+      profile_photo_url: user.profile_photo_url ?? null,
       joinedAt: new Date(user.created_at).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",

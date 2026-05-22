@@ -8,7 +8,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const { user } = await authMe();
     if (!user) {
@@ -21,11 +21,16 @@ export async function POST() {
       return NextResponse.json({ message: 'Cloudinary not configured' }, { status: 500 });
     }
 
+    const body = await request.json().catch(() => ({}));
+    const requestedFolder = (body && body.folder) || 'nashwa_uploads';
+
     const timestamp = Math.round(Date.now() / 1000);
     const publicId = `${user.uid}_${timestamp}`;
 
+    console.log('get-cloudinary-signature-image: signing for folder', requestedFolder);
+
     const signature = cloudinary.utils.api_sign_request(
-      { timestamp, folder: "nashwa_uploads" },
+      { timestamp, folder: requestedFolder, public_id: publicId },
       process.env.CLOUDINARY_API_SECRET!,
     );
 
@@ -37,6 +42,7 @@ export async function POST() {
       cloudName: process.env.CLOUDINARY_CLOUD_NAME,
       apiKey: process.env.CLOUDINARY_API_KEY,
       publicId,
+      folder: requestedFolder,
     });
   } catch (err) {
     console.error('get-cloudinary-signature-image error', err);

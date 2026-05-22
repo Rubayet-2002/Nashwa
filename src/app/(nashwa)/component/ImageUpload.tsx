@@ -44,7 +44,11 @@ export default function ImageUpload({
     if (files.length === 0) return;
     setUploading(true);
     try {
-      const sigRes = await fetch("/api/get-cloudinary-signature-image", { method: "POST" });
+      const sigRes = await fetch("/api/get-cloudinary-signature-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folder }),
+      });
       if (!sigRes.ok) {
         const err = await sigRes.json().catch(() => ({ message: 'Signature request failed' }));
         throw new Error(err.message || 'Failed to get signature');
@@ -61,6 +65,7 @@ export default function ImageUpload({
       for (const file of files) {
         const body = new FormData();
         body.append("file", file);
+        if (publicId) body.append("public_id", publicId);
         body.append("signature", signature);
         body.append("timestamp", timestamp);
         body.append("api_key", apiKey);
