@@ -63,6 +63,9 @@ export default function DashboardClient({ shop, user, products = [] }: Dashboard
   const [infoPhone, setInfoPhone] = useState(shop.shop_phone);
   const [infoLocation, setInfoLocation] = useState(shop.shop_location);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [showAssignUniversity, setShowAssignUniversity] = useState(false);
+  const [selectedUniversityUid, setSelectedUniversityUid] = useState("");
+  const UNIVERSITIES = require("../lib/universities").UNIVERSITIES as { uid: string; name: string }[];
 
   const handleSwitchToCustomer = () => {
     startTransition(async () => {
@@ -289,6 +292,57 @@ export default function DashboardClient({ shop, user, products = [] }: Dashboard
           </div>
         </div>
       </aside>
+
+      {/* Shop university assignment modal for older shops without university */}
+      {(!shop.university_name || shop.university_name === null) && showAssignUniversity && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowAssignUniversity(false)} />
+          <div className="relative z-10 w-full max-w-md overflow-hidden border border-[#eef0f3] bg-white shadow-2xl rounded-sm">
+            <div className="border-b border-[#eef0f3] px-6 py-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#BA5B55]">University</p>
+              <h3 className="mt-1 text-xl font-bold tracking-tight text-[#1a1a1a]">Select your university</h3>
+            </div>
+
+            <div className="p-4 max-h-80 overflow-y-auto">
+              <div className="grid gap-2">
+                {UNIVERSITIES.map((u) => (
+                  <button
+                    key={u.uid}
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/shop/api/set-shop-university', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                          body: JSON.stringify({ shopUid: shop.shop_uid, universityUid: u.uid }),
+                        });
+                        const j = await res.json();
+                        if (res.ok) {
+                          addToast('University assigned', 'success');
+                          router.refresh();
+                        } else {
+                          addToast(j.message || 'Failed to assign university', 'error');
+                        }
+                      } catch (err) {
+                        addToast('Network error', 'error');
+                      } finally {
+                        setShowAssignUniversity(false);
+                      }
+                    }}
+                    className="w-full text-left px-3 py-2 border border-[#eaeaea] hover:border-[#BA5B55]"
+                  >
+                    {u.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-[#eef0f3] bg-white px-6 py-4">
+              <button type="button" onClick={() => setShowAssignUniversity(false)} className="px-3 py-1 text-xs border border-[#eaeaea] hover:bg-gray-50 text-[#787878]">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* RIGHT COLUMN: Navbar & Dashboard Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
