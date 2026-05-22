@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { profileData } from "./lib/ProfileData";
 import { redirect } from "next/navigation";
-import userPP from "@/image/userProfile.png";
 import LogoutButton from "./logout/LogoutButton";
 import DeleteAccountButton from "./deleteAccount/DeleteAccountButton";
 import ShopListItem from "./lib/ShopListItem";
@@ -34,30 +33,34 @@ const ProfilePage = async () => {
       <div className="w-95 shrink-0 flex flex-col justify-between overflow-hidden gap-4 overflow-y-auto custom-scrollbar">
         {/* profile photo */}
         <div className="flex flex-col justify-center items-center gap-3 bg-[#ffffff] p-3">
-          <div className="relative p-1 border-4 w-24 h-24 flex justify-center items-center rounded-full border-[rgba(103,101,101,0.56)] cursor-pointer hover:border-[rgba(40,37,37,0.69)] bg-white">
-            <div className="relative w-full h-full rounded-full overflow-hidden">
-              {userData.profile_photo_url ? (
+          {userData.profile_photo_url ? (
+            <div className="relative p-1 border-4 w-24 h-24 flex justify-center items-center rounded-full border-[rgba(103,101,101,0.56)] cursor-pointer hover:border-[rgba(40,37,37,0.69)] bg-white">
+              <div className="relative w-full h-full rounded-full overflow-hidden">
                 <Image
                   src={userData.profile_photo_url}
-                  alt={userData.username ?? 'profile'}
+                  alt={userData.username ?? "profile"}
                   fill
                   className="object-cover rounded-full"
                 />
-              ) : (
-                <Image
-                  src={userPP}
-                  alt="profile"
-                  fill
-                  className="object-cover rounded-full"
-                />
-              )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="w-full rounded-sm border border-dashed border-[#d9d9d9] bg-[#fcfcfd] px-4 py-5 flex flex-col items-center justify-center gap-3 text-center">
+              <div className="w-24 h-24 rounded-full border-4 border-[#eaeaea] bg-white flex items-center justify-center text-[#BA5B55] overflow-hidden">
+                <span className="text-xs font-medium uppercase tracking-[0.2em]">New</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-[#1a1a1a]">Add your profile photo</p>
+                <p className="text-xs text-[#787878] mt-1">
+                  Upload a photo so your account looks complete.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Profile photo upload */}
           {/* Client component handles upload and refresh */}
           <div className="w-full flex justify-center">
-            {/* @ts-expect-error Server component importing client */}
             <ProfilePhotoEditor />
           </div>
 

@@ -14,10 +14,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const { nidPdfUrl } = await request.json();
-    if (!nidPdfUrl) {
+    const { nidPdfUrl, coverPhotoUrl, profilePhotoUrl } = await request.json();
+    if (!nidPdfUrl || !coverPhotoUrl || !profilePhotoUrl) {
       return NextResponse.json(
-        { message: "NID document is required." },
+        { message: "Cover photo, profile photo, and NID document are required." },
         { status: 400 },
       );
     }
@@ -75,8 +75,8 @@ export async function POST(request: Request) {
     await pool.query(
       `INSERT INTO shop (
         shop_uid, owner_uid, shop_name, shop_email, shop_phone,
-        shop_location, shop_description, nid_pdf_url, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')`,
+        shop_location, shop_description, cover_photo_url, profile_photo_url, nid_pdf_url, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending')`,
       [
         shop_uid,
         user.uid,
@@ -85,6 +85,8 @@ export async function POST(request: Request) {
         payload.shopPhone,
         payload.location,
         payload.description,
+        coverPhotoUrl,
+        profilePhotoUrl,
         nidPdfUrl,
       ],
     );

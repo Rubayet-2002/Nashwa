@@ -4,12 +4,15 @@ import { ArrowLeft, FileText, Store } from "@mynaui/icons-react";
 import { useActionState, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToastStore } from "@/zustand/toastStore";
+import ImageUpload from "@/app/(nashwa)/component/ImageUpload";
 import { getCloudinarySignature } from "../lib/cloudinary.config";
 import { prevStepAction } from "../lib/utils";
 
 const Step3Form = () => {
   const router = useRouter();
   const [nidFile, setNidFile] = useState<File | null>(null);
+  const [coverPhotoUrl, setCoverPhotoUrl] = useState<string>("");
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string>("");
   const addToast = useToastStore((s) => s.addToast);
 
   const handleClientAction = async (prevState: any, formData: FormData) => {
@@ -18,6 +21,10 @@ const Step3Form = () => {
     }
 
     try {
+      if (!coverPhotoUrl || !profilePhotoUrl) {
+        return { error: "Please upload both shop cover and profile photos." };
+      }
+
       const signatureData = await getCloudinarySignature();
       const uploadFormData = new FormData();
       uploadFormData.append("file", nidFile);
@@ -42,7 +49,11 @@ const Step3Form = () => {
           "Content-Type": "application/json",
           "X-Requested-With": "XMLHttpRequest",
         },
-        body: JSON.stringify({ nidPdfUrl: uploadData.secure_url }),
+        body: JSON.stringify({
+          nidPdfUrl: uploadData.secure_url,
+          coverPhotoUrl,
+          profilePhotoUrl,
+        }),
       });
 
       const result = await response.json();
@@ -84,6 +95,32 @@ const Step3Form = () => {
   return (
     <form action={action} className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
+        <p className="text-sm leading-none">
+          Upload shop photos before submitting your request
+        </p>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="border border-[#eaeaea] bg-[#fcfcfd] p-3">
+            <ImageUpload
+              label="Shop cover photo"
+              folder="nashwa_shop_covers"
+              onUploaded={(url) => setCoverPhotoUrl(Array.isArray(url) ? url[0] : url)}
+            />
+            {coverPhotoUrl && (
+              <p className="mt-2 text-xs text-[#787878] truncate">Selected: {coverPhotoUrl}</p>
+            )}
+          </div>
+          <div className="border border-[#eaeaea] bg-[#fcfcfd] p-3">
+            <ImageUpload
+              label="Shop profile photo"
+              folder="nashwa_shop_profiles"
+              onUploaded={(url) => setProfilePhotoUrl(Array.isArray(url) ? url[0] : url)}
+            />
+            {profilePhotoUrl && (
+              <p className="mt-2 text-xs text-[#787878] truncate">Selected: {profilePhotoUrl}</p>
+            )}
+          </div>
+        </div>
+
         <p className="text-sm leading-none">
           Please provide your shop location and description
         </p>
