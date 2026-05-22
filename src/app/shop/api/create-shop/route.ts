@@ -4,6 +4,7 @@ import { authMe } from "@/app/(authentication)/lib/authMe";
 import { cookies } from "next/headers";
 import { verifyJWT } from "@/app/(authentication)/lib/jwtUtils";
 import { CreateShopPayload } from "@/app/shop/create-shop/lib/utils";
+import { getUniversityByUid } from "@/app/shop/lib/universities";
 
 export async function POST(request: Request) {
   try {
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
       !payload.shopName ||
       !payload.shopEmail ||
       !payload.shopPhone ||
+      !payload.universityUid ||
       !payload.location ||
       !payload.description
     ) {
@@ -62,6 +64,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const university = getUniversityByUid(payload.universityUid);
+    if (!university) {
+      return NextResponse.json(
+        { message: "Please choose a valid university before submitting." },
+        { status: 400 },
+      );
+    }
+
     if (user.owned_shops && user.owned_shops.length >= 2) {
       return NextResponse.json(
         { message: "Store limit reached (Max 2)." },
@@ -72,6 +82,13 @@ export async function POST(request: Request) {
     const shop_uid = crypto.randomUUID();
 
     await pool.query("BEGIN");
+    await pool.query(
+      `INSERT INTO partner_university (university_uid, university_name)
+       VALUES ($1, $2)
+       ON CONFLICT (university_uid) DO UPDATE
+       SET university_name = EXCLUDED.university_name`,
+      [university.uid, university.name],
+    );
     await pool.query(
       `INSERT INTO shop (
         shop_uid, owner_uid, shop_name, shop_email, shop_phone,
@@ -89,6 +106,16 @@ export async function POST(request: Request) {
         profilePhotoUrl,
         nidPdfUrl,
       ],
+    );
+    await pool.query(
+      `INSERT INTO shop_join_university (
+         shop_uid, university_uid, sid_pdf_url, status
+       ) VALUES ($1, $2, $3, 'pending')
+       ON CONFLICT (shop_uid) DO UPDATE
+       SET university_uid = EXCLUDED.university_uid,
+           sid_pdf_url = EXCLUDED.sid_pdf_url,
+           status = 'pending'`,
+      [shop_uid, university.uid, nidPdfUrl],
     );
     await pool.query("COMMIT");
 

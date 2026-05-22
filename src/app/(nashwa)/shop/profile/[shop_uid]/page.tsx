@@ -2,8 +2,6 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import pool from "@/database/pool";
 import { authMe } from "@/app/(authentication)/lib/authMe";
-import shopCover from "@/image/shopCover.png";
-import shopProfile from "@/image/shopProfile.png";
 import { Mail, Telephone, Pin, User, CalendarArrowDown, Bookmark, ChatMessages, Package } from "@mynaui/icons-react";
 import ShopOrderSystem from "../ShopOrderSystem";
 
@@ -16,16 +14,21 @@ interface ShopProfileProps {
 export default async function ShopProfilePage({ params }: ShopProfileProps) {
   const { shop_uid } = await params;
   const { user } = await authMe();
+  const currentUser = user as
+    | { username: string; email: string; phone?: string | null }
+    | null;
 
   let shop: any = null;
   let products: Array<{ product_uid: string; title: string; description: string | null; price: string; currency: string; image_url: string | null; }> = [];
   try {
     const shopRes = await pool.query(
           `SELECT s.shop_uid, s.owner_uid, s.shop_name, s.shop_email, s.shop_phone, s.shop_location, s.shop_description, s.shop_bio, s.created_at,
-            s.cover_photo_url, s.profile_photo_url,
+            s.cover_photo_url, s.profile_photo_url, pu.university_name,
               u.username as owner_username, u.email as owner_email
        FROM shop s
        JOIN users u ON s.owner_uid = u.uid
+       LEFT JOIN shop_join_university sju ON sju.shop_uid = s.shop_uid
+       LEFT JOIN partner_university pu ON pu.university_uid = sju.university_uid
        WHERE s.shop_uid = $1 AND s.status = 'approved'`,
       [shop_uid]
     );
@@ -80,24 +83,36 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
 
         <div className="bg-white border border-[#eaeaea] shadow-sm relative">
           <div className="h-48 md:h-64 relative bg-[#f3f4f6]">
-            <Image
-              src={shop.cover_photo_url || shopCover}
-              alt={`${shop.shop_name} Cover`}
-              fill
-              className="object-cover"
-            />
+            {shop.cover_photo_url ? (
+              <Image
+                src={shop.cover_photo_url}
+                alt={`${shop.shop_name} Cover`}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#f7f1f0] to-[#eceff3] text-[#BA5B55] text-sm font-medium uppercase tracking-[0.25em]">
+                Shop Cover
+              </div>
+            )}
             <div className="absolute inset-0 bg-black/10" />
           </div>
 
           <div className="px-6 pb-6 pt-0 flex flex-col sm:flex-row sm:items-end sm:gap-6 relative">
 
             <div className="relative -mt-16 sm:-mt-20 w-32 h-32 rounded-full border-4 border-white bg-white shadow-md overflow-hidden flex justify-center items-center shrink-0">
-              <Image
-                src={shop.profile_photo_url || shopProfile}
-                alt={`${shop.shop_name} Profile`}
-                fill
-                className="object-cover"
-              />
+              {shop.profile_photo_url ? (
+                <Image
+                  src={shop.profile_photo_url}
+                  alt={`${shop.shop_name} Profile`}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-[#f1f1f1] text-[#BA5B55] text-xs font-semibold uppercase tracking-[0.2em]">
+                  Shop
+                </div>
+              )}
             </div>
 
             <div className="mt-4 sm:mt-0 flex-1 flex flex-col gap-1">
@@ -140,6 +155,12 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
               <h3 className="text-xs font-semibold text-[#BA5B55] uppercase tracking-wider">About Info</h3>
               
               <div className="flex flex-col gap-3 text-sm text-[#787878]">
+                {shop.university_name && (
+                  <div className="flex items-center gap-3">
+                    <Bookmark size={16} className="text-[#BA5B55] shrink-0" />
+                    <span className="leading-tight">{shop.university_name}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-3">
                   <Pin size={16} className="text-[#BA5B55] shrink-0" />
                   <span className="leading-tight">{shop.shop_location}</span>
@@ -165,7 +186,7 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
               shopUid={shop.shop_uid}
               shopName={shop.shop_name}
               products={products}
-              currentUser={user ? { username: user.username, email: user.email, phone: user.phone } : null}
+              currentUser={currentUser}
             />
           </div>
 

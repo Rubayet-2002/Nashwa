@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import google from "@/image/google.png";
 import { Mail } from "@mynaui/icons-react";
 import { useToastStore } from "@/zustand/toastStore";
 import { emailCheck } from "../lib/inputValidation";
@@ -153,7 +151,7 @@ const EmailForm = () => {
         }
         className="w-full text-sm bg-white hover:text-[#BA5B55] border border-[#23262D] hover:border-[#BA5B55] transition-colors flex items-center justify-center gap-2 py-2.5 text-[#23262D] disabled:text-[#787878] disabled:border-transparent cursor-pointer"
       >
-        <Image src={google} alt="google-logo" className="w-5 h-5" />
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#d1d5db] bg-white text-[10px] font-bold text-[#4285F4]">G</span>
         <p className="leading-none">Continue with Google</p>
       </button>
     </form>

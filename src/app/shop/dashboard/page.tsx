@@ -25,7 +25,13 @@ export default async function ShopDashboardPage() {
   let products: Array<{ product_uid: string; title: string; description: string | null; price: string; currency: string; image_url: string | null; }> = [];
   try {
     const shopRes = await pool.query(
-      "SELECT shop_uid, owner_uid, shop_name, shop_email, shop_phone, shop_location, shop_description, shop_bio, cover_photo_url, profile_photo_url FROM shop WHERE shop_uid = $1",
+      `SELECT s.shop_uid, s.owner_uid, s.shop_name, s.shop_email, s.shop_phone, s.shop_location,
+              s.shop_description, s.shop_bio, s.cover_photo_url, s.profile_photo_url,
+              pu.university_name
+       FROM shop s
+       LEFT JOIN shop_join_university sju ON sju.shop_uid = s.shop_uid
+       LEFT JOIN partner_university pu ON pu.university_uid = sju.university_uid
+       WHERE s.shop_uid = $1`,
       [activeShopUid]
     );
 

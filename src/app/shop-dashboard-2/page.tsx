@@ -1,7 +1,4 @@
 import React from "react";
-import Image from "next/image";
-import cover from "@/image/cover.png";
-import profile from "@/image/profile.png";
 import { Camera } from "@mynaui/icons-react";
 
 const ShopDashboard = () => {
@@ -12,7 +9,7 @@ const ShopDashboard = () => {
         <div className="bg-white relative">
           
           <div className="relative">
-            <Image src={cover} alt="cover" className="w-full" />
+            <div className="h-44 w-full bg-gradient-to-br from-[#f7f1f0] to-[#eceff3]" />
             <button className="flex items-center cursor-pointer hover:bg-[rgba(40,37,37,0.69)] justify-center px-3 py-1.5 gap-1 absolute right-2 bottom-2 bg-[rgba(103,101,101,0.56)] rounded-xl text-white text-xs">
               <Camera size={18} stroke={1.5} />
               <p className="leading-none"> Change photo</p>
@@ -22,12 +19,10 @@ const ShopDashboard = () => {
           <div className="flex justify-start items-center gap-2 p-6 pt-2">
  
             <div className="p-1 border-3 rounded-full border-[#a6a6a6] absolute left-4 bottom-0 bg-white">
-              <Image
-                src={profile}
-                alt="profile"
-                className="w-20 h-20 rounded-full"
-              />
-                          <button className="flex items-center cursor-pointer hover:bg-[rgba(40,37,37,0.69)] justify-center  absolute right-0 w-7 h-7 bottom-0 bg-[rgba(38,34,34,0.56)] rounded-full text-white text-xs">
+              <div className="w-20 h-20 rounded-full bg-[#f1f1f1] flex items-center justify-center text-[#BA5B55] text-xs font-semibold uppercase tracking-[0.2em]">
+                Profile
+              </div>
+              <button className="flex items-center cursor-pointer hover:bg-[rgba(40,37,37,0.69)] justify-center  absolute right-0 w-7 h-7 bottom-0 bg-[rgba(38,34,34,0.56)] rounded-full text-white text-xs">
               <Camera size={18} stroke={1.5} />
             </button>
             </div>

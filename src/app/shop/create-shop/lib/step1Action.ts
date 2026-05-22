@@ -6,23 +6,26 @@ import {
   getCreateShopCookie,
   setCreateShopCookie,
 } from "./utils";
+import { getUniversityByUid } from "../../lib/universities";
 
 export async function Step1Action(prevState: any, formData: FormData) {
   const shopName = (formData.get("shopName") as string)?.trim();
   const shopEmail = (formData.get("shopEmail") as string)?.trim();
   const shopPhone = (formData.get("shopPhone") as string)?.trim();
+  const universityUid = (formData.get("universityUid") as string)?.trim();
+  const university = getUniversityByUid(universityUid);
 
-  if (!shopName || !shopEmail || !shopPhone) {
+  if (!shopName || !shopEmail || !shopPhone || !university) {
     return {
       error: "All fields are required.",
-      values: { shopName, shopEmail, shopPhone },
+      values: { shopName, shopEmail, shopPhone, universityUid },
     };
   }
 
   if (shopPhone.length !== 11) {
     return {
       error: "Phone number must be exactly 11 digits.",
-      values: { shopName, shopEmail, shopPhone },
+      values: { shopName, shopEmail, shopPhone, universityUid },
     };
   }
 
@@ -34,6 +37,8 @@ export async function Step1Action(prevState: any, formData: FormData) {
       shopName,
       shopEmail,
       shopPhone,
+      universityUid,
+      universityName: university.name,
     };
 
     await setCreateShopCookie(newPayload);
@@ -41,7 +46,7 @@ export async function Step1Action(prevState: any, formData: FormData) {
     console.error("Error saving step 1 progress:", error);
     return {
       error: "Failed to save shop information. Please try again.",
-      values: { shopName, shopEmail, shopPhone },
+      values: { shopName, shopEmail, shopPhone, universityUid },
     };
   }
 

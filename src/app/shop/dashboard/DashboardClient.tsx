@@ -3,8 +3,6 @@
 import { useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import shopCover from "@/image/shopCover.png";
-import shopProfile from "@/image/shopProfile.png";
 import { useToastStore } from "@/zustand/toastStore";
 import { useAuthStore } from "@/zustand/authStore";
 import { updateShopBio, updateShopInfo } from "./actions";
@@ -35,6 +33,7 @@ interface DashboardClientProps {
     shop_description: string;
     shop_bio: string | null;
     cover_photo_url?: string | null;
+    university_name?: string | null;
     profile_photo_url?: string | null;
   };
   user: {
@@ -124,6 +123,11 @@ export default function DashboardClient({ shop, user, products = [] }: Dashboard
         <div className="p-5 border-b border-[#eef0f3] bg-white">
           <p className="text-[11px] uppercase tracking-[0.2em] text-[#BA5B55] font-semibold">Shop identity</p>
           <h2 className="mt-1 text-xl font-bold tracking-tight text-[#1a1a1a]">{shop.shop_name}</h2>
+          {shop.university_name && (
+            <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-[#787878]">
+              {shop.university_name}
+            </p>
+          )}
           <p className="text-xs text-[#787878] mt-1">Owned by <span className="font-medium text-[#1a1a1a]">{user.username}</span></p>
         </div>
 
@@ -136,11 +140,18 @@ export default function DashboardClient({ shop, user, products = [] }: Dashboard
               </div>
             </div>
             <div className="relative h-52 w-full bg-[#f3f4f6] overflow-hidden">
-              <img
-                src={shop.cover_photo_url || shopCover.src}
-                alt="Shop Cover"
-                className="absolute inset-0 h-full w-full object-cover"
-              />
+              {shop.cover_photo_url ? (
+                <Image
+                  src={shop.cover_photo_url}
+                  alt="Shop Cover"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#f7f1f0] to-[#eceff3] text-[#BA5B55] text-xs font-medium uppercase tracking-[0.2em]">
+                  Cover photo
+                </div>
+              )}
             </div>
             <div className="p-4">
               <ImageUpload
@@ -162,12 +173,18 @@ export default function DashboardClient({ shop, user, products = [] }: Dashboard
             </div>
             <div className="flex items-center justify-center py-6 bg-[#fcfcfd]">
               <div className="relative h-28 w-28 rounded-full overflow-hidden border-4 border-white shadow-lg bg-white">
-                <Image
-                  src={shop.profile_photo_url || shopProfile}
-                  alt="Shop Profile"
-                  fill
-                  className="object-cover"
-                />
+                {shop.profile_photo_url ? (
+                  <Image
+                    src={shop.profile_photo_url}
+                    alt="Shop Profile"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-[#f1f1f1] text-[#BA5B55] text-[10px] font-semibold uppercase tracking-[0.2em]">
+                    Shop
+                  </div>
+                )}
               </div>
             </div>
             <div className="p-4">
@@ -262,6 +279,12 @@ export default function DashboardClient({ shop, user, products = [] }: Dashboard
             <div className="flex items-center gap-3">
               <Pin size={16} className="text-[#BA5B55] shrink-0" />
               <span>{shop.shop_location}</span>
+                {shop.university_name && (
+                  <div className="flex items-center gap-3">
+                    <Cog size={16} className="text-[#BA5B55] shrink-0" />
+                    <span>{shop.university_name}</span>
+                  </div>
+                )}
             </div>
           </div>
         </div>

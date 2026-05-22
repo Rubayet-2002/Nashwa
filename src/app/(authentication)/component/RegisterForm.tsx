@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import google from "@/image/google.png";
 import { useActionState, useEffect, useState } from "react";
 import { User, Lock, Eye, EyeOff } from "@mynaui/icons-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";

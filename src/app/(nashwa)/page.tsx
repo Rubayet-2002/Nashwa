@@ -1,8 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import pool from "@/database/pool";
-import shopCover from "@/image/shopCover.png";
-import shopProfile from "@/image/shopProfile.png";
 import { Store, Pin } from "@mynaui/icons-react";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +9,13 @@ const Homepage = async () => {
   let shops: any[] = [];
   try {
     const shopsRes = await pool.query(
-      "SELECT shop_uid, owner_uid, shop_name, shop_location, shop_description, cover_photo_url, profile_photo_url FROM shop WHERE status = 'approved' ORDER BY created_at DESC"
+      `SELECT s.shop_uid, s.owner_uid, s.shop_name, s.shop_location, s.shop_description,
+              s.cover_photo_url, s.profile_photo_url, pu.university_name
+       FROM shop s
+       LEFT JOIN shop_join_university sju ON sju.shop_uid = s.shop_uid
+       LEFT JOIN partner_university pu ON pu.university_uid = sju.university_uid
+       WHERE s.status = 'approved'
+       ORDER BY pu.university_name ASC NULLS LAST, s.created_at DESC`
     );
     shops = shopsRes.rows;
   } catch (error) {
@@ -64,12 +68,18 @@ const Homepage = async () => {
                 >
                   {/* Cover Photo */}
                   <div className="relative h-32 w-full bg-[#f3f4f6] overflow-hidden">
-                    <Image
-                      src={shop.cover_photo_url || shopCover}
-                      alt="Shop Cover"
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+                    {shop.cover_photo_url ? (
+                      <Image
+                        src={shop.cover_photo_url}
+                        alt="Shop Cover"
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#f7f1f0] to-[#eceff3] text-[#BA5B55] text-xs font-medium uppercase tracking-[0.2em]">
+                        Shop Cover
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors duration-300" />
                   </div>
 
@@ -77,18 +87,30 @@ const Homepage = async () => {
                   <div className="p-4 pt-0 relative flex-1 flex flex-col">
                     {/* Shop Profile Image */}
                     <div className="relative -mt-10 mb-3 w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden flex justify-center items-center">
-                      <Image
-                        src={shop.profile_photo_url || shopProfile}
-                        alt="Shop Profile"
-                        fill
-                        className="object-cover"
-                      />
+                      {shop.profile_photo_url ? (
+                        <Image
+                          src={shop.profile_photo_url}
+                          alt="Shop Profile"
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-[#f1f1f1] text-[#BA5B55] text-[10px] font-semibold uppercase tracking-[0.2em]">
+                          Shop
+                        </div>
+                      )}
                     </div>
 
                     {/* Shop Info */}
                     <h3 className="font-semibold text-base text-[#1a1a1a] group-hover:text-[#BA5B55] transition-colors leading-tight">
                       {shop.shop_name}
                     </h3>
+
+                    {shop.university_name && (
+                      <div className="mt-2 inline-flex items-center rounded-full border border-[#efe4e2] bg-[#fcf7f6] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.2em] text-[#BA5B55]">
+                        {shop.university_name}
+                      </div>
+                    )}
 
                     {/* Location */}
                     <div className="flex items-center gap-1 mt-1 text-xs text-[#787878]">
