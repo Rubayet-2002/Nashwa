@@ -1,9 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    turbo: true,
-  },
   images: {
     remotePatterns: [
       {
@@ -13,6 +10,15 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  async redirects() {
+    return [
+      {
+        source: "/Feasts-Events",
+        destination: "/feasts-events",
+        permanent: false,
+      },
+    ];
   },
 };
 

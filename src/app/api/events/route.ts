@@ -89,3 +89,47 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Failed to create event" }, { status: 500 });
   }
 }
+
+// DELETE /api/events
+export async function DELETE(request: Request) {
+  try {
+    if (request.headers.get("x-requested-with") !== "XMLHttpRequest") {
+      return NextResponse.json({ message: "Security check failed." }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const eventUid = searchParams.get("eventUid");
+    if (!eventUid) {
+      return NextResponse.json({ message: "eventUid is required" }, { status: 400 });
+    }
+
+    const { user } = await authMe();
+    if (!user) {
+      return NextResponse.json({ message: "Please log in first." }, { status: 401 });
+    }
+
+    // Fetch the event to check ownership via the shop table
+    const eventRes = await pool.query(
+      `SELECT e.shop_uid, s.owner_uid 
+       FROM campus_event e
+       JOIN shop s ON s.shop_uid = e.shop_uid
+       WHERE e.event_uid = $1 LIMIT 1`,
+      [eventUid]
+    );
+
+    if (eventRes.rowCount === 0) {
+      return NextResponse.json({ message: "Event not found" }, { status: 404 });
+    }
+
+    if (eventRes.rows[0].owner_uid !== user.uid) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
+    }
+
+    await pool.query(`DELETE FROM campus_event WHERE event_uid = $1`, [eventUid]);
+
+    return NextResponse.json({ success: true, message: "Event deleted successfully" });
+  } catch (error) {
+    console.error("Events DELETE error:", error);
+    return NextResponse.json({ message: "Failed to delete event" }, { status: 500 });
+  }
+}

@@ -22,7 +22,7 @@ const NavLink = () => {
         Category
       </Link>
       <Link
-        href="/Feasts-Events"
+        href="/feasts-events"
         className="cursor-pointer hover:text-[#BA5B55] transition-colors duration-300"
       >
         Feasts & Events

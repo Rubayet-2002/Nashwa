@@ -55,6 +55,8 @@ interface DashboardClientProps {
     price: string;
     currency: string;
     image_url: string | null;
+    reaction_count?: number;
+    comment_count?: number;
   }>;
   recentOrders: Array<{
     order_uid: string;
@@ -251,6 +253,25 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
       setIsEditingBio(false);
     } else {
       addToast(res.error || "Failed to update bio", "error");
+    }
+  };
+
+  const handleDeleteEvent = async (eventUid: string) => {
+    if (!confirm("Are you sure you want to delete this campus event?")) return;
+    try {
+      const res = await fetch(`/api/events?eventUid=${encodeURIComponent(eventUid)}`, {
+        method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        addToast("Event deleted successfully", "success");
+        setMyEvents((prev) => prev.filter((e) => e.event_uid !== eventUid));
+      } else {
+        addToast(data.message || "Failed to delete event", "error");
+      }
+    } catch (err) {
+      addToast("Network error", "error");
     }
   };
 
@@ -493,6 +514,12 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
                           <span className="rounded-xl border border-[#efe4e2] bg-[#fdf8f6] px-3 py-1 text-[#BA5B55] font-semibold">
                             {product.currency} {Number(product.price).toFixed(2)}
                           </span>
+                          <span className="rounded-xl border border-[#efe4e2] bg-[#fdf8f6] px-3 py-1 text-[#BA5B55] font-semibold">
+                            {product.reaction_count ?? 0} {product.reaction_count === 1 ? "like" : "likes"}
+                          </span>
+                          <span className="rounded-xl border border-[#efe4e2] bg-[#fdf8f6] px-3 py-1 text-[#BA5B55] font-semibold">
+                            {product.comment_count ?? 0} {product.comment_count === 1 ? "comment" : "comments"}
+                          </span>
                         </div>
 
                         <div className="mt-2">
@@ -570,6 +597,13 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
 
                         <div className="border-t border-[#fcf8f6] pt-3 flex items-center justify-between mt-1">
                           <EventCountdown endsAt={event.ends_at} />
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteEvent(event.event_uid)}
+                            className="px-3.5 py-1.5 border border-[#eadfdb] hover:border-red-500 hover:text-red-500 text-xs font-semibold bg-white rounded-xl shadow-sm transition-all cursor-pointer"
+                          >
+                            Cancel Event
+                          </button>
                         </div>
                       </div>
                     </div>

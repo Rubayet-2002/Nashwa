@@ -28,6 +28,9 @@ export default function AddEventModal({
     if (!title || !hostName || !venue || !endsAt) {
       return addToast("Please fill in all required fields", "error");
     }
+    if (!imageUrl) {
+      return addToast("Please select your cover banner and click 'Upload' to finalize the image upload first!", "error");
+    }
 
     setSubmitting(true);
     try {
@@ -149,9 +152,13 @@ export default function AddEventModal({
           {/* Right Banner Upload Column */}
           <div className="bg-[#fcfcfd] p-6 flex flex-col justify-between">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#787878]">Event Cover Photo</p>
-              <p className="mt-1 text-xs text-[#787878] mb-4">Select a beautiful banner for your event spotlight listing.</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#787878]">Event Cover Photo *</p>
+              <p className="mt-1 text-xs text-[#787878] mb-3">Select a beautiful banner for your event spotlight listing.</p>
               
+              <div className="mb-3 text-[11px] font-bold text-[#BA5B55] bg-[#BA5B55]/5 px-3.5 py-2.5 rounded-2xl border border-[#efe4e2]">
+                ⚠️ Click the &quot;Upload&quot; button after selecting your photo file to complete the upload to Cloudinary.
+              </div>
+
               <div className="rounded-3xl border border-[#eef0f3] bg-white p-4 shadow-sm">
                 <ImageUpload
                   label="Select event banner"

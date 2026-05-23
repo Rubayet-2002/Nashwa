@@ -59,7 +59,17 @@ export default async function ShopDashboardPage() {
                 WHERE pi.product_uid = p.product_uid
                 ORDER BY pi.position ASC, pi.id ASC
                 LIMIT 1
-              ) AS image_url
+              ) AS image_url,
+              (
+                SELECT COUNT(*)::int
+                FROM product_reaction pr
+                WHERE pr.product_uid = p.product_uid
+              ) AS reaction_count,
+              (
+                SELECT COUNT(*)::int
+                FROM product_comment pc
+                WHERE pc.product_uid = p.product_uid
+              ) AS comment_count
        FROM product p
        WHERE p.shop_uid = $1
        ORDER BY p.created_at DESC`,
