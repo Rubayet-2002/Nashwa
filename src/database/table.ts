@@ -206,3 +206,29 @@ CREATE TABLE IF NOT EXISTS admin_key (
 );
 `;
 
+export const CampusEvent = `
+CREATE TABLE IF NOT EXISTS campus_event (
+    event_uid VARCHAR(50) PRIMARY KEY,
+    shop_uid VARCHAR(50) REFERENCES shop(shop_uid) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    image_url TEXT,
+    host_name VARCHAR(255) NOT NULL,
+    venue VARCHAR(255) NOT NULL,
+    ends_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+`;
+
+export const ChatMessage = `
+CREATE TABLE IF NOT EXISTS chat_message (
+    message_uid VARCHAR(50) PRIMARY KEY,
+    sender_uid VARCHAR(50) REFERENCES users(uid) ON DELETE CASCADE,
+    receiver_uid VARCHAR(50) REFERENCES users(uid) ON DELETE CASCADE,
+    shop_uid VARCHAR(50) REFERENCES shop(shop_uid) ON DELETE CASCADE,
+    message_text TEXT NOT NULL,
+    image_url TEXT DEFAULT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+`;
+

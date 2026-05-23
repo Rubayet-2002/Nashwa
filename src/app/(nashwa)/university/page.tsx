@@ -36,8 +36,8 @@ export default async function UniversityPage() {
   }
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto bg-[#d9eeec] px-4 py-4 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-[1280px] bg-white px-6 py-6 shadow-sm sm:px-8 lg:px-10">
+    <div className="flex-1 min-h-0 overflow-y-auto bg-[#f6f4f2] px-0 py-0 sm:px-0 lg:px-0">
+      <div className="mx-auto flex min-h-full w-full max-w-none flex-col bg-white shadow-[0_10px_30px_rgba(120,150,146,0.08)] px-6 py-6 sm:px-8 lg:px-10">
         <header className="border-b border-[#f0f0f0] pb-5">
           <p className="text-xs uppercase tracking-[0.25em] text-[#9aa6a3]">category</p>
           <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#232323]">Universities</h1>

@@ -113,7 +113,7 @@ export default function ProductCommentThread({ productUid, mode = "customer" }: 
       const data = await res.json();
       if (res.ok) {
         setReplyDrafts((current) => ({ ...current, [parentCommentUid]: "" }));
-        setReplyOpen((current) => ({ ...current, [parentCommentUid]: true }));
+        setReplyOpen((current) => ({ ...current, [parentCommentUid]: false }));
         await loadComments();
       } else {
         setError(data.message || "Failed to save reply");
@@ -175,7 +175,7 @@ export default function ProductCommentThread({ productUid, mode = "customer" }: 
       )}
 
       {error && <p className="mt-3 text-xs text-red-500">{error}</p>}
-      {!showComments ? (
+      {(!showComments && mode === "customer") ? (
         <div className="mt-4 text-sm text-[#787878]">Comments hidden. Click "Show comments" to view.</div>
       ) : loading ? (
         <p className="mt-4 text-xs text-[#8b8b8b]">Loading comments...</p>

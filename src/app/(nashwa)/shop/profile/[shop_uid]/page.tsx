@@ -6,6 +6,7 @@ import { Mail, Telephone, Pin, User, CalendarArrowDown, Bookmark, ChatMessages, 
 import ShopOrderSystem from "../ShopOrderSystem";
 import { ensureShopFollowTable } from "@/app/(nashwa)/lib/ensureShopFollowTable";
 import FollowShopButton from "@/app/(nashwa)/component/FollowShopButton";
+import ContactSellerWidget from "@/app/(nashwa)/component/ContactSellerWidget";
 
 export const dynamic = "force-dynamic";
 
@@ -142,17 +143,22 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
                   {user?.uid === shop.owner_uid ? (
                     <span className="px-4 py-2 text-xs font-medium text-[#8a8a8a]">Your shop</span>
                   ) : (
-                    <FollowShopButton
-                      shopUid={shop.shop_uid}
-                      initialIsFollowing={Boolean(shop.is_following)}
-                      canFollow={canFollow}
-                      className="flex items-center gap-1.5 px-4 py-2"
-                    />
+                    <>
+                      <FollowShopButton
+                        shopUid={shop.shop_uid}
+                        initialIsFollowing={Boolean(shop.is_following)}
+                        canFollow={canFollow}
+                        className="flex items-center gap-1.5 px-4 py-2"
+                      />
+                      <ContactSellerWidget
+                        shopUid={shop.shop_uid}
+                        shopName={shop.shop_name}
+                        shopOwnerUid={shop.owner_uid}
+                        shopAvatar={shop.profile_photo_url}
+                        currentUser={user ? { uid: user.uid, username: user.username } : null}
+                      />
+                    </>
                   )}
-                  <button className="px-4 py-2 bg-[#BA5B55] border border-[#BA5B55] hover:bg-white hover:text-[#BA5B55] text-white transition-all text-xs font-medium flex items-center gap-1.5">
-                    <ChatMessages size={14} />
-                    <span>Contact Seller</span>
-                  </button>
                 </div>
               </div>
               <div className="mt-1 text-xs text-[#8a8a8a]">

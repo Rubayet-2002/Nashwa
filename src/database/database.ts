@@ -14,6 +14,8 @@ import {
   OTP,
   Session,
   AdminKey,
+  CampusEvent,
+  ChatMessage,
 } from "./table";
 import bcrypt from "bcryptjs";
 
@@ -37,6 +39,8 @@ async function createTable() {
     await client.query(OTP);
     await client.query(Session);
     await client.query(AdminKey);
+    await client.query(CampusEvent);
+    await client.query(ChatMessage);
 
     const adminRes = await client.query(
       "SELECT uid FROM users WHERE email = $1",

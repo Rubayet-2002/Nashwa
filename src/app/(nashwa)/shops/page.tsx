@@ -189,7 +189,7 @@ export default async function ShopsPage({ searchParams }: ShopsPageProps) {
   const canFollow = Boolean(user?.uid);
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto bg-[#d9eeec] px-0 py-0 sm:px-0 lg:px-0">
+    <div className="flex-1 min-h-0 overflow-y-auto bg-[#f6f4f2] px-0 py-0 sm:px-0 lg:px-0">
       <div className="mx-auto flex min-h-full w-full max-w-none flex-col bg-white shadow-[0_10px_30px_rgba(120,150,146,0.08)]">
         <div className="border-b border-[#f0f0f0] px-6 py-5 sm:px-8 lg:px-10">
           <p className="text-sm uppercase tracking-[0.25em] text-[#9aa6a3]">shops</p>

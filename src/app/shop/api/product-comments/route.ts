@@ -109,6 +109,7 @@ export async function POST(request: Request) {
       }
 
       const parentAuthorRole = parentRes.rows[0].author_role;
+      const parentCommentUidReal = parentRes.rows[0].parent_comment_uid || parentCommentUid;
 
       // Allow replies when: user is shop owner, OR user is a customer replying to a seller/owner comment
       if (!isOwner) {
@@ -130,7 +131,7 @@ export async function POST(request: Request) {
           user.role || "customer",
           user.username,
           commentText,
-          parentCommentUid,
+          parentCommentUidReal,
         ],
       );
       await client.query("COMMIT");
