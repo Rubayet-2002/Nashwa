@@ -5,7 +5,7 @@ import { useActionState, useEffect, useState } from "react";
 import { User, Lock, Eye, EyeOff } from "@mynaui/icons-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useToastStore } from "@/zustand/toastStore";
-import { RegisterInputCheck } from "@/app/(authentication)/lib/inputValidation";
+import { CreateAccountInputCheck } from "@/app/(authentication)/lib/inputValidation";
 
 interface RegisterFormProps {
   email: string;
@@ -38,7 +38,7 @@ const RegistrationForm = ({ email }: RegisterFormProps) => {
     const email = (formData.get("email") as string).trim();
     const password = formData.get("password") as string;
 
-    const validation = RegisterInputCheck.safeParse({
+    const validation = CreateAccountInputCheck.safeParse({
       username,
       email,
       password,

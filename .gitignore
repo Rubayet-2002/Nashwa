@@ -43,3 +43,9 @@ next-env.d.ts
 
 AGENTS.MD
 CLAUDE.MD
+
+# custom test scripts
+/scripts
+
+# Agent files   
+junayed.task.txt

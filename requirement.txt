@@ -20,3 +20,5 @@ npm install nodemailer
 npm install -D @types/nodemailer
 
 npm install cloudinary
+
+npm install @openrouter/sdk

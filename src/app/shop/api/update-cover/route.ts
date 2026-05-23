@@ -1,25 +1,3 @@
-## Error Type
-Build Error
-
-## Error Message
-Module not found: Can't resolve '@/image/shopCover.png'
-
-## Build Output
-./src/app/(nashwa)/page.tsx:4:1
-Module not found: Can't resolve '@/image/shopCover.png'
-  2 | import Link from "next/link";
-  3 | import pool from "@/database/pool";
-> 4 | import shopCover from "@/image/shopCover.png";
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  5 | import shopProfile from "@/image/shopProfile.png";
-  6 | import { Store, Pin } from "@mynaui/icons-react";
-  7 |
-
-Import map: aliased to relative './src/image/shopCover.png' inside of [project]/
-
-https://nextjs.org/docs/messages/module-not-found
-
-Next.js version: 16.2.6 (Turbopack)
 import { NextResponse } from "next/server";
 import pool from "@/database/pool";
 import { authMe } from "@/app/(authentication)/lib/authMe";

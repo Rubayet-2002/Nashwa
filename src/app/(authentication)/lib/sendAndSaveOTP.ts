@@ -26,10 +26,18 @@ export async function sendAndSaveOTP(
       [email, hashedOTP, otpExpiry, purpose],
     );
 
-    if (purpose === "password-reset") {
-      await mail_passwordResetOTP(email, otp, 5);
-    } else {
-      await mail_verifyAccountOTP(email, otp, 5);
+    try {
+      if (purpose === "password-reset") {
+        await mail_passwordResetOTP(email, otp, 5);
+      } else {
+        await mail_verifyAccountOTP(email, otp, 5);
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === "production") {
+        throw error;
+      }
+
+      console.warn("OTP email skipped in development:", error);
     }
 
     await client.query("COMMIT");
