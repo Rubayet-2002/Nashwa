@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "install:all": "npm install && pip install -r requirement.txt",
     "db": "tsx src/database/database.ts",
     "db:migrate": "tsx src/database/migrations/001_add_user_university.ts",
     "ddb": "tsx src/database/dropDB.ts",

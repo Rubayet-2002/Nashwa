@@ -12,10 +12,15 @@ Nashwa is a student-focused social e-commerce platform built with Next.js, Postg
 
 ## Local Setup
 
-Install dependencies and start the app:
+Install all dependencies (Node and Python) with one command:
 
 ```bash
-npm install
+npm run install:all
+```
+
+Start the app:
+
+```bash
 npm run dev
 ```
 

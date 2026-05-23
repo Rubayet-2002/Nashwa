@@ -11,15 +11,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  async redirects() {
-    return [
-      {
-        source: "/Feasts-Events",
-        destination: "/feasts-events",
-        permanent: false,
-      },
-    ];
-  },
+  // Redirects removed to avoid case-insensitive loop
 };
 
 export default nextConfig;

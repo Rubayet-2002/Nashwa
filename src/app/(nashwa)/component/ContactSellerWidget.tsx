@@ -50,8 +50,10 @@ export default function ContactSellerWidget({
         if (active && res.ok && data.success) {
           setMessages(data.messages || []);
         }
-      } catch (err) {
-        console.error("Error loading chat:", err);
+      } catch (err: any) {
+        if (err.name !== "AbortError" && !err.message?.includes("Failed to fetch")) {
+          console.error("Error loading chat:", err);
+        }
       }
     };
 
