@@ -133,6 +133,7 @@ export default function ProfileClient({
   const [emailInput, setEmailInput] = useState(user.email);
   const [phoneInput, setPhoneInput] = useState(user.phone || "");
   const [updatingInfo, setUpdatingInfo] = useState(false);
+  const [formErrors, setFormErrors] = useState<{ username?: string; email?: string; phone?: string }>({});
 
   // Password States
   const [currentPassword, setCurrentPassword] = useState("");
@@ -247,6 +248,16 @@ export default function ProfileClient({
   const handleSaveInfo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (updatingInfo) return;
+    // Client-side validation
+    const errors: { username?: string; email?: string; phone?: string } = {};
+    if (!usernameInput.trim() || usernameInput.length < 2) errors.username = "Enter a valid name (min 2 chars).";
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(emailInput)) errors.email = "Enter a valid email address.";
+    const phoneRe = /^\+?\d{7,15}$/;
+    if (phoneInput && !phoneRe.test(phoneInput)) errors.phone = "Enter phone in international format, e.g. +8801XXXXXXXXX";
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setUpdatingInfo(true);
 
     try {
@@ -928,6 +939,9 @@ export default function ProfileClient({
                       onChange={(e) => setUsernameInput(e.target.value)}
                       className="w-full border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#BA5B55] bg-white text-[#1a1a1a]"
                     />
+                    {formErrors.username && (
+                      <p className="text-[11px] text-red-600 mt-1">{formErrors.username}</p>
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-1.5">
@@ -939,6 +953,9 @@ export default function ProfileClient({
                       onChange={(e) => setEmailInput(e.target.value)}
                       className="w-full border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#BA5B55] bg-white text-[#1a1a1a]"
                     />
+                    {formErrors.email && (
+                      <p className="text-[11px] text-red-600 mt-1">{formErrors.email}</p>
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-1.5">
@@ -950,6 +967,9 @@ export default function ProfileClient({
                       placeholder="e.g. +8801234567890"
                       className="w-full border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#BA5B55] bg-white text-[#1a1a1a]"
                     />
+                    {formErrors.phone && (
+                      <p className="text-[11px] text-red-600 mt-1">{formErrors.phone}</p>
+                    )}
                   </div>
 
                   <div className="flex justify-end mt-1">
