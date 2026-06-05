@@ -479,7 +479,7 @@ export default function ProfileClient({
       <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoSelected(e, "avatar")} />
 
       {/* Left section: Profile branding */}
-      <div className="w-full md:w-96 shrink-0 flex flex-col justify-start overflow-y-auto custom-scrollbar gap-5">
+      <aside aria-label="Profile sidebar" className="w-full md:w-96 shrink-0 flex flex-col justify-start overflow-y-auto custom-scrollbar gap-5">
         
         {/* Cover Photo & Avatar Header Container */}
         <div className="bg-white border border-[#e2e2e2] rounded-3xl overflow-hidden shadow-xs relative">
@@ -560,7 +560,10 @@ export default function ProfileClient({
 
           <div className="flex items-center gap-3 text-[#555] text-xs font-light">
             <Mail stroke={1.5} size={15} className="text-[#BA5B55]" />
-            <p className="leading-none truncate" title={user.email}>{user.email}</p>
+            <p className="leading-none truncate" title={user.email}>
+              <span className="sr-only">Email:</span>
+              {user.email}
+            </p>
           </div>
 
           <div className="flex items-center gap-3 text-[#555] text-xs font-light">
@@ -639,16 +642,18 @@ export default function ProfileClient({
             </div>
           )}
         </div>
-      </div>
+      </aside>
 
       {/* Right section: Active tab content */}
-      <div className="flex-1 flex flex-col bg-white border border-[#e2e2e2] rounded-3xl overflow-hidden shadow-xs">
+      <main className="flex-1 flex flex-col bg-white border border-[#e2e2e2] rounded-3xl overflow-hidden shadow-xs" aria-live="polite">
         
         {/* Navigation tabs header */}
         <div className="flex justify-between items-center bg-[#fafafa] border-b border-[#e2e2e2] py-3 px-5 flex-wrap gap-4 shrink-0">
-          <div className="flex gap-6 items-center text-xs">
+          <div className="flex gap-6 items-center text-xs" role="tablist" aria-label="Profile sections">
 
             <button
+              role="tab"
+              aria-selected={activeTab === "orders"}
               onClick={() => setActiveTab("orders")}
               className={`pb-1 border-b-2 font-bold cursor-pointer transition-all flex items-center gap-1.5 ${
                 activeTab === "orders"
@@ -660,6 +665,8 @@ export default function ProfileClient({
               <span>My Orders</span>
             </button>
             <button
+              role="tab"
+              aria-selected={activeTab === "reviews"}
               onClick={() => setActiveTab("reviews")}
               className={`pb-1 border-b-2 font-bold cursor-pointer transition-all flex items-center gap-1.5 ${
                 activeTab === "reviews"
@@ -671,6 +678,8 @@ export default function ProfileClient({
               <span>My Reviews</span>
             </button>
             <button
+              role="tab"
+              aria-selected={activeTab === "settings"}
               onClick={() => setActiveTab("settings")}
               className={`pb-1 border-b-2 font-bold cursor-pointer transition-all flex items-center gap-1.5 ${
                 activeTab === "settings"
@@ -929,7 +938,7 @@ export default function ProfileClient({
                   <p className="text-[11px] text-[#787878] font-light mt-0.5">Edit username, email, and phone number parameters. Both email and phone must be unique.</p>
                 </div>
 
-                <form onSubmit={handleSaveInfo} className="flex flex-col gap-4 text-xs">
+                <form onSubmit={handleSaveInfo} className="flex flex-col gap-4 text-xs" aria-label="Change account information">
                   <div className="flex flex-col gap-1.5">
                     <label className="font-semibold text-[#787878]">Username</label>
                     <input
@@ -937,7 +946,9 @@ export default function ProfileClient({
                       required
                       value={usernameInput}
                       onChange={(e) => setUsernameInput(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#BA5B55] bg-white text-[#1a1a1a]"
+                      aria-label="Username"
+                      placeholder="Your display name"
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#BA5B55] focus:ring-2 focus:ring-[#BA5B55]/20 bg-white text-[#1a1a1a]"
                     />
                     {formErrors.username && (
                       <p className="text-[11px] text-red-600 mt-1">{formErrors.username}</p>
@@ -951,7 +962,9 @@ export default function ProfileClient({
                       required
                       value={emailInput}
                       onChange={(e) => setEmailInput(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#BA5B55] bg-white text-[#1a1a1a]"
+                      aria-label="Email address"
+                      placeholder="you@example.com"
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#BA5B55] focus:ring-2 focus:ring-[#BA5B55]/20 bg-white text-[#1a1a1a]"
                     />
                     {formErrors.email && (
                       <p className="text-[11px] text-red-600 mt-1">{formErrors.email}</p>
@@ -965,7 +978,8 @@ export default function ProfileClient({
                       value={phoneInput}
                       onChange={(e) => setPhoneInput(e.target.value)}
                       placeholder="e.g. +8801234567890"
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#BA5B55] bg-white text-[#1a1a1a]"
+                      aria-label="Phone number"
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#BA5B55] focus:ring-2 focus:ring-[#BA5B55]/20 bg-white text-[#1a1a1a]"
                     />
                     {formErrors.phone && (
                       <p className="text-[11px] text-red-600 mt-1">{formErrors.phone}</p>
@@ -1141,7 +1155,7 @@ export default function ProfileClient({
           )}
 
         </div>
-      </div>
+      </main>
 
       {/* Large View Photo Modal */}
       {lightboxSrc && (
