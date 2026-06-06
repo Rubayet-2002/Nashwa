@@ -32,8 +32,8 @@ export default async function RootLayout({
   if (clearCookies) redirect("/api/clear-cookie");
 
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <AuthStoreSetup user={user} activeShopUid={activeShopUid} />
         <SocketProvider>{children}</SocketProvider>
         <Toast />
