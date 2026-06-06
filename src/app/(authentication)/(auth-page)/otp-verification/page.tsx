@@ -32,7 +32,7 @@ const OTP = async () => {
 
   return (
     <div className="min-w-full flex justify-center">
-      <div className="bg-white mt-15 flex flex-col p-6 gap-4 w-113 shadow-sm border border-gray-100">
+      <div className="bg-white mt-12 flex flex-col p-6 gap-4 w-full max-w-md border border-gray-100 shadow-sm">
         <Logo />
 
         <p className="text-sm">{headerText}</p>

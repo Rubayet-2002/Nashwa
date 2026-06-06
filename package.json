@@ -1,16 +1,13 @@
 {
-  "name": "nashwa_bd",
+  "name": "nashwa",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "install:all": "npm install && pip install -r requirement.txt",
     "db": "tsx src/database/database.ts",
-    "db:migrate": "tsx src/database/migrations/001_add_user_university.ts",
     "ddb": "tsx src/database/dropDB.ts",
-    "sa": "tsx src/database/seedAdmin.ts",
-    "dev": "next dev",
+    "dev": "node server.js",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_ENV=production node server.js",
     "lint": "eslint"
   },
   "dependencies": {
@@ -21,9 +18,12 @@
     "jose": "^6.2.3",
     "next": "16.2.6",
     "nodemailer": "^8.0.7",
-    "pg": "^8.21.0",
+    "pg": "^8.20.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-easy-crop": "^5.5.7",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
     "zod": "^4.4.3",
     "zustand": "^5.0.13"
   },
@@ -37,7 +37,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
-    "tsx": "^4.22.3",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

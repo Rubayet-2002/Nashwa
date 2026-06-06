@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import ImageUpload from "../../(nashwa)/component/ImageUpload";
+import ImageUpload from "@/components/ImageUpload";
 import { useToastStore } from "@/zustand/toastStore";
 import { UNIVERSITIES } from "../lib/universities";
 
@@ -73,9 +73,9 @@ export default function AddEventModal({
       
       <form
         onSubmit={handleCreate}
-        className="relative z-10 w-full max-w-4xl overflow-hidden border border-[#eef0f3] bg-white shadow-2xl rounded-3xl animate-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-4xl overflow-hidden border border-[#eadfdb] bg-white shadow-2xl rounded-3xl"
       >
-        <div className="border-b border-[#eef0f3] bg-[#fcfcfd] px-6 py-5">
+        <div className="border-b border-[#eadfdb] bg-[#fcfcfd] px-6 py-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#BA5B55]">Campus Feast & Event</p>
           <h3 className="text-xl font-bold tracking-tight text-[#1a1a1a]">Schedule Campus Event</h3>
           <p className="mt-1 text-xs text-[#787878]">Advertise your winter festivals, pitha feasts, or bakery carousels to your university audience.</p>
@@ -84,7 +84,7 @@ export default function AddEventModal({
         <div className="grid grid-cols-1 gap-0 lg:grid-cols-[1.1fr_0.9fr]">
           
           {/* Left Form Column */}
-          <div className="border-b border-[#eef0f3] p-6 lg:border-b-0 lg:border-r flex flex-col gap-4">
+          <div className="border-b border-[#eadfdb] p-6 lg:border-b-0 lg:border-r flex flex-col gap-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="flex flex-col gap-1">
                 <label className="text-[11px] font-semibold uppercase tracking-wider text-[#787878]">Event Title *</label>
@@ -93,7 +93,7 @@ export default function AddEventModal({
                   onChange={(e) => setTitle(e.target.value)}
                   required
                   placeholder="e.g. Winter Pitha Feast"
-                  className="w-full border border-[#eaeaea] bg-white px-3 py-2 text-sm outline-none focus:border-[#BA5B55]"
+                  className="w-full border border-[#eadfdb] bg-white px-3 py-2 text-sm outline-none focus:border-[#BA5B55] rounded-xl"
                 />
               </div>
 
@@ -103,7 +103,7 @@ export default function AddEventModal({
                   value={hostName}
                   onChange={(e) => setHostName(e.target.value)}
                   required
-                  className="w-full border border-[#eaeaea] bg-white px-3 py-2 text-sm outline-none focus:border-[#BA5B55]"
+                  className="w-full border border-[#eadfdb] bg-white px-3 py-2 text-sm outline-none focus:border-[#BA5B55] rounded-xl"
                 >
                   <option value="">Select Host Campus</option>
                   {UNIVERSITIES.map((u) => (
@@ -121,7 +121,7 @@ export default function AddEventModal({
                   onChange={(e) => setVenue(e.target.value)}
                   required
                   placeholder="e.g. Auditorium lobby, Ground level"
-                  className="w-full border border-[#eaeaea] bg-white px-3 py-2 text-sm outline-none focus:border-[#BA5B55]"
+                  className="w-full border border-[#eadfdb] bg-white px-3 py-2 text-sm outline-none focus:border-[#BA5B55] rounded-xl"
                 />
               </div>
 
@@ -132,7 +132,7 @@ export default function AddEventModal({
                   value={endsAt}
                   onChange={(e) => setEndsAt(e.target.value)}
                   required
-                  className="w-full border border-[#eaeaea] bg-white px-3 py-2 text-sm outline-none focus:border-[#BA5B55]"
+                  className="w-full border border-[#eadfdb] bg-white px-3 py-2 text-sm outline-none focus:border-[#BA5B55] rounded-xl"
                 />
               </div>
 
@@ -143,7 +143,7 @@ export default function AddEventModal({
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Explain event specials, winter food menus, timings, or discount coupons for students."
                   rows={4}
-                  className="w-full resize-none border border-[#eaeaea] bg-white px-3 py-2 text-sm outline-none focus:border-[#BA5B55]"
+                  className="w-full resize-none border border-[#eadfdb] bg-white px-3 py-2 text-sm outline-none focus:border-[#BA5B55] rounded-xl"
                 />
               </div>
             </div>
@@ -159,10 +159,12 @@ export default function AddEventModal({
                 ⚠️ Click the &quot;Upload&quot; button after selecting your photo file to complete the upload to Cloudinary.
               </div>
 
-              <div className="rounded-3xl border border-[#eef0f3] bg-white p-4 shadow-sm">
+              <div className="rounded-3xl border border-[#eadfdb] bg-white p-4 shadow-sm">
                 <ImageUpload
                   label="Select event banner"
                   folder="nashwa_events"
+                  crop={true}
+                  aspectRatio={2.5}
                   onUploaded={(u) => setImageUrl(Array.isArray(u) ? u[0] : u)}
                 />
               </div>
@@ -174,17 +176,17 @@ export default function AddEventModal({
               )}
             </div>
 
-            <div className="mt-4 rounded-2xl border border-dashed border-[#dbe1e8] bg-white px-4 py-3 text-xs text-[#787878]">
+            <div className="mt-4 rounded-2xl border border-dashed border-[#eadfdb] bg-white px-4 py-3 text-xs text-[#787878]">
               Events will show up directly on the homepage spotlight and on the Feasts & Events directory.
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-[#eef0f3] bg-white px-6 py-4 sm:flex-row sm:items-center sm:justify-end">
+        <div className="flex flex-col gap-3 border-t border-[#eadfdb] bg-white px-6 py-4 sm:flex-row sm:items-center sm:justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border border-[#eaeaea] text-xs font-semibold text-[#787878] hover:border-[#BA5B55] hover:text-[#BA5B55] rounded-xl"
+            className="px-4 py-2 border border-[#eadfdb] text-xs font-semibold text-[#787878] hover:border-[#BA5B55] hover:text-[#BA5B55] rounded-xl"
           >
             Cancel
           </button>

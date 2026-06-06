@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import pool from "@/database/pool";
 import { authMe } from "@/app/(authentication)/lib/authMe";
-import { getUniversityByUid } from "@/app/shop/lib/universities";
 
 export async function POST(request: Request) {
   try {
@@ -9,8 +8,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Security check failed." }, { status: 403 });
     }
 
-    const { shopUid, universityUid } = await request.json();
-    if (!shopUid || !universityUid) return NextResponse.json({ message: "Missing fields." }, { status: 400 });
+    const { shopUid, universityUid, studentId, sidPdfUrl } = await request.json();
+    if (!shopUid || !universityUid || !studentId || !sidPdfUrl) {
+      return NextResponse.json({ message: "Missing required fields." }, { status: 400 });
+    }
 
     const { user } = await authMe();
     if (!user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -21,29 +22,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
-    const university = getUniversityByUid(universityUid);
-    if (!university) return NextResponse.json({ message: "Invalid university." }, { status: 400 });
+    // Verify university exists in DB
+    const uniRes = await pool.query("SELECT university_name FROM partner_university WHERE university_uid = $1", [universityUid]);
+    if (uniRes.rowCount === 0) {
+      return NextResponse.json({ message: "Invalid university selection." }, { status: 400 });
+    }
 
-    await pool.query("BEGIN");
-    await pool.query(
-      `INSERT INTO partner_university (university_uid, university_name)
-       VALUES ($1, $2)
-       ON CONFLICT (university_uid) DO UPDATE SET university_name = EXCLUDED.university_name`,
-      [university.uid, university.name],
-    );
+    const universityName = uniRes.rows[0].university_name;
 
-    await pool.query(
-      `INSERT INTO shop_join_university (shop_uid, university_uid, sid_pdf_url, status)
-       VALUES ($1, $2, $3, 'pending')
-       ON CONFLICT (shop_uid) DO UPDATE SET university_uid = EXCLUDED.university_uid, sid_pdf_url = EXCLUDED.sid_pdf_url, status = 'pending'`,
-      [shopUid, university.uid, ''],
-    );
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
 
-    await pool.query("COMMIT");
-    return NextResponse.json({ success: true, universityName: university.name });
+      await client.query(
+        `INSERT INTO shop_join_university (shop_uid, university_uid, student_id, sid_pdf_url, status)
+         VALUES ($1, $2, $3, $4, 'pending')
+         ON CONFLICT (shop_uid) DO UPDATE 
+         SET university_uid = EXCLUDED.university_uid, 
+             student_id = EXCLUDED.student_id,
+             sid_pdf_url = EXCLUDED.sid_pdf_url, 
+             status = 'pending'`,
+        [shopUid, universityUid, studentId, sidPdfUrl],
+      );
+
+      await client.query("COMMIT");
+      return NextResponse.json({ success: true, message: "University join request submitted successfully.", universityName });
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   } catch (error) {
-    try { await pool.query("ROLLBACK"); } catch (e) {}
-    console.error("set-shop-university error:", error instanceof Error ? error.message : error, error instanceof Error ? error.stack : null);
+    console.error("set-shop-university error:", error);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }

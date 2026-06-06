@@ -35,7 +35,7 @@ const AdminLogoutButton = () => {
     <button
       onClick={handleLogout}
       disabled={isPending}
-      className="flex items-center gap-2 px-4 py-2 bg-[#BA5B55] hover:bg-[#a04e49] text-white text-sm font-medium rounded transition-colors cursor-pointer disabled:opacity-70"
+      className="flex items-center gap-2 px-4 py-2 bg-[#BA5B55] hover:bg-[#a04e49] text-white text-sm font-medium rounded-xl transition-colors cursor-pointer disabled:opacity-70"
     >
       <Logout size={18} stroke={1.5} />
       <p className="leading-none">{isPending ? "Logging out..." : "Logout"}</p>

@@ -20,6 +20,7 @@ const LogoutButton = () => {
       if (result.success) {
         addToast(result.message, "success");
         clearUser();
+        router.refresh();
         router.replace("/");
       } else {
         addToast(result.message, "error");

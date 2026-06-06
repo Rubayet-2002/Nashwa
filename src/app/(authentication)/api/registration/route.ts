@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { CreateAccountInputCheck } from "@/app/(authentication)/lib/inputValidation";
+import { RegisterInputCheck } from "@/app/(authentication)/lib/inputValidation";
 import pool from "@/database/pool";
 import bcrypt from "bcryptjs";
 import { sendOTP } from "@/app/(authentication)/lib/sendOTP";
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const validation = CreateAccountInputCheck.safeParse(body);
+    const validation = RegisterInputCheck.safeParse(body);
 
     if (!validation.success) {
       return NextResponse.json(
