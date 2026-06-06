@@ -38,21 +38,21 @@ const CreateShop = async () => {
 
   return (
     <div className="min-w-full flex justify-center">
-      <div className="flex flex-col justify-center items-center mt-4 gap-4 w-230">
+      <div className="flex flex-col justify-center items-center mt-4 gap-4 w-full max-w-[920px]">
         <div className="bg-white w-full px-6 py-4 flex justify-between items-center">
           <Logo />
           <CreateShopSteps step={currentStep} />
         </div>
 
         <div className="flex justify-center items-start gap-4 min-h-120">
-          <div className="bg-white w-113 p-6 gap-4 h-full">
+          <div className="bg-white w-full md:w-[452px] p-6 gap-4 h-full border border-gray-100 shadow-xs">
             <p className="text-sm">
               Start your business with
               <span className="text-[#BA5B55] ml-1">Nashwa</span>
             </p>
           </div>
 
-          <div className="bg-white w-113 p-6 flex flex-col justify-between h-full">
+          <div className="bg-white w-full md:w-[452px] p-6 flex flex-col justify-between h-full border border-gray-100 shadow-xs">
             {renderStepForm()}
           </div>
         </div>

@@ -2,14 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import pool from "@/database/pool";
 import { Store, Pin } from "@mynaui/icons-react";
-import { profileData } from "../profile/lib/ProfileData";
-import { getUniversityLogo } from "./universityLogo";
+import { profileData } from "@/app/(nashwa)/profile/lib/ProfileData";
 
 export const dynamic = "force-dynamic";
 
 type UniversityRow = {
   university_uid: string;
   university_name: string;
+  logo_url: string | null;
   shop_count: number;
 };
 
@@ -21,11 +21,12 @@ export default async function UniversityPage() {
     const res = await pool.query(
       `SELECT pu.university_uid,
               pu.university_name,
+              pu.logo_url,
               COUNT(s.shop_uid)::int AS shop_count
        FROM partner_university pu
-       LEFT JOIN shop_join_university sju ON sju.university_uid = pu.university_uid
+       LEFT JOIN shop_join_university sju ON sju.university_uid = pu.university_uid AND sju.status = 'approved'
        LEFT JOIN shop s ON s.shop_uid = sju.shop_uid AND s.status = 'approved'
-       GROUP BY pu.university_uid, pu.university_name
+       GROUP BY pu.university_uid, pu.university_name, pu.logo_url
        HAVING COUNT(s.shop_uid) > 0
        ORDER BY pu.university_name ASC`
     );
@@ -36,13 +37,13 @@ export default async function UniversityPage() {
   }
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto bg-[#f6f4f2] px-0 py-0 sm:px-0 lg:px-0">
-      <div className="mx-auto flex min-h-full w-full max-w-none flex-col bg-white shadow-[0_10px_30px_rgba(120,150,146,0.08)] px-6 py-6 sm:px-8 lg:px-10">
+    <div className="flex-1 min-h-0 overflow-y-auto bg-[#f6f4f2] px-4 py-6 font-sans">
+      <div className="mx-auto flex min-h-full w-full max-w-5xl flex-col bg-white shadow-xs p-6 rounded-3xl border border-gray-150">
         <header className="border-b border-[#f0f0f0] pb-5">
-          <p className="text-xs uppercase tracking-[0.25em] text-[#9aa6a3]">category</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-[#9aa6a3] font-bold">community</p>
           <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#232323]">Universities</h1>
           <p className="mt-2 text-sm text-[#7b7b7b]">
-            Explore universities and open their shop lists.
+            Explore universities and view student entrepreneur shops associated with them.
           </p>
         </header>
 
@@ -52,16 +53,16 @@ export default async function UniversityPage() {
               const isOwnUniversity = profile?.university_uid === uni.university_uid;
 
               return (
-                <article key={uni.university_uid} className="rounded-xl border border-[#ece7e5] px-4 py-4 transition-shadow hover:shadow-sm">
+                <article key={uni.university_uid} className="rounded-xl border border-[#ece7e5] px-4 py-4 transition-all hover:shadow-xs hover:border-[#BA5B55]/30">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-[#ece7e5] bg-[#fafafa]">
-                        {getUniversityLogo(uni.university_name) ? (
+                        {uni.logo_url ? (
                           <Image
-                            src={getUniversityLogo(uni.university_name)!}
+                            src={uni.logo_url}
                             alt={uni.university_name}
                             fill
-                            className="object-contain p-1"
+                            className="object-cover"
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-[#BA5B55]">
@@ -72,7 +73,7 @@ export default async function UniversityPage() {
 
                       <div className="min-w-0">
                         <h2 className="truncate text-base font-semibold text-[#222222]">{uni.university_name}</h2>
-                        <p className="mt-1 text-xs text-[#8a8a8a]">{uni.shop_count} shops</p>
+                        <p className="mt-1 text-xs text-[#8a8a8a]">{uni.shop_count} {uni.shop_count === 1 ? 'shop' : 'shops'}</p>
                       </div>
                     </div>
 
@@ -83,35 +84,28 @@ export default async function UniversityPage() {
                     ) : null}
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1 text-xs text-[#8a8a8a]">
+                  <div className="mt-3 flex items-center justify-between border-t border-gray-50 pt-3">
+                    <span className="inline-flex items-center gap-1 text-xs text-[#8a8a8a] font-light">
                       <Pin size={13} className="text-[#BA5B55]" />
                       University shops directory
                     </span>
 
                     <Link
                       href={`/university/${uni.university_uid}`}
-                      className="text-xs font-medium text-[#ba5b55] hover:text-[#9c403a]"
+                      className="text-xs font-semibold text-[#ba5b55] hover:text-[#9c403a] hover:underline"
                     >
-                      See all shops
+                      See all shops &rarr;
                     </Link>
                   </div>
                 </article>
               );
             })
           ) : (
-            <div className="rounded-xl border border-dashed border-[#e5e5e5] bg-[#fcfcfc] p-8 text-sm text-[#8a8a8a] lg:col-span-2">
+            <div className="rounded-xl border border-dashed border-[#e5e5e5] bg-[#fcfcfc] p-8 text-sm text-[#8a8a8a] lg:col-span-2 text-center py-16">
               No universities with approved shops found.
             </div>
           )}
         </section>
-
-        <footer className="mt-8 border-t border-[#f2f2f2] pt-4 text-xs text-[#8a8a8a]">
-          <span className="inline-flex items-center gap-2">
-            <Store size={13} className="text-[#ba5b55]" />
-            Click See all shops to open the selected university page.
-          </span>
-        </footer>
       </div>
     </div>
   );

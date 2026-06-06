@@ -88,6 +88,7 @@ const OTPForm = ({ email, uid, purpose }: OTPFormProps) => {
         router.replace(state.redirect);
       } else if (state.user) {
         setUser(state.user, state.activeShopUid);
+        router.refresh();
         router.replace(state.redirect);
       }
     } else if (state?.error) {

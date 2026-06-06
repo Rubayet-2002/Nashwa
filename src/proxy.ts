@@ -17,6 +17,26 @@ export async function proxy(request: NextRequest) {
     return;
   }
 
+  const adminToken = request.cookies.get("admin-token")?.value;
+  let isAdminAuthenticated = false;
+
+  if (adminToken) {
+    try {
+      const decodedAdmin = await jwtVerify(adminToken, secret);
+      isAdminAuthenticated = !!decodedAdmin;
+    } catch (error) {}
+  }
+
+  if (isAdminAuthenticated) {
+    if (pathname === "/admin/login" || !pathname.startsWith("/admin")) {
+      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+    }
+  } else {
+    if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+  }
+
   const accessToken = request.cookies.get("access-token")?.value;
   const refreshToken = request.cookies.get("refresh-token")?.value;
 
@@ -33,21 +53,6 @@ export async function proxy(request: NextRequest) {
 
   const isAuthenticated = !!payload;
   const activeShopUid = payload?.activeShopUid;
-  const role = payload?.role;
-  const isAdminAuthenticated = isAuthenticated && role === "admin";
-
-  if (isAdminAuthenticated) {
-    if (pathname === "/admin/login") {
-      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-    }
-    if (!pathname.startsWith("/admin/dashboard") && !pathname.startsWith("/admin/api")) {
-      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-    }
-  } else {
-    if (pathname.startsWith("/admin/dashboard")) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
-    }
-  }
 
   const authRoutes = [
     "/email",

@@ -40,8 +40,8 @@ export const authMe = cache(async (): Promise<AuthMeResult> => {
 
   try {
     const sessionRes = await pool.query(
-      `SELECT session_id, token_hash, active_shop_uid 
-       FROM session 
+      `SELECT session_id, token_hash, active_shop_uid
+       FROM session
        WHERE session_id = $1 AND user_uid = $2 AND is_revoked = FALSE AND expires_at > NOW()`,
       [sessionId, uid],
     );
@@ -59,7 +59,9 @@ export const authMe = cache(async (): Promise<AuthMeResult> => {
     }
 
     const userRes = await pool.query(
-      "SELECT username, role, is_verified FROM users WHERE uid = $1",
+      `SELECT uid, username, email, role, is_verified,
+              profile_photo_url, cover_photo_url, bio, phone, address, city
+       FROM users WHERE uid = $1`,
       [uid],
     );
 
@@ -70,7 +72,8 @@ export const authMe = cache(async (): Promise<AuthMeResult> => {
     const userData = userRes.rows[0];
 
     const shopRes = await pool.query(
-      "SELECT shop_uid, shop_name, status FROM shop WHERE owner_uid = $1",
+      `SELECT shop_uid, shop_name, status, profile_photo_url
+       FROM shop WHERE owner_uid = $1`,
       [uid],
     );
 
@@ -81,8 +84,15 @@ export const authMe = cache(async (): Promise<AuthMeResult> => {
         uid: uid,
         sessionId: session.session_id,
         username: userData.username,
+        email: userData.email,
         role: userData.role,
         is_verified: userData.is_verified,
+        profile_photo_url: userData.profile_photo_url,
+        cover_photo_url: userData.cover_photo_url,
+        bio: userData.bio,
+        phone: userData.phone,
+        address: userData.address,
+        city: userData.city,
         owned_shops: ownedShops,
         need_refresh: needsRefresh,
       },

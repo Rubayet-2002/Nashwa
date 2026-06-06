@@ -5,21 +5,11 @@ body {
   color: #1a1a1a;
 }
 
+.custom-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none; 
+}
+
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #f2f4f7;
-
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #f3deda;
-  border-radius: 50px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #ba5b55;
-  cursor: pointer;
+  display: none;
 }

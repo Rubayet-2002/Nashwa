@@ -11,11 +11,10 @@ const AdminLoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleClientAction = async (prevState: any, formData: FormData) => {
-    const admin_key = (formData.get("admin_key") as string).trim();
     const admin_email = (formData.get("admin_email") as string).trim();
     const password = formData.get("password") as string;
 
-    if (!admin_key || !admin_email || !password) {
+    if (!admin_email || !password) {
       return { error: "All fields are required." };
     }
 
@@ -26,7 +25,7 @@ const AdminLoginForm = () => {
           "Content-Type": "application/json",
           "X-Requested-With": "XMLHttpRequest",
         },
-        body: JSON.stringify({ admin_key, admin_email, password }),
+        body: JSON.stringify({ admin_email, password }),
       });
       const result = await response.json();
 
@@ -60,23 +59,13 @@ const AdminLoginForm = () => {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <div className="flex items-center gap-2 px-3 py-2 border border-[#787878] focus-within:border-[#BA5B55]">
-        <Key color="#787878" size={20} stroke={1.5} className="min-w-4" />
-        <input
-          type="text"
-          name="admin_key"
-          placeholder="Enter Admin Key"
-          required
-          className="w-full bg-white text-sm outline-none placeholder:text-[#787878]"
-        />
-      </div>
 
       <div className="flex items-center gap-2 px-3 py-2 border border-[#787878] focus-within:border-[#BA5B55]">
         <Mail color="#787878" size={20} stroke={1.5} className="min-w-4.5" />
         <input
           type="email"
           name="admin_email"
-          placeholder="Enter Admin Email"
+          placeholder="Admin Email"
           required
           className="w-full bg-white text-sm outline-none placeholder:text-[#787878]"
         />

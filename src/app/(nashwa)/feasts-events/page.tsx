@@ -1,8 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import pool from "@/database/pool";
 import { Store, Pin, Bookmark, Calendar } from "@mynaui/icons-react";
-import EventCountdown from "../component/EventCountdown";
+import EventCountdown from "@/components/EventCountdown";
 
 const formatDateForGCal = (date: Date | string) => {
   const d = new Date(date);
@@ -24,7 +23,7 @@ export const dynamic = "force-dynamic";
 export default async function FeastsEventsPage() {
   let events: any[] = [];
   try {
-    let eventsRes = await pool.query(
+    const eventsRes = await pool.query(
       `SELECT e.event_uid, e.shop_uid, e.title, e.description, e.image_url, e.host_name, e.venue, e.ends_at,
               s.shop_name, s.profile_photo_url AS shop_avatar
        FROM campus_event e
@@ -123,7 +122,7 @@ export default async function FeastsEventsPage() {
                           )}
                         </div>
                         <span className="text-xs text-[#787878] truncate">
-                          Organized by <Link href={`/shop/profile/${event.shop_uid}`} className="font-medium text-[#1a1a1a] hover:text-[#BA5B55] transition-colors">{event.shop_name}</Link>
+                          Organized by <Link href={`/shop/${event.shop_uid}`} className="font-medium text-[#1a1a1a] hover:text-[#BA5B55] transition-colors">{event.shop_name}</Link>
                         </span>
                       </div>
 
@@ -168,7 +167,7 @@ export default async function FeastsEventsPage() {
                           </a>
                           
                           <Link
-                            href={`/shop/profile/${event.shop_uid}`}
+                            href={`/shop/${event.shop_uid}`}
                             className="flex-1 flex justify-center items-center gap-1.5 px-3 py-2 bg-[#BA5B55] border border-[#BA5B55] text-white text-xs font-medium hover:bg-white hover:text-[#BA5B55] transition-all duration-300 rounded-sm"
                           >
                             <Store size={14} />

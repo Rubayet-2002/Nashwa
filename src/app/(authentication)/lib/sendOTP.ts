@@ -1,7 +1,7 @@
 import pool from "@/database/pool";
 import bcrypt from "bcryptjs";
 import crypto from 'crypto';
-import { mail_verifyAccountOTP, mail_passwordResetOTP } from "@/mail/mail";
+import { mail_verifyAccountOTP, mail_passwordResetOTP } from "./mail";
 
 export async function sendOTP(
   email: string,
@@ -28,21 +28,13 @@ export async function sendOTP(
       [email, hashedOTP, otpExpiry, purpose, user_uid],
     );
 
-    try {
-      switch (purpose) {
-        case "password-reset":
-          await mail_passwordResetOTP(email, otp, otp_exp);
-          break;
-        case "verify-account":
-          await mail_verifyAccountOTP(email, otp, otp_exp);
-          break;
-      }
-    } catch (error) {
-      if (process.env.NODE_ENV === "production") {
-        throw error;
-      }
-
-      console.warn("OTP email skipped in development:", error);
+    switch (purpose) {
+      case "password-reset":
+        await mail_passwordResetOTP(email, otp, otp_exp);
+        break;
+      case "verify-account":
+        await mail_verifyAccountOTP(email, otp, otp_exp);
+        break;
     }
 
     await client.query("COMMIT");

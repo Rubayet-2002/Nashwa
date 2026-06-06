@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, X,  User, Mail, Telephone, MapPin, Store, Eye, Download } from "@mynaui/icons-react";
+import { Check, X, User, Mail, Telephone, MapPin, Store, Eye, Download } from "@mynaui/icons-react";
 import { useToastStore } from "@/zustand/toastStore";
 
 interface ShopRequestCardProps {
@@ -71,11 +71,11 @@ const ShopRequestCard = ({ request, isApproved }: ShopRequestCardProps) => {
   };
 
   return (
-    <div className="bg-[#1e1e1e] border border-[#333] p-6 rounded-lg shadow-md flex flex-col gap-6 text-[#e0e0e0]">
+    <div className="bg-[#1e1e1e] border border-[#333] p-6 rounded-3xl shadow-md flex flex-col gap-6 text-[#e0e0e0]">
       {/* Header */}
       <div className="flex justify-between items-start border-b border-[#333] pb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-[#BA5B55]/20 text-[#BA5B55] rounded">
+          <div className="p-2 bg-[#BA5B55]/20 text-[#BA5B55] rounded-xl">
             <Store size={24} stroke={1.5} />
           </div>
           <div>
@@ -97,7 +97,7 @@ const ShopRequestCard = ({ request, isApproved }: ShopRequestCardProps) => {
       {/* Grid Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
         {/* Shop Info */}
-        <div className="flex flex-col gap-3 bg-[#141414] p-4 rounded border border-[#2a2a2a]">
+        <div className="flex flex-col gap-3 bg-[#141414] p-4 rounded-2xl border border-[#2a2a2a]">
           <h4 className="text-xs font-semibold text-[#BA5B55] uppercase tracking-wider mb-1">Shop Details</h4>
           <div className="flex items-center gap-2 text-[#bbb]">
             <Mail size={18} stroke={1.5} className="text-[#888] shrink-0" />
@@ -118,7 +118,7 @@ const ShopRequestCard = ({ request, isApproved }: ShopRequestCardProps) => {
         </div>
 
         {/* User Info */}
-        <div className="flex flex-col gap-3 bg-[#141414] p-4 rounded border border-[#2a2a2a]">
+        <div className="flex flex-col gap-3 bg-[#141414] p-4 rounded-2xl border border-[#2a2a2a]">
           <h4 className="text-xs font-semibold text-[#BA5B55] uppercase tracking-wider mb-1">Applicant (User) Details</h4>
           <div className="flex items-center gap-2 text-[#bbb]">
             <User size={18} stroke={1.5} className="text-[#888] shrink-0" />
@@ -142,7 +142,7 @@ const ShopRequestCard = ({ request, isApproved }: ShopRequestCardProps) => {
               <button
                 type="button"
                 onClick={() => setShowPdfPreview(!showPdfPreview)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-[#252525] hover:bg-[#303030] border border-[#444] rounded text-xs text-[#BA5B55] hover:text-[#d96a63] font-medium transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-2 bg-[#252525] hover:bg-[#303030] border border-[#444] rounded-xl text-xs text-[#BA5B55] hover:text-[#d96a63] font-medium transition-colors cursor-pointer"
               >
                 <Eye size={16} stroke={1.5} />
                 <span>{showPdfPreview ? "Hide PDF Preview" : "Inline PDF Preview"}</span>
@@ -153,7 +153,7 @@ const ShopRequestCard = ({ request, isApproved }: ShopRequestCardProps) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 download
-                className="flex items-center gap-1.5 px-3 py-2 bg-[#252525] hover:bg-[#303030] border border-[#444] rounded text-xs text-blue-400 hover:text-blue-300 font-medium transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-2 bg-[#252525] hover:bg-[#303030] border border-[#444] rounded-xl text-xs text-blue-400 hover:text-blue-300 font-medium transition-colors cursor-pointer"
               >
                 <Download size={16} stroke={1.5} />
                 <span>Download PDF</span>
@@ -165,14 +165,14 @@ const ShopRequestCard = ({ request, isApproved }: ShopRequestCardProps) => {
 
       {/* Inline PDF Preview Iframe */}
       {showPdfPreview && (
-        <div className="w-full h-120 border border-[#444] rounded-lg overflow-hidden bg-[#141414] flex flex-col shadow-inner animate-fadeIn">
+        <div className="w-full h-120 border border-[#444] rounded-2xl overflow-hidden bg-[#141414] flex flex-col shadow-inner animate-fadeIn">
           <div className="bg-[#222] px-4 py-2 border-b border-[#333] flex justify-between items-center text-xs text-[#aaa]">
             <span>NID PDF Document Preview</span>
             <button onClick={() => setShowPdfPreview(false)} className="hover:text-white cursor-pointer">✕ Close</button>
           </div>
           <iframe
             src={request.nid_pdf_url}
-            className="w-full flex-1 border-none"
+            className="w-full flex-1 border-none bg-white"
             title="NID PDF Preview"
           />
         </div>
@@ -185,7 +185,7 @@ const ShopRequestCard = ({ request, isApproved }: ShopRequestCardProps) => {
             type="button"
             onClick={() => setShowRejectModal(true)}
             disabled={isPending}
-            className="flex items-center gap-2 px-5 py-2.5 bg-transparent hover:bg-red-500/10 text-red-400 border border-red-500/30 hover:border-red-500 rounded text-sm font-medium transition-colors cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2.5 bg-transparent hover:bg-red-500/10 text-red-400 border border-red-500/30 hover:border-red-500 rounded-xl text-sm font-medium transition-colors cursor-pointer disabled:opacity-50"
           >
             <X size={18} stroke={1.5} />
             <span>Reject</span>
@@ -195,7 +195,7 @@ const ShopRequestCard = ({ request, isApproved }: ShopRequestCardProps) => {
             type="button"
             onClick={() => handleAction("approve")}
             disabled={isPending}
-            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 shadow-sm"
+            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 shadow-sm"
           >
             <Check size={18} stroke={1.5} />
             <span>{isPending ? "Processing..." : "Approve Shop"}</span>
@@ -206,7 +206,7 @@ const ShopRequestCard = ({ request, isApproved }: ShopRequestCardProps) => {
       {/* Reject Modal */}
       {showRejectModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-5">
-          <div className="bg-[#1e1e1e] border border-[#333] p-6 rounded-lg max-w-md w-full shadow-2xl flex flex-col gap-4 text-[#e0e0e0]">
+          <div className="bg-[#1e1e1e] border border-[#333] p-6 rounded-3xl max-w-md w-full shadow-2xl flex flex-col gap-4 text-[#e0e0e0]">
             <h3 className="text-lg font-bold text-white border-b border-[#333] pb-2">Reject Shop Request</h3>
             <p className="text-xs text-[#aaa]">
               Please provide a clear reason for rejecting <strong className="text-white">{request.shop_name}</strong>. This will be sent to the user via email.
@@ -216,14 +216,14 @@ const ShopRequestCard = ({ request, isApproved }: ShopRequestCardProps) => {
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="e.g., NID document is blurry or invalid, shop location is incomplete..."
               rows={4}
-              className="w-full p-3 bg-[#141414] border border-[#333] rounded text-sm text-white placeholder:text-[#666] outline-none focus:border-[#BA5B55]"
+              className="w-full p-3 bg-[#141414] border border-[#333] rounded-2xl text-sm text-white placeholder:text-[#666] outline-none focus:border-[#BA5B55] resize-none"
             />
             <div className="flex justify-end gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setShowRejectModal(false)}
                 disabled={isPending}
-                className="px-4 py-2 bg-transparent hover:bg-[#2a2a2a] text-[#aaa] hover:text-white rounded text-xs cursor-pointer"
+                className="px-4 py-2 bg-transparent hover:bg-[#2a2a2a] text-[#aaa] hover:text-white rounded-xl text-xs cursor-pointer"
               >
                 Cancel
               </button>
@@ -231,7 +231,7 @@ const ShopRequestCard = ({ request, isApproved }: ShopRequestCardProps) => {
                 type="button"
                 onClick={() => handleAction("reject", rejectReason)}
                 disabled={isPending || !rejectReason.trim()}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-medium cursor-pointer disabled:opacity-50 shadow"
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-medium cursor-pointer disabled:opacity-50 shadow"
               >
                 {isPending ? "Rejecting..." : "Confirm Rejection"}
               </button>

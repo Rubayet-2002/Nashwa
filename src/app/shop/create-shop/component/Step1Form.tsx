@@ -1,11 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { ArrowRight, Telephone, Store, Mail } from "@mynaui/icons-react";
 import { useToastStore } from "@/zustand/toastStore";
 import { Step1Action } from "../lib/step1Action";
 import { CreateShopPayload } from "../lib/utils";
-import { UNIVERSITIES } from "../../lib/universities";
 
 interface Step1FormProps {
   defaultValues?: CreateShopPayload | null;
@@ -13,13 +12,8 @@ interface Step1FormProps {
 
 const Step1Form = ({ defaultValues }: Step1FormProps) => {
   const addToast = useToastStore((s) => s.addToast);
+  
   const [state, action, isPending] = useActionState(Step1Action, null);
-  const [selectedUniversityUid, setSelectedUniversityUid] = useState(
-    defaultValues?.universityUid || "",
-  );
-  const [isUniversityDialogOpen, setIsUniversityDialogOpen] = useState(
-    !(defaultValues?.universityUid || state?.values?.universityUid),
-  );
 
   useEffect(() => {
     if (state?.error) {
@@ -28,66 +22,9 @@ const Step1Form = ({ defaultValues }: Step1FormProps) => {
   }, [state, addToast]);
 
   const currentValues = state?.values || defaultValues;
-  const selectedUniversity = UNIVERSITIES.find(
-    (university) => university.uid === selectedUniversityUid,
-  );
-
-  useEffect(() => {
-    const nextUniversityUid = currentValues?.universityUid || "";
-    if (nextUniversityUid) {
-      setSelectedUniversityUid(nextUniversityUid);
-      setIsUniversityDialogOpen(false);
-    }
-  }, [currentValues?.universityUid]);
 
   return (
-    <form action={action} className="relative flex flex-col gap-3">
-      <input type="hidden" name="universityUid" value={selectedUniversityUid} />
-      <input type="hidden" name="universityName" value={selectedUniversity?.name || ""} />
-
-      {isUniversityDialogOpen && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/90 backdrop-blur-sm p-2">
-          <div className="w-full max-w-md border border-[#eaeaea] bg-white shadow-xl">
-            <div className="border-b border-[#f0f0f0] px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#BA5B55]">
-                University setup
-              </p>
-              <h3 className="mt-1 text-lg font-bold text-[#1a1a1a]">
-                Choose your university
-              </h3>
-              <p className="mt-1 text-xs text-[#787878]">
-                We use this to sort shops and keep Nashwa focused on your campus.
-              </p>
-            </div>
-
-            <div className="max-h-80 overflow-y-auto p-4">
-              <div className="grid gap-2">
-                {UNIVERSITIES.map((university) => (
-                  <button
-                    key={university.uid}
-                    type="button"
-                    onClick={() => {
-                      setSelectedUniversityUid(university.uid);
-                      setIsUniversityDialogOpen(false);
-                    }}
-                    className={`flex items-center justify-between border px-3 py-2 text-left text-sm transition-colors ${
-                      selectedUniversityUid === university.uid
-                        ? "border-[#BA5B55] bg-[#BA5B55]/5 text-[#BA5B55]"
-                        : "border-[#eaeaea] text-[#1a1a1a] hover:border-[#BA5B55]/40 hover:bg-[#fcfcfd]"
-                    }`}
-                  >
-                    <span>{university.name}</span>
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-[#787878]">
-                      Select
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
+    <form action={action} className="flex flex-col gap-3">
       <div className="flex flex-col gap-3">
         <p className="text-sm leading-none">
           Please provide your shop information
@@ -146,29 +83,6 @@ const Step1Form = ({ defaultValues }: Step1FormProps) => {
           pattern="[0-9]*"
           className="w-full bg-white text-sm outline-none placeholder:text-[#787878]"
         />
-      </div>
-
-      <div className="border border-[#eaeaea] bg-[#fcfcfd] p-3">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#787878]">
-              University
-            </p>
-            <p className="text-xs text-[#787878]">
-              {selectedUniversity ? selectedUniversity.name : "Choose your university"}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsUniversityDialogOpen(true)}
-            className="text-xs font-medium text-[#BA5B55] hover:underline"
-          >
-            {selectedUniversity ? "Change" : "Select"}
-          </button>
-        </div>
-        <p className="mt-2 text-[11px] text-[#787878]">
-          If you are starting a new shop, pick the university that best matches your campus.
-        </p>
       </div>
 
       <div className="flex gap-2">

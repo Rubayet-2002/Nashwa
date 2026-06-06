@@ -1,6 +1,5 @@
 import { Pool } from "pg";
 import dotenv from "dotenv";
-import { CampusEvent, ChatMessage } from "./table";
 dotenv.config();
 
 const globalForPg = global as unknown as { pool: Pool };
@@ -27,11 +26,8 @@ async function verify() {
   try {
     await pool.query("SELECT NOW()");
     console.log("DB connected successfully");
-    await pool.query(CampusEvent);
-    await pool.query(ChatMessage);
-    console.log("Campus Event and Chat Message tables verified/created successfully.");
   } catch (err) {
-    console.error("Error connecting to DB or verifying tables:", err);
+    console.error("Error connecting to DB");
   }
 }
 
