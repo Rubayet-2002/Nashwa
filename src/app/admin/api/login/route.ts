@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import pool from "@/database/pool";
-import bcrypt from "bcryptjs";
 import { issueJWT, setTokenCookie } from "@/app/(authentication)/lib/jwtUtils";
 
 export async function POST(request: Request) {
@@ -13,6 +12,8 @@ export async function POST(request: Request) {
     }
 
     const { admin_email, password } = await request.json();
+    const configuredAdminEmail = process.env.ADMIN_EMAIL || "admin@nashwa.com";
+    const configuredAdminPassword = process.env.ADMIN_PASSWORD || "admin123";
 
     if (!admin_email || !password) {
       return NextResponse.json(
@@ -21,8 +22,15 @@ export async function POST(request: Request) {
       );
     }
 
+    if (admin_email !== configuredAdminEmail || password !== configuredAdminPassword) {
+      return NextResponse.json(
+        { message: "Invalid admin credentials." },
+        { status: 401 },
+      );
+    }
+
     const adminRes = await pool.query(
-      "SELECT uid AS admin_uid, email AS admin_email, password_hash FROM users WHERE email = $1 AND role = 'admin'",
+      "SELECT uid AS admin_uid, email AS admin_email FROM users WHERE email = $1 AND role = 'admin'",
       [admin_email],
     );
 
@@ -34,14 +42,6 @@ export async function POST(request: Request) {
     }
 
     const admin = adminRes.rows[0];
-
-    const isMatch = await bcrypt.compare(password, admin.password_hash);
-    if (!isMatch) {
-      return NextResponse.json(
-        { message: "Invalid admin credentials." },
-        { status: 401 },
-      );
-    }
 
     const payload = {
       admin_uid: admin.admin_uid,
