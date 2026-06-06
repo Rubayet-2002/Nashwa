@@ -13,6 +13,7 @@ import {
   UniversityFavorite,
   Product,
   ProductImage,
+  Bids,
   ProductReaction,
   ProductSave,
   ProductComment,
@@ -46,6 +47,7 @@ async function run() {
     await client.query(UniversityFavorite);
     await client.query(Product);
     await client.query(ProductImage);
+    await client.query(Bids);
     await client.query(ProductReaction);
     await client.query(ProductSave);
     await client.query(ProductComment);

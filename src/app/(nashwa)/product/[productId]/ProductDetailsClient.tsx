@@ -39,6 +39,11 @@ interface ProductDetailsClientProps {
     shop_follower_count: number;
     variants?: any;
     product_details?: any;
+    // Auction fields
+    is_bidding?: boolean;
+    bidding_starts_at?: string | null;
+    bidding_ends_at?: string | null;
+    bidding_minimum?: string | null;
   };
   images: string[];
   currentUserId: string | null;
@@ -80,6 +85,13 @@ export default function ProductDetailsClient({
   const [savedProducts, setSavedProducts] = useState<Set<string>>(new Set());
   const [reactedProducts, setReactedProducts] = useState<Set<string>>(new Set());
   const [canUserReview, setCanUserReview] = useState(false);
+
+  // Bids / Auction state
+  const [bids, setBids] = useState<any[]>([]);
+  const [loadingBids, setLoadingBids] = useState(false);
+  const [bidAmount, setBidAmount] = useState("");
+  const [placingBid, setPlacingBid] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
 
   // Review creation form states
   const [userReviewRating, setUserReviewRating] = useState(0);
@@ -324,6 +336,89 @@ export default function ProductDetailsClient({
       active = false;
     };
   }, [product.product_uid, product.shop_uid, currentUserId]);
+
+  // Fetch bids
+  const fetchBids = async () => {
+    setLoadingBids(true);
+    try {
+      const res = await fetch(`/api/bids?productUid=${encodeURIComponent(product.product_uid)}`);
+      const j = await res.json();
+      if (res.ok && j.bids) setBids(j.bids);
+    } catch (err) {
+      console.error("Failed to fetch bids", err);
+    } finally {
+      setLoadingBids(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBids();
+    // listen for new bids via socket if available
+    try {
+      const socket = connectSocket();
+      socket.emit("join:product", { productId: product.product_uid });
+      socket.on("product:bid", (d: any) => {
+        if (d.productId === product.product_uid) fetchBids();
+      });
+      return () => {
+        socket.off("product:bid");
+      };
+    } catch (e) {
+      // ignore socket errors
+    }
+  }, [product.product_uid]);
+
+  const handlePlaceBid = async () => {
+    if (!currentUserId) return addToast("Please sign in to place bids", "error");
+    const amt = parseFloat(bidAmount);
+    if (!amt || amt <= 0) return addToast("Enter a valid bid amount", "error");
+    setPlacingBid(true);
+    try {
+      const res = await fetch("/api/bids", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify({ productUid: product.product_uid, amount: amt }),
+      });
+      const j = await res.json();
+      if (res.ok && j.success) {
+        addToast("Bid placed successfully", "success");
+        setBidAmount("");
+        fetchBids();
+      } else {
+        addToast(j.error || "Failed to place bid", "error");
+      }
+    } catch (e) {
+      console.error(e);
+      addToast("Network error placing bid", "error");
+    } finally {
+      setPlacingBid(false);
+    }
+  };
+
+  const handleFinalizeAuction = async () => {
+    if (!isOwner) return;
+    if (!confirm("Finalize auction and select winner? This will remove the product.")) return;
+    setFinalizing(true);
+    try {
+      const res = await fetch("/api/auctions/finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify({ productUid: product.product_uid }),
+      });
+      const j = await res.json();
+      if (res.ok && j.success) {
+        addToast("Auction finalized", "success");
+        router.refresh();
+      } else {
+        addToast(j.error || "Failed to finalize auction", "error");
+      }
+    } catch (e) {
+      console.error(e);
+      addToast("Network error finalizing auction", "error");
+    } finally {
+      setFinalizing(false);
+    }
+  };
 
   // Fetch user info for pre-filling when modal opens
   useEffect(() => {
@@ -747,20 +842,69 @@ export default function ProductDetailsClient({
 
               {/* Dominant Purchase Button */}
               <div className="border-t border-[#f5f5f5] pt-5 mt-4">
-                {!currentUserId ? (
-                  <Link
-                    href="/email"
-                    className="w-full text-center block text-xs bg-[#BA5B55] border border-[#BA5B55] hover:bg-white hover:text-[#BA5B55] transition-all py-3 text-white font-bold rounded-2xl cursor-pointer shadow-xs"
-                  >
-                    Sign in to Purchase
-                  </Link>
+                {product.is_bidding ? (
+                  <div className="flex flex-col gap-3">
+                    <div className="text-xs text-[#555]">
+                      <div>Auction window:</div>
+                      <div className="text-[11px] text-gray-500">
+                        {product.bidding_starts_at ? new Date(product.bidding_starts_at).toLocaleString() : "—"} 
+                        &nbsp;—&nbsp; {product.bidding_ends_at ? new Date(product.bidding_ends_at).toLocaleString() : "—"}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-bold text-[#BA5B55]">
+                        Current highest: {loadingBids ? "Loading..." : bids.length > 0 ? `${product.currency} ${Number(bids[0].amount).toFixed(0)}` : "No bids yet"}
+                      </div>
+                      {isOwner && product.bidding_ends_at && new Date(product.bidding_ends_at) < new Date() && (
+                        <button
+                          onClick={handleFinalizeAuction}
+                          disabled={finalizing}
+                          className="px-3 py-1.5 bg-[#BA5B55] text-white text-xs font-bold rounded-xl"
+                        >
+                          {finalizing ? "Finalizing..." : "Finalize Auction"}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Bid form for non-owners */}
+                    {!isOwner && (
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="Your bid"
+                          value={bidAmount}
+                          onChange={(e) => setBidAmount(e.target.value)}
+                          className="flex-1 border border-[#eadfdb] px-3 py-2 text-xs outline-none"
+                        />
+                        <button
+                          onClick={handlePlaceBid}
+                          disabled={placingBid}
+                          className="px-4 py-2 bg-[#BA5B55] text-white text-xs font-bold rounded-xl"
+                        >
+                          {placingBid ? "Placing..." : "Place Bid"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <button
-                    onClick={() => setIsPurchaseModalOpen(true)}
-                    className="w-full text-center text-xs bg-[#BA5B55] border border-[#BA5B55] hover:bg-white hover:text-[#BA5B55] transition-all py-3 text-white font-bold rounded-2xl cursor-pointer shadow-xs"
-                  >
-                    Purchase Product
-                  </button>
+                  (!currentUserId ? (
+                    <Link
+                      href="/email"
+                      className="w-full text-center block text-xs bg-[#BA5B55] border border-[#BA5B55] hover:bg-white hover:text-[#BA5B55] transition-all py-3 text-white font-bold rounded-2xl cursor-pointer shadow-xs"
+                    >
+                      Sign in to Purchase
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => setIsPurchaseModalOpen(true)}
+                      className="w-full text-center text-xs bg-[#BA5B55] border border-[#BA5B55] hover:bg-white hover:text-[#BA5B55] transition-all py-3 text-white font-bold rounded-2xl cursor-pointer shadow-xs"
+                    >
+                      Purchase Product
+                    </button>
+                  ))
                 )}
               </div>
 

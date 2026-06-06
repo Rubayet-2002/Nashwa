@@ -18,6 +18,7 @@ export const DropAll = `
   DROP TABLE IF EXISTS product_reaction CASCADE;
   DROP TABLE IF EXISTS product_comment CASCADE;
   DROP TABLE IF EXISTS product_image CASCADE;
+  DROP TABLE IF EXISTS bids CASCADE;
   DROP TABLE IF EXISTS product CASCADE;
   DROP TABLE IF EXISTS university_favorite CASCADE;
   DROP TABLE IF EXISTS shop_follow CASCADE;
@@ -198,6 +199,12 @@ CREATE TABLE IF NOT EXISTS product (
   outside_delivery_charge NUMERIC(10,2) DEFAULT 0,
   free_on_campus_delivery BOOLEAN DEFAULT FALSE,
 
+  -- Auction / Bidding support
+  is_bidding              BOOLEAN DEFAULT FALSE,
+  bidding_starts_at       TIMESTAMPTZ DEFAULT NULL,
+  bidding_ends_at         TIMESTAMPTZ DEFAULT NULL,
+  bidding_minimum         NUMERIC(12,2) DEFAULT NULL,
+
   variants                JSONB DEFAULT '[]',
   product_details         JSONB DEFAULT '[]',
 
@@ -220,6 +227,17 @@ CREATE TABLE IF NOT EXISTS product_image (
   product_uid   VARCHAR(50) REFERENCES product(product_uid) ON DELETE CASCADE,
   image_url     TEXT NOT NULL,
   position      INT DEFAULT 0
+);
+`;
+
+// ---- BIDS (auction bids) ----
+export const Bids = `
+CREATE TABLE IF NOT EXISTS bids (
+  bid_uid       VARCHAR(50) PRIMARY KEY,
+  product_uid   VARCHAR(50) REFERENCES product(product_uid) ON DELETE CASCADE,
+  bidder_uid    VARCHAR(50) REFERENCES users(uid) ON DELETE SET NULL,
+  amount        NUMERIC(12,2) NOT NULL,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
 );
 `;
 

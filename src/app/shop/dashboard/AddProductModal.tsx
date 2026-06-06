@@ -54,6 +54,11 @@ export default function AddProductModal({
   // 4. Price
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("BDT");
+  // Bidding / Auction
+  const [isBidding, setIsBidding] = useState(false);
+  const [biddingStartsAt, setBiddingStartsAt] = useState("");
+  const [biddingEndsAt, setBiddingEndsAt] = useState("");
+  const [biddingMinimum, setBiddingMinimum] = useState("");
   
   // 5. Delivery Charge
   const [deliveryCharge, setDeliveryCharge] = useState("");
@@ -120,14 +125,22 @@ export default function AddProductModal({
     if (selectedFiles.length === 0) {
       return addToast("Please select at least 1 image", "error");
     }
-    if (!title || !price || !category) {
+    if (!title || (!isBidding && !price) || !category) {
       return addToast("Please fill all required fields (*)", "error");
     }
 
-    const basePrice = parseFloat(price);
     const discount = discountPercent ? parseFloat(discountPercent) : 0;
-    const finalPrice = discount > 0 ? basePrice * (1 - discount / 100) : basePrice;
-    const origPrice = discount > 0 ? basePrice : null;
+    let finalPrice: number | null = null;
+    let origPrice: number | null = null;
+    if (isBidding) {
+      // For bidding products, store price as biddingMinimum if provided, otherwise 0
+      finalPrice = biddingMinimum ? parseFloat(biddingMinimum) : 0;
+      origPrice = null;
+    } else {
+      const basePrice = parseFloat(price);
+      finalPrice = discount > 0 ? basePrice * (1 - discount / 100) : basePrice;
+      origPrice = discount > 0 ? basePrice : null;
+    }
 
     const parsedDeliveryCharge = deliveryCharge ? parseFloat(deliveryCharge) : 0;
 
@@ -170,6 +183,10 @@ export default function AddProductModal({
           title,
           description,
           price: finalPrice,
+          isBidding,
+          biddingStartsAt: isBidding ? (biddingStartsAt ? new Date(biddingStartsAt).toISOString() : null) : null,
+          biddingEndsAt: isBidding ? (biddingEndsAt ? new Date(biddingEndsAt).toISOString() : null) : null,
+          biddingMinimum: isBidding ? (biddingMinimum ? parseFloat(biddingMinimum) : null) : null,
           originalPrice: origPrice,
           discountPercent: discount,
           currency,
@@ -336,13 +353,28 @@ export default function AddProductModal({
                 <input
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  required
+                    required={!isBidding}
                   type="number"
                   step="0.01"
                   min="0"
                   placeholder="0.00"
                   className="ml-2 w-full border-0 bg-transparent text-xs outline-none text-[#1a1a1a]"
                 />
+              </div>
+              <div className="mt-2">
+                <label className="flex items-center gap-2 text-xs">
+                  <input type="checkbox" checked={isBidding} onChange={(e) => setIsBidding(e.target.checked)} />
+                  <span className="ml-1">Enable bidding / auction</span>
+                </label>
+                {isBidding && (
+                  <div className="mt-2 grid grid-cols-1 gap-2">
+                    <div className="flex gap-2">
+                      <input type="datetime-local" value={biddingStartsAt} onChange={(e) => setBiddingStartsAt(e.target.value)} className="w-1/2 border border-[#eadfdb] px-2 py-1 text-xs" />
+                      <input type="datetime-local" value={biddingEndsAt} onChange={(e) => setBiddingEndsAt(e.target.value)} className="w-1/2 border border-[#eadfdb] px-2 py-1 text-xs" />
+                    </div>
+                    <input type="number" step="0.01" min="0" placeholder="Minimum bid (optional)" value={biddingMinimum} onChange={(e) => setBiddingMinimum(e.target.value)} className="border border-[#eadfdb] px-2 py-1 text-xs" />
+                  </div>
+                )}
               </div>
             </div>
           </div>          {/* STEP 5: Delivery Charge */}

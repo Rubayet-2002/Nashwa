@@ -32,14 +32,36 @@ export async function POST(req: NextRequest) {
     const enrichedItems: any[] = [];
 
     for (const item of items) {
-      const productRes = await pool.query(`SELECT product_uid, title, price, status, free_on_campus_delivery, inside_delivery_charge FROM product WHERE product_uid = $1 AND shop_uid = $2`, [item.productUid, shopUid]);
-      if (!productRes.rows[0] || productRes.rows[0].status !== "active") {
+      const productRes = await pool.query(
+        `SELECT product_uid, title, price, status, is_bidding, free_on_campus_delivery, inside_delivery_charge FROM product WHERE product_uid = $1 AND shop_uid = $2`,
+        [item.productUid, shopUid]
+      );
+      if (!productRes.rows[0]) {
         return NextResponse.json({ error: `Product "${item.productUid}" is not available` }, { status: 400 });
       }
+
       const p = productRes.rows[0];
-      const lineTotal = Number(p.price) * item.quantity;
+      const topBidRes = await pool.query(
+        `SELECT bidder_uid, amount FROM bids WHERE product_uid = $1 ORDER BY amount DESC, created_at ASC LIMIT 1`,
+        [item.productUid]
+      );
+      const topBid = topBidRes.rows[0];
+
+      const isAuctionWinner = Boolean(
+        p.is_bidding &&
+          p.status !== "active" &&
+          topBid &&
+          topBid.bidder_uid === user.uid
+      );
+
+      if (p.status !== "active" && !isAuctionWinner) {
+        return NextResponse.json({ error: `Product "${item.productUid}" is not available` }, { status: 400 });
+      }
+
+      const unitPrice = isAuctionWinner ? Number(topBid.amount) : Number(p.price);
+      const lineTotal = unitPrice * item.quantity;
       subtotal += lineTotal;
-      enrichedItems.push({ productUid: p.product_uid, productTitle: p.title, unitPrice: Number(p.price), quantity: item.quantity, variant: item.variant || null, lineTotal });
+      enrichedItems.push({ productUid: p.product_uid, productTitle: p.title, unitPrice, quantity: item.quantity, variant: item.variant || null, lineTotal });
     }
 
     // Assuming single-product order or first product dictates delivery for now

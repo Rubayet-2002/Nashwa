@@ -38,10 +38,11 @@ export async function POST(req: NextRequest) {
       insideDeliveryCharge = 0, outsideDeliveryCharge = 0,
       freeOnCampusDelivery = false, variants = [], productDetails = [],
       eventUid, productType = "regular",
+      isBidding = false, biddingStartsAt = null, biddingEndsAt = null, biddingMinimum = null,
       images = [], // array of base64 strings (already cropped on client)
     } = body;
 
-    if (!shopUid || !title || !price) {
+    if (!shopUid || !title || (!isBidding && (price === undefined || price === null || price === ""))) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -66,17 +67,22 @@ export async function POST(req: NextRequest) {
     }
 
     const productUid = crypto.randomUUID();
+    // If product is bidding-only, ensure price field is non-null (DB requires NOT NULL). Use biddingMinimum or 0.
+    const priceToInsert = isBidding ? (biddingMinimum ? parseFloat(biddingMinimum) : 0) : (price !== undefined && price !== null ? parseFloat(price) : 0);
+    const originalPriceToInsert = isBidding ? null : (originalPrice || null);
+
     await pool.query(`
       INSERT INTO product (product_uid, shop_uid, title, description, category,
         product_type, price, original_price, discount_percent, currency,
         inside_delivery_charge, outside_delivery_charge, free_on_campus_delivery,
-        variants, product_details, status)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+        variants, product_details, status, is_bidding, bidding_starts_at, bidding_ends_at, bidding_minimum)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
     `, [
       productUid, shopUid, title, description || null, category || null,
-      finalProductType, price, originalPrice || null, discountPercent || 0, currency,
+      finalProductType, priceToInsert, originalPriceToInsert, discountPercent || 0, currency,
       insideDeliveryCharge, outsideDeliveryCharge, freeOnCampusDelivery,
       JSON.stringify(variants), JSON.stringify(productDetails), status,
+      isBidding, biddingStartsAt ? new Date(biddingStartsAt) : null, biddingEndsAt ? new Date(biddingEndsAt) : null, biddingMinimum || null,
     ]);
 
     // Upload images to Cloudinary or save URLs directly

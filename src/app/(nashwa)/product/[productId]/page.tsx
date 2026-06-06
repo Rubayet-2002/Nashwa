@@ -16,14 +16,18 @@ export default async function ProductDetailPage({
   let product: any = null;
   let imageList: string[] = [];
   let initialIsFollowing = false;
+  let canAuctionPurchase = false;
+  let winningBidAmount: string | null = null;
 
   try {
     // Fetch product detail along with shop information
     const productRes = await pool.query(
-      `SELECT p.product_uid, p.title, p.description, p.price, p.original_price,
+            `SELECT p.product_uid, p.title, p.description, p.price, p.original_price,
               p.discount_percent, p.currency, p.category, p.product_type,
               p.inside_delivery_charge, p.outside_delivery_charge, p.free_on_campus_delivery,
+              p.is_bidding, p.bidding_starts_at, p.bidding_ends_at, p.bidding_minimum,
               p.sold_count, p.avg_rating, p.variants,
+              p.status,
               s.shop_uid, s.shop_name, s.shop_location, s.profile_photo_url AS shop_profile_photo_url, s.owner_uid,
               s.avg_rating AS shop_rating, s.follower_count AS shop_follower_count,
               u.username AS owner_name,
@@ -33,7 +37,7 @@ export default async function ProductDetailPage({
        JOIN users u ON u.uid = s.owner_uid
        LEFT JOIN shop_join_university sju ON sju.shop_uid = s.shop_uid AND sju.status = 'approved'
        LEFT JOIN partner_university pu ON pu.university_uid = sju.university_uid
-       WHERE p.product_uid = $1 AND p.status = 'active'`,
+       WHERE p.product_uid = $1`,
       [productId]
     );
 
@@ -42,6 +46,24 @@ export default async function ProductDetailPage({
     }
 
     product = productRes.rows[0];
+
+    const topBidRes = await pool.query(
+      `SELECT bidder_uid, amount FROM bids WHERE product_uid = $1 ORDER BY amount DESC, created_at ASC LIMIT 1`,
+      [productId]
+    );
+    if (topBidRes.rows[0]) {
+      winningBidAmount = topBidRes.rows[0].amount;
+      canAuctionPurchase = Boolean(
+        product.is_bidding &&
+          product.status !== "active" &&
+          user &&
+          (topBidRes.rows[0].bidder_uid === user.uid || product.owner_uid === user.uid)
+      );
+    }
+
+    if (product.status !== "active" && !canAuctionPurchase && !(user && product.owner_uid === user.uid && product.is_bidding)) {
+      notFound();
+    }
 
     // Fetch product images
     const imagesRes = await pool.query(
@@ -79,6 +101,8 @@ export default async function ProductDetailPage({
           currentUserId={user?.uid || null}
           currentUserRole={user?.role || null}
           initialIsFollowing={initialIsFollowing}
+          canAuctionPurchase={canAuctionPurchase}
+          winningBidAmount={winningBidAmount}
         />
       </div>
     </div>
