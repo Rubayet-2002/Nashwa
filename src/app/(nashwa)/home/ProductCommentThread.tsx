@@ -39,8 +39,8 @@ function timeAgo(dateStr: string) {
 
 function Avatar({ name, url }: { name: string; url?: string | null }) {
   return (
-    <div style={{ width: 28, height: 28, borderRadius: "50%", flexShrink: 0, overflow: "hidden", background: "var(--brand-light)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "var(--brand)" }}>
-      {url ? <img src={url} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : name.charAt(0).toUpperCase()}
+    <div className="w-7 h-7 rounded-full shrink-0 overflow-hidden bg-[#BA5B55]/5 border border-gray-200 flex items-center justify-center text-[10px] font-bold text-[#BA5B55]">
+      {url ? <img src={url} alt={name} className="w-full h-full object-cover" /> : name.charAt(0).toUpperCase()}
     </div>
   );
 }
@@ -120,50 +120,64 @@ export default function ProductCommentThread({ productUid, shopUid, currentUserI
   const isOwner = (currentUserId && shopOwnerUid && currentUserId === shopOwnerUid) || currentUserRole === "seller";
 
   return (
-    <div>
+    <div className="flex flex-col gap-3 font-sans">
       {/* New comment input */}
-      {!isOwner && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-          <input
-            value={text}
-            onChange={e => setText(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); post(text); } }}
-            placeholder={currentUserId ? "Write a comment…" : "Sign in to comment"}
-            disabled={!currentUserId}
-            style={{ flex: 1, padding: "7px 14px", fontSize: 12, borderRadius: 99, border: "1px solid var(--border)", outline: "none", background: currentUserId ? "#fff" : "var(--bg)", color: "var(--text-primary)" }}
-          />
-          <button onClick={() => post(text)} disabled={!currentUserId || !text.trim()} style={{ padding: "7px 14px", fontSize: 12, background: "var(--brand)", color: "#fff", border: "none", borderRadius: 99, cursor: "pointer", opacity: (!currentUserId || !text.trim()) ? 0.45 : 1 }}>
-            Post
-          </button>
-        </div>
-      )}
+      <div className="flex gap-2 mb-2 w-full">
+        <input
+          value={text}
+          onChange={e => setText(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); post(text); } }}
+          placeholder={currentUserId ? "Write a comment…" : "Sign in to comment"}
+          disabled={!currentUserId}
+          className={`flex-1 px-4 py-2 text-xs rounded-full border border-gray-200 outline-none transition-all ${
+            currentUserId ? "bg-white text-[#1a1a1a] focus:border-[#BA5B55]" : "bg-gray-50 text-gray-400 cursor-not-allowed"
+          }`}
+        />
+        <button
+          onClick={() => post(text)}
+          disabled={!currentUserId || !text.trim()}
+          className="px-4 py-2 text-xs bg-[#BA5B55] hover:bg-[#a34e48] text-white rounded-full font-bold transition-all disabled:opacity-45 disabled:cursor-not-allowed cursor-pointer shrink-0 shadow-3xs"
+        >
+          Post
+        </button>
+      </div>
 
       {loading ? (
-        <p style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", padding: "12px 0" }}>Loading…</p>
+        <p className="text-xs text-gray-400 text-center py-4">Loading…</p>
       ) : threads.length === 0 ? (
-        <p style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", padding: "12px 0" }}>No comments yet. Be the first! 💬</p>
+        <p className="text-xs text-gray-400 text-center py-4">No comments yet. Be the first! 💬</p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="flex flex-col gap-4">
           {threads.map(comment => {
             const isParentShopAuthor = comment.author_role === "seller" || comment.author_uid === shopOwnerUid;
             return (
-              <div key={comment.comment_uid}>
+              <div key={comment.comment_uid} className="flex flex-col gap-2">
                 {/* Parent comment */}
-                <div style={{ display: "flex", gap: 8 }}>
+                <div className="flex gap-2">
                   <Avatar name={comment.author_name} url={comment.author_photo_url} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ background: "var(--bg)", borderRadius: "16px 16px 16px 4px", padding: "8px 12px", border: "1px solid var(--border-soft)" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                        <span style={{ fontSize: 12, fontWeight: 700 }}>{comment.author_name}</span>
-                        {isParentShopAuthor && <span style={{ fontSize: 9, background: "var(--brand-light)", color: "var(--brand)", padding: "1px 6px", borderRadius: 99, fontWeight: 700 }}>Shop</span>}
-                        <span style={{ fontSize: 10, color: "var(--text-muted)", marginLeft: "auto" }}>{timeAgo(comment.created_at)}</span>
+                  <div className="flex-1">
+                    <div className="bg-gray-50 border border-gray-100 rounded-2xl rounded-bl-xs p-3.5">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <span className="text-xs font-bold text-[#1a1a1a]">{comment.author_name}</span>
+                        {isParentShopAuthor && (
+                          <span className="text-[9px] bg-[#BA5B55]/5 text-[#BA5B55] px-2 py-0.5 rounded-full font-bold">
+                            Shop
+                          </span>
+                        )}
+                        <span className="text-[10px] text-gray-400 font-light ml-auto">{timeAgo(comment.created_at)}</span>
                       </div>
-                      <p style={{ fontSize: 12, lineHeight: 1.5 }}>{comment.comment_text}</p>
+                      <p className="text-xs text-[#1a1a1a] leading-relaxed whitespace-pre-wrap">{comment.comment_text}</p>
                     </div>
                     {/* Actions */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4, paddingLeft: 4 }}>
-                      <button onClick={() => likeComment(comment.comment_uid)} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 600, background: "none", border: "none", cursor: "pointer", color: likedComments.has(comment.comment_uid) ? "#ef4444" : "var(--text-muted)" }}>
-                        <Heart size={14} fill={likedComments.has(comment.comment_uid) ? "#ef4444" : "none"} /> {comment.like_count > 0 && comment.like_count}
+                    <div className="flex items-center gap-4 mt-1 pl-1">
+                      <button
+                        onClick={() => likeComment(comment.comment_uid)}
+                        className={`flex items-center gap-1 text-[10px] font-bold transition-colors cursor-pointer ${
+                          likedComments.has(comment.comment_uid) ? "text-red-500 hover:text-red-600" : "text-gray-400 hover:text-red-500"
+                        }`}
+                      >
+                        <Heart size={14} fill={likedComments.has(comment.comment_uid) ? "currentColor" : "none"} />
+                        <span>{comment.like_count > 0 && comment.like_count}</span>
                       </button>
                       {canReply() && (
                         <button
@@ -171,7 +185,7 @@ export default function ProductCommentThread({ productUid, shopUid, currentUserI
                             setActiveReplyTo(a => ({ ...a, [comment.comment_uid]: null }));
                             setReplyOpen(o => ({ ...o, [comment.comment_uid]: !o[comment.comment_uid] }));
                           }}
-                          style={{ fontSize: 10, fontWeight: 600, background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}
+                          className="text-[10px] font-bold text-gray-400 hover:text-[#BA5B55] transition-colors cursor-pointer"
                         >
                           Reply
                         </button>
@@ -182,7 +196,7 @@ export default function ProductCommentThread({ productUid, shopUid, currentUserI
 
                 {/* Reply input for parent comment */}
                 {replyOpen[comment.comment_uid] && (!activeReplyTo[comment.comment_uid] || activeReplyTo[comment.comment_uid]?.commentUid === comment.comment_uid) && (
-                  <div style={{ display: "flex", gap: 8, marginTop: 8, marginLeft: 36 }}>
+                  <div className="flex gap-2 mt-1 ml-9">
                     <input
                       value={replyDrafts[comment.comment_uid] || ""}
                       onChange={e => setReplyDrafts(d => ({ ...d, [comment.comment_uid]: e.target.value }))}
@@ -193,63 +207,76 @@ export default function ProductCommentThread({ productUid, shopUid, currentUserI
                         }
                       }}
                       placeholder={`Reply to ${comment.author_name}…`}
-                      style={{ flex: 1, padding: "6px 12px", fontSize: 11, borderRadius: 99, border: "1px solid var(--border)", outline: "none" }}
+                      className="flex-1 px-3.5 py-1.5 text-xs rounded-full border border-gray-200 outline-none bg-white text-[#1a1a1a] focus:border-[#BA5B55] transition-all"
                     />
                     <button
                       onClick={() => post(replyDrafts[comment.comment_uid] || "", comment.comment_uid, activeReplyTo[comment.comment_uid]?.authorName)}
-                      style={{ padding: "6px 12px", fontSize: 11, background: "var(--brand)", color: "#fff", border: "none", borderRadius: 99, cursor: "pointer" }}
+                      className="px-3.5 py-1.5 text-xs bg-[#BA5B55] hover:bg-[#a34e48] text-white rounded-full font-bold transition-all cursor-pointer"
                     >
                       Send
                     </button>
                   </div>
                 )}
 
-
-
                 {/* Replies */}
                 {comment.replies.length > 0 && (
-                  <div style={{ marginLeft: 36, marginTop: 8, display: "flex", flexDirection: "column", gap: 8, paddingLeft: 12, borderLeft: "2px solid var(--border-soft)" }}>
+                  <div className="ml-9 mt-1 flex flex-col gap-3 pl-3 border-l-2 border-gray-100">
                     {comment.replies.map(reply => {
                       const isReplyShopAuthor = reply.author_role === "seller" || reply.author_uid === shopOwnerUid;
+                      const isChildReplying = replyOpen[comment.comment_uid] && activeReplyTo[comment.comment_uid]?.commentUid === reply.comment_uid;
                       return (
-                        <div key={reply.comment_uid} style={{ display: "flex", gap: 8 }}>
-                          <Avatar name={reply.author_name} url={reply.author_photo_url} />
-                          <div style={{ flex: 1, background: "#fff", border: "1px solid var(--border-soft)", borderRadius: "12px 12px 12px 4px", padding: "7px 11px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
-                              <span style={{ fontSize: 11, fontWeight: 700 }}>{reply.author_name}</span>
-                              {isReplyShopAuthor && <span style={{ fontSize: 9, background: "var(--brand-light)", color: "var(--brand)", padding: "1px 5px", borderRadius: 99, fontWeight: 700 }}>Shop</span>}
-                              <span style={{ fontSize: 10, color: "var(--text-muted)", marginLeft: "auto" }}>{timeAgo(reply.created_at)}</span>
-                            </div>
-                            {reply.reply_to_name && (
-                              <p style={{ fontSize: 11 }}>
-                                <strong style={{ color: "var(--brand)" }}>@{reply.reply_to_name}</strong>{" "}
-                                {reply.comment_text}
-                              </p>
-                            )}
-                            {!reply.reply_to_name && <p style={{ fontSize: 11, lineHeight: 1.5 }}>{reply.comment_text}</p>}
-                            
-                            {/* Actions for reply */}
-                            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
-                              <button onClick={() => likeComment(reply.comment_uid)} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 600, background: "none", border: "none", cursor: "pointer", color: likedComments.has(reply.comment_uid) ? "#ef4444" : "var(--text-muted)" }}>
-                                <Heart size={14} fill={likedComments.has(reply.comment_uid) ? "#ef4444" : "none"} /> {reply.like_count > 0 && reply.like_count}
-                              </button>
-                              {canReply() && (
-                                <button
-                                  onClick={() => {
-                                    setActiveReplyTo(a => ({ ...a, [comment.comment_uid]: { commentUid: reply.comment_uid, authorName: reply.author_name } }));
-                                    setReplyOpen(o => ({ ...o, [comment.comment_uid]: true }));
-                                  }}
-                                  style={{ fontSize: 10, fontWeight: 600, background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}
-                                >
-                                  Reply
-                                </button>
+                        <div key={reply.comment_uid} className="flex flex-col gap-2">
+                          <div className="flex gap-2">
+                            <Avatar name={reply.author_name} url={reply.author_photo_url} />
+                            <div className="flex-1 bg-white border border-gray-100 rounded-2xl rounded-bl-xs p-3">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <span className="text-xs font-bold text-[#1a1a1a]">{reply.author_name}</span>
+                                {isReplyShopAuthor && (
+                                  <span className="text-[9px] bg-[#BA5B55]/5 text-[#BA5B55] px-1.5 py-0.5 rounded-full font-bold">
+                                    Shop
+                                  </span>
+                                )}
+                                <span className="text-[10px] text-gray-400 font-light ml-auto">{timeAgo(reply.created_at)}</span>
+                              </div>
+                              {reply.reply_to_name && (
+                                <p className="text-xs text-[#1a1a1a] leading-relaxed">
+                                  <strong className="text-[#BA5B55] font-semibold">@{reply.reply_to_name}</strong>{" "}
+                                  {reply.comment_text}
+                                </p>
                               )}
+                              {!reply.reply_to_name && (
+                                <p className="text-xs text-[#1a1a1a] leading-relaxed">{reply.comment_text}</p>
+                              )}
+                              
+                              {/* Actions for reply */}
+                              <div className="flex items-center gap-3 mt-1.5 pl-0.5">
+                                <button
+                                  onClick={() => likeComment(reply.comment_uid)}
+                                  className={`flex items-center gap-1 text-[10px] font-bold transition-colors cursor-pointer ${
+                                    likedComments.has(reply.comment_uid) ? "text-red-500 hover:text-red-600" : "text-gray-400 hover:text-red-500"
+                                  }`}
+                                >
+                                  <Heart size={14} fill={likedComments.has(reply.comment_uid) ? "currentColor" : "none"} />
+                                  <span>{reply.like_count > 0 && reply.like_count}</span>
+                                </button>
+                                {canReply() && (
+                                  <button
+                                    onClick={() => {
+                                      setActiveReplyTo(a => ({ ...a, [comment.comment_uid]: { commentUid: reply.comment_uid, authorName: reply.author_name } }));
+                                      setReplyOpen(o => ({ ...o, [comment.comment_uid]: true }));
+                                    }}
+                                    className="text-[10px] font-bold text-gray-400 hover:text-[#BA5B55] transition-colors cursor-pointer"
+                                  >
+                                    Reply
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
 
                           {/* Reply input for child comment */}
-                          {replyOpen[comment.comment_uid] && activeReplyTo[comment.comment_uid]?.commentUid === reply.comment_uid && (
-                            <div style={{ display: "flex", gap: 8, marginTop: 8, marginLeft: 36 }}>
+                          {isChildReplying && (
+                            <div className="flex gap-2 mt-1 ml-9">
                               <input
                                 value={replyDrafts[comment.comment_uid] || ""}
                                 onChange={e => setReplyDrafts(d => ({ ...d, [comment.comment_uid]: e.target.value }))}
@@ -260,11 +287,11 @@ export default function ProductCommentThread({ productUid, shopUid, currentUserI
                                   }
                                 }}
                                 placeholder={`Reply to @${activeReplyTo[comment.comment_uid]?.authorName}…`}
-                                style={{ flex: 1, padding: "6px 12px", fontSize: 11, borderRadius: 99, border: "1px solid var(--border)", outline: "none" }}
+                                className="flex-1 px-3.5 py-1.5 text-xs rounded-full border border-gray-200 outline-none bg-white text-[#1a1a1a] focus:border-[#BA5B55] transition-all"
                               />
                               <button
                                 onClick={() => post(replyDrafts[comment.comment_uid] || "", comment.comment_uid, activeReplyTo[comment.comment_uid]?.authorName)}
-                                style={{ padding: "6px 12px", fontSize: 11, background: "var(--brand)", color: "#fff", border: "none", borderRadius: 99, cursor: "pointer" }}
+                                className="px-3.5 py-1.5 text-xs bg-[#BA5B55] hover:bg-[#a34e48] text-white rounded-full font-bold transition-all cursor-pointer"
                               >
                                 Send
                               </button>

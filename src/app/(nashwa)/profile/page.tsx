@@ -86,7 +86,13 @@ export default async function ProfilePage() {
 
     // Fetch user's reviews
     const reviewsRes = await pool.query(
-      `SELECT product_uid, rating, review_text FROM product_review WHERE user_uid = $1`,
+      `SELECT pr.review_uid, pr.product_uid, pr.rating, pr.review_text, pr.created_at,
+              p.title AS product_title,
+              (SELECT image_url FROM product_image pi WHERE pi.product_uid = p.product_uid ORDER BY position ASC LIMIT 1) AS product_image
+       FROM product_review pr
+       JOIN product p ON p.product_uid = pr.product_uid
+       WHERE pr.user_uid = $1
+       ORDER BY pr.created_at DESC`,
       [user.uid]
     );
     const userReviews = reviewsRes.rows;

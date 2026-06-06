@@ -57,9 +57,9 @@ function SearchableDropdown({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full text-left text-xs border border-[#eadfdb] bg-white px-3 py-2 outline-none flex justify-between items-center rounded-none font-semibold text-[#1a1a1a]"
+        className="w-full text-left text-xs border border-[#eadfdb] bg-white px-3 py-2 outline-none flex justify-between items-center rounded-none font-semibold text-[#1a1a1a] min-w-0"
       >
-        <span className="truncate">{displayValue}</span>
+        <span className="truncate flex-1 mr-2 min-w-0">{displayValue}</span>
         <svg
           viewBox="0 0 24 24"
           width="14"
@@ -146,6 +146,9 @@ export default function ShopProductsClient({
   initialSavedProducts,
   initialReactedProducts,
 }: ShopProductsClientProps) {
+  const maxProductPrice = products.reduce((max, p) => Math.max(max, Number(p.price) || 0), 10000);
+  const maxRangeLimit = Math.max(10000, Math.ceil(maxProductPrice / 1000) * 1000);
+
   const [followedShops, setFollowedShops] = useState<Set<string>>(new Set(initialFollowedShops));
   const [savedProducts, setSavedProducts] = useState<Set<string>>(new Set(initialSavedProducts));
   const [reactedProducts, setReactedProducts] = useState<Set<string>>(new Set(initialReactedProducts));
@@ -154,7 +157,7 @@ export default function ShopProductsClient({
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(10000);
+  const [maxPrice, setMaxPrice] = useState(maxRangeLimit);
 
   const handleFollowChange = useCallback((shopUid: string, following: boolean) => {
     setFollowedShops((prev) => {
@@ -191,7 +194,7 @@ export default function ShopProductsClient({
     return categoryMatch && priceMatch;
   });
 
-  const hasActive = selectedCategory.length > 0 || minPrice > 0 || maxPrice < 10000;
+  const hasActive = selectedCategory.length > 0 || minPrice > 0 || maxPrice < maxRangeLimit;
 
   const categoryOptions = CATEGORIES.map((cat) => ({ value: cat, label: cat }));
 
@@ -206,14 +209,14 @@ export default function ShopProductsClient({
               {filteredProducts.length}
             </span>
           </div>
-
+ 
           <div className="flex items-center gap-3">
             {hasActive && (
               <button
                 onClick={() => {
                   setSelectedCategory([]);
                   setMinPrice(0);
-                  setMaxPrice(10000);
+                  setMaxPrice(maxRangeLimit);
                 }}
                 className="text-[#ba5b55] bg-transparent font-semibold cursor-pointer hover:underline"
               >
@@ -257,14 +260,14 @@ export default function ShopProductsClient({
 
               <div className="relative w-full h-5 mt-2 flex items-center">
                 {/* Background Track */}
-                <div className="absolute w-full h-[2px] bg-gray-200 rounded-none" />
+                <div className="absolute w-full h-0.5 bg-gray-200 rounded-none" />
                 
                 {/* Active Track Highlight */}
                 <div
-                  className="absolute h-[2px] bg-[#BA5B55] rounded-none"
+                  className="absolute h-0.5 bg-[#BA5B55] rounded-none"
                   style={{
-                    left: `${(minPrice / 10000) * 100}%`,
-                    right: `${100 - (maxPrice / 10000) * 100}%`,
+                    left: `${(minPrice / maxRangeLimit) * 100}%`,
+                    right: `${100 - (maxPrice / maxRangeLimit) * 100}%`,
                   }}
                 />
 
@@ -272,29 +275,29 @@ export default function ShopProductsClient({
                 <input
                   type="range"
                   min={0}
-                  max={10000}
-                  step={100}
+                  max={maxRangeLimit}
+                  step={maxRangeLimit > 50000 ? 1000 : 100}
                   value={minPrice}
                   onChange={(e) => {
-                    const val = Math.min(Number(e.target.value), maxPrice - 100);
+                    const val = Math.min(Number(e.target.value), maxPrice - (maxRangeLimit > 50000 ? 1000 : 100));
                     setMinPrice(val);
                   }}
-                  className="absolute pointer-events-none appearance-none w-full h-[2px] bg-transparent outline-none top-1/2 -translate-y-1/2 left-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:bg-[#BA5B55] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:bg-[#BA5B55] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
-                  style={{ zIndex: minPrice > 8000 ? 5 : 3 }}
+                  className="absolute pointer-events-none appearance-none w-full h-0.5 bg-transparent outline-none top-1/2 -translate-y-1/2 left-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:bg-[#BA5B55] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:bg-[#BA5B55] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
+                  style={{ zIndex: minPrice > (maxRangeLimit * 0.8) ? 5 : 3 }}
                 />
 
                 {/* Max Range Slider */}
                 <input
                   type="range"
                   min={0}
-                  max={10000}
-                  step={100}
+                  max={maxRangeLimit}
+                  step={maxRangeLimit > 50000 ? 1000 : 100}
                   value={maxPrice}
                   onChange={(e) => {
-                    const val = Math.max(Number(e.target.value), minPrice + 100);
+                    const val = Math.max(Number(e.target.value), minPrice + (maxRangeLimit > 50000 ? 1000 : 100));
                     setMaxPrice(val);
                   }}
-                  className="absolute pointer-events-none appearance-none w-full h-[2px] bg-transparent outline-none top-1/2 -translate-y-1/2 left-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:bg-[#BA5B55] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:bg-[#BA5B55] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
+                  className="absolute pointer-events-none appearance-none w-full h-0.5 bg-transparent outline-none top-1/2 -translate-y-1/2 left-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:bg-[#BA5B55] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:bg-[#BA5B55] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
                   style={{ zIndex: 4 }}
                 />
               </div>

@@ -11,10 +11,10 @@ export async function GET(
   const { id } = await params;
   try {
     const reviewsRes = await pool.query(
-      `SELECT r.review_uid, r.rating, r.review_text, r.created_at,
+      `SELECT r.review_uid, r.user_uid, r.rating, r.review_text, r.created_at,
               u.username, u.profile_photo_url
        FROM product_review r
-       JOIN users u ON u.uid = r.user_uid
+       LEFT JOIN users u ON u.uid = r.user_uid
        WHERE r.product_uid = $1
        ORDER BY r.created_at DESC`,
       [id]
@@ -46,16 +46,29 @@ export async function POST(
       return NextResponse.json({ error: "Invalid rating" }, { status: 400 });
     }
 
+    // Enforce that the user has a completed/fulfilled order for this product
+    const orderCheck = await pool.query(
+      `SELECT 1 FROM order_request o
+       JOIN order_request_item oi ON oi.order_uid = o.order_uid
+       WHERE o.buyer_uid = $1 AND oi.product_uid = $2 AND o.status = 'completed'
+       LIMIT 1`,
+      [user.uid, productUid]
+    );
+    if (orderCheck.rowCount === 0) {
+      return NextResponse.json(
+        { error: "You can only review products you have successfully purchased and received." },
+        { status: 403 }
+      );
+    }
+
     const reviewUid = crypto.randomUUID();
 
     await pool.query("BEGIN");
 
-    // 1. Insert review
+    // 1. Insert review (no constraint since UNIQUE constraint has been dropped)
     await pool.query(
       `INSERT INTO product_review (review_uid, product_uid, user_uid, rating, review_text)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (product_uid, user_uid) 
-       DO UPDATE SET rating = EXCLUDED.rating, review_text = EXCLUDED.review_text`,
+       VALUES ($1, $2, $3, $4, $5)`,
       [reviewUid, productUid, user.uid, rating, reviewText || null]
     );
 
@@ -86,7 +99,31 @@ export async function POST(
 
     await pool.query("COMMIT");
 
-    return NextResponse.json({ success: true, message: "Review submitted successfully!" });
+    // Fetch product details for returning enriched data to frontend
+    const productInfo = await pool.query(
+      `SELECT title, (SELECT image_url FROM product_image pi WHERE pi.product_uid = p.product_uid ORDER BY position ASC LIMIT 1) AS image_url
+       FROM product p
+       WHERE product_uid = $1`,
+      [productUid]
+    );
+    const productTitle = productInfo.rows[0]?.title || "";
+    const productImage = productInfo.rows[0]?.image_url || null;
+
+    const newReview = {
+      review_uid: reviewUid,
+      product_uid: productUid,
+      rating: rating,
+      review_text: reviewText || null,
+      created_at: new Date().toISOString(),
+      product_title: productTitle,
+      product_image: productImage
+    };
+
+    return NextResponse.json({
+      success: true,
+      review: newReview,
+      message: "Review submitted successfully!"
+    });
   } catch (err: any) {
     await pool.query("ROLLBACK");
     console.error("Error submitting review:", err);

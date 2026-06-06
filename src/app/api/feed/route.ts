@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const tab = searchParams.get("tab") || "explore";
   const minPrice = Number(searchParams.get("minPrice") || 0);
-  const maxPrice = Number(searchParams.get("maxPrice") || 10000);
+  const maxPrice = Number(searchParams.get("maxPrice") || 1000000);
   const category = searchParams.get("category") || "";
   const communityId = searchParams.get("communityId") || "";
   const page = parseInt(searchParams.get("page") || "1");

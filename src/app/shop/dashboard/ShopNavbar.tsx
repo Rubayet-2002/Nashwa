@@ -39,13 +39,16 @@ const ShopNavbar = ({ shopName, shopUid }: ShopNavbarProps) => {
 
     // Listen for real-time order/follow notifications
     const socket = connectSocket();
-    socket.on("notification:new", () => {
-      fetchUnreadCount();
-    });
+    const handleNewNotif = (notif?: { shopUid?: string }) => {
+      if (notif && notif.shopUid && notif.shopUid === shopUid) {
+        fetchUnreadCount();
+      }
+    };
+    socket.on("notification:new", handleNewNotif);
 
     return () => {
       window.removeEventListener("shop-notifications:read", handleRead);
-      socket.off("notification:new");
+      socket.off("notification:new", handleNewNotif);
     };
   }, [shopUid]);
 

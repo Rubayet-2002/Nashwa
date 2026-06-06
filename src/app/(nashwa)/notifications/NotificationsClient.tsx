@@ -37,7 +37,8 @@ export default function NotificationsClient({ initialNotifications, userId }: Pr
     const socket = connectSocket();
     socket.emit("join:user", { userId });
 
-    socket.on("notification:new", (notif: Notification) => {
+    socket.on("notification:new", (notif: Notification & { shopUid?: string }) => {
+      if (notif.shopUid) return;
       setNotifications((prev) => [notif, ...prev]);
     });
 

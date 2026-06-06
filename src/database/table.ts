@@ -281,8 +281,7 @@ CREATE TABLE IF NOT EXISTS product_review (
   user_uid      VARCHAR(50) REFERENCES users(uid) ON DELETE SET NULL,
   rating        INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
   review_text   TEXT DEFAULT NULL,
-  created_at    TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE (product_uid, user_uid)
+  created_at    TIMESTAMPTZ DEFAULT NOW()
 );
 `;
 

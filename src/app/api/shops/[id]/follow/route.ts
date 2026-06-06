@@ -30,7 +30,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         `, [notifUid, shopRes.rows[0].owner_uid, id, "New Follower", `${followerName} started following your shop`, `/shop/${id}`]);
 
         if (global.io) {
-          global.io.to(`user:${shopRes.rows[0].owner_uid}`).emit("notification:new", { title: `${followerName} started following your shop`, unread: 1 });
+          global.io.to(`user:${shopRes.rows[0].owner_uid}`).emit("notification:new", { title: `${followerName} started following your shop`, unread: 1, shopUid: id });
         }
       }
 

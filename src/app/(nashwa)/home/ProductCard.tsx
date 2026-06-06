@@ -29,6 +29,7 @@ interface Props {
   onSaveChange: (prodUid: string, saved: boolean) => void;
   onReactChange: (prodUid: string, reacted: boolean) => void;
   hideFollowButton?: boolean;
+  compact?: boolean;
 }
 
 export default function ProductCard({
@@ -42,6 +43,7 @@ export default function ProductCard({
   onSaveChange,
   onReactChange,
   hideFollowButton = false,
+  compact = false,
 }: Props) {
   const addToast = useToastStore((s) => s.addToast);
   const [showComments, setShowComments] = useState(false);
@@ -269,9 +271,9 @@ export default function ProductCard({
 
       {/* Content */}
       <div className="p-3 pt-0">
-        <div className="flex gap-4 flex-col sm:flex-row">
+        <div className={`flex gap-4 flex-col ${compact ? "" : "sm:flex-row"}`}>
           {/* Images */}
-          <div className="w-56 shrink-0 mx-auto sm:mx-0">
+          <div className={`shrink-0 mx-auto ${compact ? "w-full" : "w-56 sm:mx-0"}`}>
             <Link href={`/product/${product.product_uid}`}>
               <div className="w-full h-36 bg-[#f4f4f4] border border-[#e2e2e2] rounded overflow-hidden relative cursor-pointer">
                 {images[activeImg] ? (
@@ -448,7 +450,7 @@ export default function ProductCard({
       {/* Report Modal */}
       {showReport && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[1000] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-1000 flex items-center justify-center p-4"
           onClick={(e) => e.target === e.currentTarget && setShowReport(false)}
         >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col">

@@ -54,14 +54,14 @@ function SearchableDropdown({
     : value.map(v => options.find(o => o.value === v)?.label).filter(Boolean).join(", ");
 
   return (
-    <div className="relative flex flex-col gap-1 w-full font-sans z-30">
+    <div className="relative flex flex-col gap-1 w-full font-sans z-30 min-w-0">
       <span className="text-[10px] font-semibold uppercase tracking-wider text-[#787878]">{label}</span>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full text-left text-xs border border-[#eadfdb] bg-white px-3 py-2 outline-none flex justify-between items-center rounded-none font-semibold text-[#1a1a1a]"
+        className="w-full text-left text-xs border border-[#eadfdb] bg-white px-3 py-2 outline-none flex justify-between items-center rounded-none font-semibold text-[#1a1a1a] min-w-0"
       >
-        <span className="truncate">{displayValue}</span>
+        <span className="truncate flex-1 mr-2 min-w-0">{displayValue}</span>
         <svg
           viewBox="0 0 24 24"
           width="14"
@@ -144,7 +144,7 @@ export default function FilterBar({ onFilterChange, communities }: FilterBarProp
   const [filters, setFilters] = useState<FilterState>({
     tab: "explore",
     minPrice: 0,
-    maxPrice: 10000,
+    maxPrice: 1000000,
     category: [],
     communityId: [],
   });
@@ -160,7 +160,7 @@ export default function FilterBar({ onFilterChange, communities }: FilterBarProp
     filters.category.length > 0 ||
     filters.communityId.length > 0 ||
     filters.minPrice > 0 ||
-    filters.maxPrice < 10000;
+    filters.maxPrice < 1000000;
 
   const tabs: Array<{ id: FilterState["tab"]; label: string }> = [
     { id: "explore", label: "Explore" },
@@ -175,7 +175,7 @@ export default function FilterBar({ onFilterChange, communities }: FilterBarProp
   }));
 
   return (
-    <div className="flex flex-col overflow-visible bg-white rounded-none">
+    <div className="flex flex-col overflow-visible bg-white rounded-none min-w-0">
       {/* Tab Row */}
       <div className="p-3.5 flex justify-between items-center text-xs leading-none">
         <div className="flex gap-6 leading-none">
@@ -195,7 +195,7 @@ export default function FilterBar({ onFilterChange, communities }: FilterBarProp
         <div className="flex items-center gap-3">
           {hasActive && (
             <button
-              onClick={() => update({ minPrice: 0, maxPrice: 10000, category: [], communityId: [] })}
+              onClick={() => update({ minPrice: 0, maxPrice: 1000000, category: [], communityId: [] })}
               className="text-[#ba5b55] bg-transparent font-semibold cursor-pointer hover:underline"
             >
               ✕ Clear
@@ -215,9 +215,9 @@ export default function FilterBar({ onFilterChange, communities }: FilterBarProp
 
       {/* Expandable Filter Panel */}
       {showFilters && (
-        <div className="p-5 bg-[#fafafa] flex flex-col gap-6 border-t border-[#f0f0f0] animate-in fade-in duration-150 overflow-visible">
+        <div className="p-5 bg-[#fafafa] flex flex-col gap-6 border-t border-[#f0f0f0] animate-in fade-in duration-150 overflow-visible min-w-0 w-full">
           {/* Custom Searchable Dropdowns (stacked vertically / column-wise) */}
-          <div className="flex flex-col gap-4 w-full">
+          <div className="flex flex-col gap-4 w-full min-w-0">
             <SearchableDropdown
               label="Category"
               placeholder="Select category"
@@ -254,8 +254,8 @@ export default function FilterBar({ onFilterChange, communities }: FilterBarProp
               <div
                 className="absolute h-[2px] bg-[#BA5B55] rounded-none"
                 style={{
-                  left: `${(filters.minPrice / 10000) * 100}%`,
-                  right: `${100 - (filters.maxPrice / 10000) * 100}%`,
+                  left: `${(filters.minPrice / 1000000) * 100}%`,
+                  right: `${100 - (filters.maxPrice / 1000000) * 100}%`,
                 }}
               />
 
@@ -263,26 +263,26 @@ export default function FilterBar({ onFilterChange, communities }: FilterBarProp
               <input
                 type="range"
                 min={0}
-                max={10000}
-                step={100}
+                max={1000000}
+                step={1000}
                 value={filters.minPrice}
                 onChange={(e) => {
-                  const val = Math.min(Number(e.target.value), filters.maxPrice - 100);
+                  const val = Math.min(Number(e.target.value), filters.maxPrice - 1000);
                   update({ minPrice: val });
                 }}
                 className="absolute pointer-events-none appearance-none w-full h-[2px] bg-transparent outline-none top-1/2 -translate-y-1/2 left-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:bg-[#BA5B55] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:bg-[#BA5B55] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
-                style={{ zIndex: filters.minPrice > 8000 ? 5 : 3 }}
+                style={{ zIndex: filters.minPrice > 800000 ? 5 : 3 }}
               />
 
               {/* Max Range Slider */}
               <input
                 type="range"
                 min={0}
-                max={10000}
-                step={100}
+                max={1000000}
+                step={1000}
                 value={filters.maxPrice}
                 onChange={(e) => {
-                  const val = Math.max(Number(e.target.value), filters.minPrice + 100);
+                  const val = Math.max(Number(e.target.value), filters.minPrice + 1000);
                   update({ maxPrice: val });
                 }}
                 className="absolute pointer-events-none appearance-none w-full h-[2px] bg-transparent outline-none top-1/2 -translate-y-1/2 left-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:bg-[#BA5B55] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:bg-[#BA5B55] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"

@@ -89,7 +89,15 @@ interface ProfileClientProps {
   orders: Order[];
   sessions: SessionLog[];
   hasPasswordInitially: boolean;
-  initialReviews?: Array<{ product_uid: string; rating: number; review_text: string | null }>;
+  initialReviews?: Array<{
+    review_uid: string;
+    product_uid: string;
+    rating: number;
+    review_text: string | null;
+    created_at: string;
+    product_title: string;
+    product_image: string | null;
+  }>;
 }
 
 export default function ProfileClient({
@@ -120,6 +128,86 @@ export default function ProfileClient({
 
   const [reviewsList, setReviewsList] = useState(initialReviews);
   const [reviewForms, setReviewForms] = useState<Record<string, { rating: number; text: string; submitting?: boolean }>>({});
+
+  // Review Edit/Delete States
+  const [editingReviewUid, setEditingReviewUid] = useState<string | null>(null);
+  const [editRating, setEditRating] = useState<number>(0);
+  const [editText, setEditText] = useState<string>("");
+  const [submittingEdit, setSubmittingEdit] = useState<boolean>(false);
+
+  const handleEditReviewClick = (r: any) => {
+    setEditingReviewUid(r.review_uid);
+    setEditRating(r.rating);
+    setEditText(r.review_text || "");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingReviewUid(null);
+    setEditRating(0);
+    setEditText("");
+  };
+
+  const handleSaveEditedReview = async (reviewUid: string) => {
+    if (!editRating) {
+      addToast("Please select a rating.", "error");
+      return;
+    }
+    setSubmittingEdit(true);
+    try {
+      const res = await fetch(`/api/reviews/${reviewUid}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({
+          rating: editRating,
+          reviewText: editText,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        addToast("Review updated successfully!", "success");
+        setReviewsList((prev) =>
+          prev.map((r) =>
+            r.review_uid === reviewUid
+              ? { ...r, rating: editRating, review_text: editText }
+              : r
+          )
+        );
+        setEditingReviewUid(null);
+        router.refresh();
+      } else {
+        addToast(data.error || "Failed to update review.", "error");
+      }
+    } catch {
+      addToast("Network error. Failed to update review.", "error");
+    } finally {
+      setSubmittingEdit(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewUid: string) => {
+    if (!confirm("Are you sure you want to delete this review?")) return;
+    try {
+      const res = await fetch(`/api/reviews/${reviewUid}`, {
+        method: "DELETE",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        addToast("Review deleted successfully!", "success");
+        setReviewsList((prev) => prev.filter((r) => r.review_uid !== reviewUid));
+        router.refresh();
+      } else {
+        addToast(data.error || "Failed to delete review.", "error");
+      }
+    } catch {
+      addToast("Network error. Failed to delete review.", "error");
+    }
+  };
 
   useEffect(() => {
     const tab = searchParams.get("tab") as "orders" | "reviews" | "settings";
@@ -438,8 +526,8 @@ export default function ProfileClient({
       if (res.ok && data.success) {
         addToast("Review submitted successfully!", "success");
         setReviewsList((prev) => [
+          data.review,
           ...prev,
-          { product_uid: productUid, rating: form.rating, review_text: form.text },
         ]);
         router.refresh();
       } else {
@@ -895,15 +983,161 @@ export default function ProfileClient({
             <div className="flex flex-col gap-4">
               <div>
                 <h3 className="text-base font-bold text-[#1a1a1a]">My Reviews</h3>
-                <p className="text-xs text-[#787878] font-light mt-0.5">View all the product reviews you've written.</p>
+                <p className="text-xs text-[#787878] font-light mt-0.5">View and manage all the product reviews you've written.</p>
               </div>
-              <div className="text-center py-20 border border-dashed border-gray-200 rounded-3xl bg-gray-50/20 mt-2">
-                <Eye stroke={1} size={48} className="mx-auto text-gray-300 mb-3" />
-                <h4 className="text-xs font-bold text-[#1a1a1a]">No reviews yet</h4>
-                <p className="text-[11px] text-gray-400 mt-1 max-w-xs mx-auto leading-relaxed">
-                  Purchase items and share your thoughts to help others discover great products!
-                </p>
-              </div>
+
+              {reviewsList.length > 0 ? (
+                <div className="flex flex-col gap-4 mt-2">
+                  {reviewsList.map((r) => {
+                    const reviewDate = new Date(r.created_at).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    });
+                    const isEditing = editingReviewUid === r.review_uid;
+
+                    return (
+                      <div
+                        key={r.review_uid}
+                        className="border border-[#e2e2e2] rounded-3xl p-4 bg-[#fafafa]/10 flex flex-col md:flex-row gap-4 items-start shadow-3xs"
+                      >
+                        {/* Product Thumbnail */}
+                        <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shrink-0">
+                          {r.product_image ? (
+                            <Image src={r.product_image} alt="" fill className="object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <polyline points="21 15 16 10 5 21" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Review info */}
+                        <div className="flex-1 min-w-0">
+                          <Link
+                            href={`/product/${r.product_uid}`}
+                            className="text-xs font-bold text-[#1a1a1a] hover:text-[#BA5B55] transition-colors truncate block"
+                          >
+                            {r.product_title}
+                          </Link>
+                          <span className="text-[10px] text-gray-400 font-light block mt-0.5">Reviewed on {reviewDate}</span>
+
+                          {isEditing ? (
+                            <div className="flex flex-col gap-2 mt-3 bg-white p-3 border border-gray-100 rounded-2xl">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-[#BA5B55] uppercase tracking-wider">Edit Rating</span>
+                                <div className="flex gap-1">
+                                  {Array.from({ length: 5 }).map((_, sIdx) => {
+                                    const starVal = sIdx + 1;
+                                    return (
+                                      <button
+                                        key={sIdx}
+                                        type="button"
+                                        onClick={() => setEditRating(starVal)}
+                                        className="text-gray-355 hover:text-amber-400 transition-colors"
+                                      >
+                                        <svg
+                                          width="16"
+                                          height="16"
+                                          viewBox="0 0 24 24"
+                                          fill={starVal <= editRating ? "#fbbf24" : "none"}
+                                          stroke={starVal <= editRating ? "#fbbf24" : "currentColor"}
+                                          strokeWidth="2"
+                                        >
+                                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                        </svg>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                              <textarea
+                                value={editText}
+                                onChange={(e) => setEditText(e.target.value)}
+                                rows={2}
+                                className="w-full text-xs border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#BA5B55] bg-white text-[#1a1a1a] resize-none"
+                              />
+                              <div className="flex justify-end gap-2 mt-1">
+                                <button
+                                  type="button"
+                                  onClick={handleCancelEdit}
+                                  className="px-3 py-1.5 border border-gray-200 text-gray-500 rounded-xl text-[10px] font-semibold hover:bg-gray-50 cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={submittingEdit}
+                                  onClick={() => handleSaveEditedReview(r.review_uid)}
+                                  className="px-3.5 py-1.5 bg-[#BA5B55] hover:bg-[#9e4f4a] text-white text-[10px] font-bold rounded-xl disabled:opacity-50 cursor-pointer"
+                                >
+                                  {submittingEdit ? "Saving..." : "Save"}
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="mt-2">
+                              {/* Rating Stars */}
+                              <div className="flex gap-0.5 text-amber-400 mb-1.5">
+                                {Array.from({ length: 5 }).map((_, starIdx) => (
+                                  <svg
+                                    key={starIdx}
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill={starIdx < r.rating ? "currentColor" : "none"}
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                  </svg>
+                                ))}
+                              </div>
+                              {r.review_text && (
+                                <p className="text-xs text-[#555] font-light leading-relaxed whitespace-pre-wrap italic">
+                                  "{r.review_text}"
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Actions */}
+                        {!isEditing && (
+                          <div className="flex gap-2 shrink-0 self-start md:self-center">
+                            <button
+                              type="button"
+                              onClick={() => handleEditReviewClick(r)}
+                              className="px-3 py-1.5 border border-gray-200 text-[#555] rounded-xl text-[10px] font-semibold hover:border-[#BA5B55] hover:text-[#BA5B55] transition-colors cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteReview(r.review_uid)}
+                              className="px-3 py-1.5 border border-red-100 text-red-500 rounded-xl text-[10px] font-semibold hover:bg-red-50 transition-colors cursor-pointer"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-20 border border-dashed border-gray-200 rounded-3xl bg-gray-50/20 mt-2">
+                  <Eye stroke={1} size={48} className="mx-auto text-gray-300 mb-3" />
+                  <h4 className="text-xs font-bold text-[#1a1a1a]">No reviews yet</h4>
+                  <p className="text-[11px] text-gray-400 mt-1 max-w-xs mx-auto leading-relaxed">
+                    Purchase items and share your thoughts to help others discover great products!
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

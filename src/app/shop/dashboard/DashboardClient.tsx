@@ -438,12 +438,7 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
   const [orderFormQty, setOrderFormQty] = useState(1);
   const [orderFormPrice, setOrderFormPrice] = useState("");
 
-  // Auto-open assign-university for legacy shops
-  useEffect(() => {
-    if (!shop.university_name) {
-      setShowAssignUniversity(true);
-    }
-  }, [shop.university_name]);
+
 
   // Load events when Event tab is activated
   useEffect(() => {

@@ -1,16 +1,13 @@
 {
-  "name": "nashwa_bd",
+  "name": "nashwa",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "install:all": "npm install && pip install -r requirement.txt",
     "db": "tsx src/database/database.ts",
-    "db:migrate": "tsx src/database/migrations/001_add_user_university.ts",
     "ddb": "tsx src/database/dropDB.ts",
-    "sa": "tsx src/database/seedAdmin.ts",
-    "dev": "next dev",
+    "dev": "node server.js",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_ENV=production node server.js",
     "lint": "eslint"
   },
   "dependencies": {
@@ -19,11 +16,11 @@
     "cloudinary": "^2.10.0",
     "dotenv": "^17.4.2",
     "jose": "^6.2.3",
-    "next": "^16.2.6",
-    "nodemailer": "^8.0.10",
-    "pg": "^8.21.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
+    "next": "16.2.6",
+    "nodemailer": "^8.0.7",
+    "pg": "^8.20.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
     "react-easy-crop": "^5.5.7",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
@@ -35,12 +32,12 @@
     "@types/node": "^20.19.42",
     "@types/nodemailer": "^8.0.0",
     "@types/pg": "^8.20.0",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "eslint": "^9.39.4",
-    "eslint-config-next": "^16.2.6",
-    "tailwindcss": "^4.3.0",
-    "tsx": "^4.22.4",
-    "typescript": "^5.9.3"
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "tailwindcss": "^4",
+    "tsx": "^4.21.0",
+    "typescript": "^5"
   }
 }

@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
       [notifUid, shopRes.rows[0].owner_uid, shopUid, `New order request for ৳${totalAmount.toFixed(0)}`, `/shop/dashboard`]);
 
     if (global.io) {
-      global.io.to(`user:${shopRes.rows[0].owner_uid}`).emit("notification:new", { title: "New order request!", unread: 1 });
+      global.io.to(`user:${shopRes.rows[0].owner_uid}`).emit("notification:new", { title: "New order request!", unread: 1, shopUid });
     }
 
     return NextResponse.json({ success: true, orderUid, total: totalAmount });

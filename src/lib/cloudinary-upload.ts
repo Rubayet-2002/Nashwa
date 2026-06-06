@@ -1,7 +1,4 @@
-/**
- * Client-side helper to upload a File or Blob directly to Cloudinary
- * using a signed request fetched from the local Next.js API.
- */
+
 export async function uploadImageToCloudinary(
   fileOrBlob: File | Blob,
   folder: string = "nashwa_uploads"

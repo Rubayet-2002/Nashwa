@@ -70,7 +70,8 @@ export default function NavButton({ serverUser }: { serverUser: any }) {
     socket.emit("identify", { uid: currentUser.uid });
     socket.emit("join:product", { productId: `user-${currentUser.uid}` });
     
-    const handleNewNotification = (data: { title: string; unread: number }) => {
+    const handleNewNotification = (data: { title: string; unread: number; shopUid?: string }) => {
+      if (data.shopUid) return;
       if (data.title && data.title.startsWith("New message from")) {
         fetch("/api/chat?unreadCount=true")
           .then((r) => r.json())

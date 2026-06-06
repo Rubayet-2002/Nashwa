@@ -110,11 +110,11 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
   const canFollow = Boolean(user?.uid);
 
   return (
-    <div className="flex-1 bg-[#fbfbfb] flex flex-col items-center justify-start min-h-0 overflow-y-auto py-6 px-4 custom-scrollbar">
-      <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-6 items-start">
+    <div className="flex-1 bg-[#fbfbfb] flex flex-col items-center justify-start min-h-0 overflow-y-auto py-6 px-4 custom-scrollbar lg:overflow-hidden lg:h-full">
+      <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-6 items-start lg:items-stretch min-h-0 lg:h-full">
         
         {/* Left Section: Info Panel (w-120 = 480px on desktop) */}
-        <div className="w-full lg:w-[480px] shrink-0">
+        <div className="w-full lg:w-[480px] shrink-0 lg:h-full lg:overflow-y-auto custom-scrollbar pr-1">
           <ShopProfileLeft
             shop={shop}
             currentUser={user ? { uid: user.uid, username: user.username } : null}
@@ -123,7 +123,7 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
         </div>
 
         {/* Right Section: Products Stream */}
-        <div className="flex-1 w-full min-w-0">
+        <div className="flex-1 w-full min-w-0 lg:h-full lg:overflow-y-auto custom-scrollbar pr-1">
           <ShopProductsClient
             products={products}
             currentUserId={user ? user.uid : null}
