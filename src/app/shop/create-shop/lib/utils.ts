@@ -9,8 +9,6 @@ export type CreateShopPayload = {
   shopName?: string;
   shopEmail?: string;
   shopPhone?: string;
-  universityUid?: string;
-  universityName?: string;
   location?: string;
   description?: string;
   nidPdfUrl?: string;

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/database/pool";
-import { adminAuth } from "../../lib/adminAuth";
-import { mail_shopApproved, mail_shopRejected } from "@/mail/mail";
+import { adminAuthMe } from "@/app/admin/lib/adminAuthMe";
+import { mail_shopApproved, mail_shopRejected } from "@/app/(authentication)/lib/mail";
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { admin } = await adminAuth();
+    const { admin } = await adminAuthMe();
     if (!admin) {
       return NextResponse.json(
         { message: "Unauthorized admin access." },

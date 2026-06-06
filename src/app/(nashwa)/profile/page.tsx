@@ -1,232 +1,112 @@
-import Image from "next/image";
-import Link from "next/link";
-import { profileData } from "./lib/ProfileData";
 import { redirect } from "next/navigation";
-import LogoutButton from "./logout/LogoutButton";
-import DeleteAccountButton from "./deleteAccount/DeleteAccountButton";
-import ShopListItem from "./lib/ShopListItem";
-import ProfilePhotoEditor from "./ProfilePhotoEditor";
-import CustomerUniversityPopup from "./CustomerUniversityPopup";
-import {
-  CalendarArrowDown,
-  CogFour,
-  EditOne,
-  ImageRectangle,
-  Mail,
-  Package,
-  Pencil,
-  Plus,
-  Store,
-  Telephone,
-  Users,
-} from "@mynaui/icons-react";
+import pool from "@/database/pool";
+import { authMe } from "@/app/(authentication)/lib/authMe";
+import ProfileClient from "./ProfileClient";
 
-const ProfilePage = async () => {
-  const userData = await profileData();
-  if (!userData) {
+export const dynamic = "force-dynamic";
+
+export default async function ProfilePage() {
+  const { user } = await authMe();
+  if (!user) {
     redirect("/email");
   }
-  const showCustomerUniversityPopup = !userData.university_uid;
-  const hasShops = userData.shops && userData.shops.length > 0;
-  return (
-    
-    <>
-    <CustomerUniversityPopup show={showCustomerUniversityPopup} />
-    <div className="flex w-full gap-5 h-full overflow-hidden">
-      {/* left section */}
-      <div className="w-95 shrink-0 flex flex-col justify-between overflow-hidden gap-4 overflow-y-auto custom-scrollbar">
-        {/* profile photo */}
-        <div className="flex flex-col justify-center items-center gap-3 bg-[#ffffff] p-3">
-          {userData.profile_photo_url ? (
-            <div className="relative p-1 border-4 w-24 h-24 flex justify-center items-center rounded-full border-[rgba(103,101,101,0.56)] cursor-pointer hover:border-[rgba(40,37,37,0.69)] bg-white">
-              <div className="relative w-full h-full rounded-full overflow-hidden">
-                <Image
-                  src={userData.profile_photo_url}
-                  alt={userData.username ?? "profile"}
-                  fill
-                  className="object-cover rounded-full"
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="w-full rounded-sm border border-dashed border-[#d9d9d9] bg-[#fcfcfd] px-4 py-5 flex flex-col items-center justify-center gap-3 text-center">
-              <div className="w-24 h-24 rounded-full border-4 border-[#eaeaea] bg-white flex items-center justify-center text-[#BA5B55] overflow-hidden">
-                <span className="text-xs font-medium uppercase tracking-[0.2em]">New</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-[#1a1a1a]">Add your profile photo</p>
-                <p className="text-xs text-[#787878] mt-1">
-                  Upload a photo so your account looks complete.
-                </p>
-              </div>
-            </div>
-          )}
 
-          {/* Profile photo upload */}
-          {/* Client component handles upload and refresh */}
-          <div className="w-full flex justify-center">
-            <ProfilePhotoEditor />
-          </div>
+  try {
+    // 1. Fetch user account information
+    const userRes = await pool.query(
+      `SELECT uid, username, email, phone, role, profile_photo_url, cover_photo_url, password_hash, created_at
+       FROM users
+       WHERE uid = $1`,
+      [user.uid]
+    );
 
-          <p className="leading-none font-medium text-[#4f4f4f]">
-            {userData.username}
-          </p>
+    if (userRes.rowCount === 0) {
+      redirect("/email");
+    }
 
-          <div className="flex justify-center items-center gap-5">
-            <Link
-              href=""
-              className="flex justify-center items-center gap-1 text-xs hover:text-[#ba5b55] hover:underline"
-            >
-              <Users stroke={1.5} size={14} className="text-[#ba5b55]" />
-              <p>{0} Followings</p>
-            </Link>
+    const userData = userRes.rows[0];
+    const joinedAt = new Date(userData.created_at).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
 
-            <Link
-              href=""
-              className="flex justify-center items-center gap-1 text-xs hover:text-[#ba5b55] hover:underline"
-            >
-              <EditOne stroke={1.5} size={14} className="text-[#ba5b55]" />
-              <p>{0} Posts</p>
-            </Link>
+    const userProfile = {
+      uid: userData.uid,
+      username: userData.username,
+      email: userData.email,
+      phone: userData.phone || null,
+      role: userData.role,
+      profile_photo_url: userData.profile_photo_url || null,
+      cover_photo_url: userData.cover_photo_url || null,
+      joinedAt,
+      sessionId: user.sessionId || "",
+    };
 
-            <Link
-              href=""
-              className="flex justify-center items-center gap-1 text-xs hover:text-[#ba5b55] hover:underline"
-            >
-              <Package stroke={1.5} size={14} className="text-[#ba5b55]" />
-              <p>{0} Buyings</p>
-            </Link>
-          </div>
-        </div>
+    const hasPasswordInitially = userData.password_hash !== null;
 
-        {/* my info */}
-        <div className="flex flex-col justify-center items-start bg-[#ffffff] p-4 gap-3">
-          <div className="w-full flex justify-between items-center text-xs leading-none mb-1 text-[#787878]">
-            <p className="text-[#ba5b55]">My info</p>
-            <Link
-              href=""
-              className="flex justify-center items-center gap-1 hover:text-[#ba5b55] hover:underline"
-            >
-              <Pencil stroke={1.5} size={14} />
-              <p>Edit info</p>
-            </Link>
-          </div>
+    // 2. Fetch owned shops
+    const ownedShopsRes = await pool.query(
+      `SELECT shop_uid, shop_name, status, profile_photo_url
+       FROM shop
+       WHERE owner_uid = $1`,
+      [user.uid]
+    );
+    const ownedShops = ownedShopsRes.rows;
 
-          <div className="flex justify-center items-center gap-3 text-[#787878] text-sm">
-            <Mail stroke={1.5} size={16} />
-            <p className="leading-none mb-0.5">{userData.email}</p>
-          </div>
 
-          {userData.university_name && (
-            <div className="flex justify-center items-center gap-3 text-[#787878] text-sm">
-              <Store stroke={1.5} size={16} />
-              <p className="leading-none mb-0.5">{userData.university_name}</p>
-            </div>
-          )}
+    // 4. Fetch orders placed by this user (purchases) along with order items
+    const ordersRes = await pool.query(
+      `SELECT o.order_uid, o.shop_uid, o.customer_name, o.customer_email, o.customer_phone,
+              o.delivery_address, o.city, o.postal_code, o.note, o.delivery_type, o.payment_method,
+              o.subtotal, o.delivery_charge, o.total_amount, o.status, o.created_at,
+              s.shop_name, s.profile_photo_url AS shop_photo,
+              COALESCE((
+                SELECT json_agg(row_to_json(ori))
+                FROM order_request_item ori
+                WHERE ori.order_uid = o.order_uid
+              ), '[]') AS items
+       FROM order_request o
+       JOIN shop s ON s.shop_uid = o.shop_uid
+       WHERE o.buyer_uid = $1
+       ORDER BY o.created_at DESC`,
+      [user.uid]
+    );
+    const orders = ordersRes.rows;
 
-          {userData.phone && (
-            <div className="flex justify-center items-center gap-3 text-[#787878] text-sm">
-              <Telephone stroke={1.5} size={16} />
-              <p className="leading-none mb-0.5">{userData.phone}</p>
-            </div>
-          )}
+    // 5. Fetch active session history
+    const sessionsRes = await pool.query(
+      `SELECT session_id, device_type, device_ip, browser_name, os_name, created_at, expires_at
+       FROM session
+       WHERE user_uid = $1 AND is_revoked = FALSE AND expires_at > NOW()
+       ORDER BY created_at DESC`,
+      [user.uid]
+    );
+    const sessions = sessionsRes.rows;
 
-          <div className="flex justify-center items-center gap-3 text-[#787878] text-sm">
-            <CalendarArrowDown stroke={1.5} size={16} />
-            <p className="leading-none mb-0.5">Joined {userData.joinedAt}</p>
-          </div>
-        </div>
+    // Fetch user's reviews
+    const reviewsRes = await pool.query(
+      `SELECT product_uid, rating, review_text FROM product_review WHERE user_uid = $1`,
+      [user.uid]
+    );
+    const userReviews = reviewsRes.rows;
 
-        {/* shipping details */}
-
-        <div className="flex flex-col justify-center items-center bg-[#ffffff] p-4 gap-3">
-          <Link
-            href=""
-            className="flex justify-center items-center gap-1 text-[#ba5b55] hover:underline text-xs leading-none"
-          >
-            <Plus stroke={1.5} size={14} />
-            <p>Add Shipping details</p>
-          </Link>
-        </div>
-
-        {/* business section */}
-
-        <div className="flex flex-col justify-center items-center bg-[#ffffff] p-4 gap-3">
-          {hasShops ? (
-            <>
-              <div className="w-full flex justify-between items-center text-xs leading-none mb-1 text-[#787878]">
-                <p className="text-[#ba5b55]">My Shops</p>
-
-                {userData.shops.length === 1 && (
-                  <Link
-                    href="/shop/create-shop"
-                    className="flex justify-center items-center gap-1 text-[#ba5b55] hover:underline text-xs leading-none"
-                  >
-                    <Plus stroke={1.5} size={14} />
-                    <p>Create another shop</p>
-                  </Link>
-                )}
-              </div>
-
-              {userData.shops.map((shop) => (
-                <ShopListItem key={shop.shop_uid} shop={shop as any} />
-              ))}
-            </>
-          ) : (
-            <div className="w-full flex flex-col items-start text-center gap-3">
-              <div className="flex gap-2 justify-center items-center">
-                <Store stroke={1.5} size={18} color="#ba5b55" />
-                <p className="text-start leading-none text-sm">
-                  Start your Entrepreneurship with
-                  <span className="text-[#ba5b55] ml-1">Nashwa</span> Business.
-                </p>
-              </div>
-              <p className="text-xs text-[#787878] text-start leading-4">
-                Create a shop on our platform and start selling your products.
-                Grow your business with Nashwa to become a successful
-                entrepreneur.
-              </p>
-              <Link
-                href="/shop/create-shop"
-                className="w-full text-sm bg-[#BA5B55] border border-[#BA5B55] hover:bg-white hover:text-[#BA5B55] hover:border transition-colors flex items-center justify-center gap-2 py-2 text-white cursor-pointer mt-1"
-              >
-                <Plus stroke={1.5} size={18} />
-                <p>Create a shop</p>
-              </Link>
-            </div>
-          )}
+    return (
+      <div className="flex-1 bg-[#f2f4f7] overflow-y-auto custom-scrollbar py-6 px-4 flex justify-center items-start min-h-0 min-w-0">
+        <div className="max-w-6xl w-full">
+          <ProfileClient
+            initialUser={userProfile}
+            initialShops={ownedShops}
+            orders={orders}
+            sessions={sessions}
+            hasPasswordInitially={hasPasswordInitially}
+            initialReviews={userReviews}
+          />
         </div>
       </div>
-
-      {/* right section */}
-
-      <div className="flex-1 flex flex-col overflow-hidden gap-4">
-        <div className="flex justify-between items-center bg-white w-full py-3 px-5">
-          <div className="flex justify-center gap-10 items-center text-xs">
-            <button className="hover:underline cursor-pointer flex justify-center items-center gap-1.25 hover:text-[#ba5b55]">
-              <EditOne stroke={1.5} size={14} className="text-[#ba5b55]" />
-              <p className="leading-none">My Posts</p>
-            </button>
-            <button className="hover:underline cursor-pointer flex justify-center items-center gap-1.25 hover:text-[#ba5b55]">
-              <Package stroke={1.5} size={16} className="text-[#ba5b55]" />
-              <p className="leading-none">My Orders</p>
-            </button>
-            <button className="hover:underline cursor-pointer flex justify-center items-center gap-1 hover:text-[#ba5b55]">
-              <CogFour stroke={1.5} size={18} className="text-[#ba5b55]" />
-              <p className="leading-none">Account & Settings</p>
-            </button>
-          </div>
-
-          <div className="flex justify-center items-center gap-5">
-            <LogoutButton />
-            <DeleteAccountButton />
-          </div>
-        </div>
-        <div className="flex-1 flex flex-col bg-white overflow-hidden min-w-0"></div>
-      </div>
-    </div>
-    </>
-  );
-};
-
-export default ProfilePage;
+    );
+  } catch (error) {
+    console.error("Failed to load profile data:", error);
+    redirect("/email");
+  }
+}

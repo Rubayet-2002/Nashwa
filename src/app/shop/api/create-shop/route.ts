@@ -4,7 +4,6 @@ import { authMe } from "@/app/(authentication)/lib/authMe";
 import { cookies } from "next/headers";
 import { verifyJWT } from "@/app/(authentication)/lib/jwtUtils";
 import { CreateShopPayload } from "@/app/shop/create-shop/lib/utils";
-import { getUniversityByUid } from "@/app/shop/lib/universities";
 
 export async function POST(request: Request) {
   try {
@@ -15,10 +14,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const { nidPdfUrl, coverPhotoUrl, profilePhotoUrl } = await request.json();
-    if (!nidPdfUrl || !coverPhotoUrl || !profilePhotoUrl) {
+    const { nidPdfUrl } = await request.json();
+    if (!nidPdfUrl) {
       return NextResponse.json(
-        { message: "Cover photo, profile photo, and NID document are required." },
+        { message: "NID document is required." },
         { status: 400 },
       );
     }
@@ -41,7 +40,6 @@ export async function POST(request: Request) {
       !payload.shopName ||
       !payload.shopEmail ||
       !payload.shopPhone ||
-      !payload.universityUid ||
       !payload.location ||
       !payload.description
     ) {
@@ -64,14 +62,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const university = getUniversityByUid(payload.universityUid);
-    if (!university) {
-      return NextResponse.json(
-        { message: "Please choose a valid university before submitting." },
-        { status: 400 },
-      );
-    }
-
     if (user.owned_shops && user.owned_shops.length >= 2) {
       return NextResponse.json(
         { message: "Store limit reached (Max 2)." },
@@ -83,17 +73,10 @@ export async function POST(request: Request) {
 
     await pool.query("BEGIN");
     await pool.query(
-      `INSERT INTO partner_university (university_uid, university_name)
-       VALUES ($1, $2)
-       ON CONFLICT (university_uid) DO UPDATE
-       SET university_name = EXCLUDED.university_name`,
-      [university.uid, university.name],
-    );
-    await pool.query(
       `INSERT INTO shop (
         shop_uid, owner_uid, shop_name, shop_email, shop_phone,
-        shop_location, shop_description, cover_photo_url, profile_photo_url, nid_pdf_url, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending')`,
+        shop_location, shop_description, nid_pdf_url, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')`,
       [
         shop_uid,
         user.uid,
@@ -102,26 +85,14 @@ export async function POST(request: Request) {
         payload.shopPhone,
         payload.location,
         payload.description,
-        coverPhotoUrl,
-        profilePhotoUrl,
         nidPdfUrl,
       ],
-    );
-    await pool.query(
-      `INSERT INTO shop_join_university (
-         shop_uid, university_uid, sid_pdf_url, status
-       ) VALUES ($1, $2, $3, 'pending')
-       ON CONFLICT (shop_uid) DO UPDATE
-       SET university_uid = EXCLUDED.university_uid,
-           sid_pdf_url = EXCLUDED.sid_pdf_url,
-           status = 'pending'`,
-      [shop_uid, university.uid, nidPdfUrl],
     );
     await pool.query("COMMIT");
 
     const response = NextResponse.json({
       success: true,
-      message: "Shop requested successfully!",
+      message: "Shop opening requested successfully!",
     });
 
     response.cookies.delete("create-shop-token");

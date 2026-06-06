@@ -8,13 +8,6 @@ export const RegisterInputCheck = z.object({
   username: z.string().min(3, "Username must be 3+ characters"),
   email: z.email("Invalid email format"),
   password: z.string().min(6, "Password must be 6+ characters"),
-  universityUid: z.string().min(1, "Please select your university"),
-});
-
-export const CreateAccountInputCheck = z.object({
-  username: z.string().min(3, "Username must be 3+ characters"),
-  email: z.email("Invalid email format"),
-  password: z.string().min(6, "Password must be 6+ characters"),
 });
 
 export const passwordCheck = z.object({

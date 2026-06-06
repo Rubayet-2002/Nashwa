@@ -36,7 +36,13 @@ export async function updateShopBio(shopUid: string, bio: string) {
 
 export async function updateShopInfo(
   shopUid: string,
-  data: { email: string; phone: string; location: string }
+  data: {
+    email: string;
+    phone: string;
+    location: string;
+    instagram_url?: string | null;
+    facebook_url?: string | null;
+  }
 ) {
   const { user } = await authMe();
   if (!user) {
@@ -55,8 +61,15 @@ export async function updateShopInfo(
     }
 
     await pool.query(
-      "UPDATE shop SET shop_email = $1, shop_phone = $2, shop_location = $3 WHERE shop_uid = $4",
-      [data.email, data.phone, data.location, shopUid]
+      "UPDATE shop SET shop_email = $1, shop_phone = $2, shop_location = $3, instagram_url = $4, facebook_url = $5 WHERE shop_uid = $6",
+      [
+        data.email,
+        data.phone,
+        data.location,
+        data.instagram_url || null,
+        data.facebook_url || null,
+        shopUid,
+      ]
     );
 
     revalidatePath("/shop/dashboard");

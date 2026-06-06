@@ -7,7 +7,6 @@ export async function POST() {
     redirect: "/admin/login",
   });
 
-  response.cookies.delete("access-token");
-  response.cookies.delete("refresh-token");
+  response.cookies.delete("admin-token");
   return response;
 }

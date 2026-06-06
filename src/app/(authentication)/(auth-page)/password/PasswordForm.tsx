@@ -75,6 +75,7 @@ const PasswordForm = ({ email, uid }: PasswordFormProps) => {
       addToast(state.message, "success");
       if (state.is_verified) {
         setUser(state.user);
+        router.refresh();
         router.replace(state.redirect);
       } else {
         router.replace(state.redirect);

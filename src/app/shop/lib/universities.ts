@@ -4,12 +4,13 @@ export type UniversityOption = {
 };
 
 export const UNIVERSITIES: UniversityOption[] = [
-  { uid: "uiu", name: "United International University (UIU)" },
-  { uid: "bracu", name: "Brac University (BracU)" },
-  { uid: "nsu", name: "North South University (NSU)" },
-  { uid: "ewu", name: "East West University (EWU)" },
-  { uid: "aiub", name: "American International University Bangladesh (AIUB)" },
-  { uid: "iub", name: "Independent University Bangladesh (IUB)" },
+  { uid: "nsu", name: "North South University" },
+  { uid: "brac", name: "BRAC University" },
+  { uid: "iub", name: "Independent University, Bangladesh" },
+  { uid: "uiu", name: "United International University" },
+  { uid: "aiub", name: "American International University-Bangladesh" },
+  { uid: "du", name: "University of Dhaka" },
+  { uid: "buet", name: "Bangladesh University of Engineering & Technology" },
 ];
 
 export function getUniversityByUid(universityUid?: string | null) {

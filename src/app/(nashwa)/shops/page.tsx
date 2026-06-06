@@ -1,13 +1,16 @@
+import pool from "@/database/pool";
+import { authMe } from "@/app/(authentication)/lib/authMe";
+import FollowShopButton from "@/components/FollowShopButton";
+import { Search, Users, Pin } from "@mynaui/icons-react";
 import Image from "next/image";
 import Link from "next/link";
-import pool from "@/database/pool";
-import { Search, Store, Pin, ShoppingBag } from "@mynaui/icons-react";
-import { profileData } from "../profile/lib/ProfileData";
-import { authMe } from "@/app/(authentication)/lib/authMe";
-import { ensureShopFollowTable } from "../lib/ensureShopFollowTable";
-import FollowShopButton from "../component/FollowShopButton";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = {
+  title: "Shops - Nashwa",
+  description: "Browse student entrepreneur shops on Nashwa.",
+};
 
 type ShopRow = {
   shop_uid: string;
@@ -19,117 +22,17 @@ type ShopRow = {
   profile_photo_url: string | null;
   university_uid: string | null;
   university_name: string | null;
-  owner_username: string;
+  owner_name: string;
   product_count: number;
-  followers_count: number;
+  follower_count: number;
   is_following: boolean;
-  is_own_shop: boolean;
 };
 
-type ShopsPageProps = {
-  searchParams: Promise<{ q?: string }>;
-};
-
-function formatCompactCount(value: number) {
-  if (value >= 1000) {
-    return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`;
-  }
-
-  return `${value}`;
-}
-
-function buildFollowers(shop: ShopRow) {
-  return formatCompactCount(shop.followers_count);
-}
-
-function matchesQuery(shop: ShopRow, query: string) {
-  if (!query) {
-    return true;
-  }
-
-  const normalizedQuery = query.toLowerCase();
-  return [
-    shop.shop_name,
-    shop.shop_location,
-    shop.shop_description,
-    shop.university_name,
-    shop.owner_username,
-  ]
-    .filter(Boolean)
-    .some((value) => value!.toLowerCase().includes(normalizedQuery));
-}
-
-function ShopCard({
-  shop,
-  canFollow,
+export default async function ShopsPage({
+  searchParams,
 }: {
-  shop: ShopRow;
-  canFollow: boolean;
+  searchParams: Promise<{ q?: string }>;
 }) {
-  const followers = buildFollowers(shop);
-  const imageSource = shop.profile_photo_url || shop.cover_photo_url;
-
-  return (
-    <div className="flex items-start gap-4 rounded-xl border border-[#ece7e5] px-3 py-3 transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-sm">
-      <Link href={`/shop/profile/${shop.shop_uid}`} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[#eadfdb] bg-[#f5f1ee] shadow-sm">
-        {imageSource ? (
-          <Image src={imageSource} alt={shop.shop_name} fill className="object-cover" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-[#BA5B55]">
-            <Store size={22} />
-          </div>
-        )}
-      </Link>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <Link href={`/shop/profile/${shop.shop_uid}`} className="block truncate text-sm font-semibold text-[#1a1a1a] transition-colors hover:text-[#BA5B55]">
-              {shop.shop_name}
-            </Link>
-            <p className="mt-0.5 truncate text-[11px] text-[#7f7f7f]">{shop.owner_username}</p>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-2">
-            <Link href={`/shop/profile/${shop.shop_uid}`} className="text-[11px] font-medium text-[#ba5b55] hover:text-[#9c403a]">
-              Visit shop
-            </Link>
-            {shop.is_own_shop ? (
-              <span className="px-2.5 py-1 text-[11px] font-medium text-[#8a8a8a]">Your shop</span>
-            ) : (
-              <FollowShopButton
-                shopUid={shop.shop_uid}
-                initialIsFollowing={shop.is_following}
-                canFollow={canFollow}
-                className="px-2.5 py-1"
-              />
-            )}
-          </div>
-        </div>
-
-        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[#8a8a8a]">
-          {shop.university_name && <span>{shop.university_name}</span>}
-          <span className="inline-flex items-center gap-1">
-            <Pin size={12} className="text-[#BA5B55]" />
-            {shop.shop_location}
-          </span>
-        </div>
-
-        <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-[#8b8b8b]">
-          {shop.shop_description}
-        </p>
-
-        <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-[#8b8b8b]">
-          <span>{followers} Followers</span>
-          <span>{shop.product_count} Products</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default async function ShopsPage({ searchParams }: ShopsPageProps) {
-  const profile = await profileData();
   const { user } = await authMe();
   const { q = "" } = await searchParams;
 
@@ -137,148 +40,184 @@ export default async function ShopsPage({ searchParams }: ShopsPageProps) {
 
   try {
     const currentUid = user?.uid ?? null;
-    await ensureShopFollowTable();
 
-    const shopRes = await pool.query(
-      `SELECT s.shop_uid,
-              s.owner_uid,
-              s.shop_name,
-              s.shop_location,
-              s.shop_description,
-              s.cover_photo_url,
-              s.profile_photo_url,
-              sju.university_uid,
-              pu.university_name,
-              u.username AS owner_username,
-              COALESCE(pc.product_count, 0)::int AS product_count,
-              COALESCE(fc.followers_count, 0)::int AS followers_count,
-              CASE WHEN $1::text IS NOT NULL AND sf.user_uid IS NOT NULL THEN TRUE ELSE FALSE END AS is_following
-       FROM shop s
-       JOIN users u ON u.uid = s.owner_uid
-       LEFT JOIN shop_join_university sju ON sju.shop_uid = s.shop_uid
-       LEFT JOIN partner_university pu ON pu.university_uid = sju.university_uid
-       LEFT JOIN shop_follow sf ON sf.shop_uid = s.shop_uid AND sf.user_uid = $1
-       LEFT JOIN LATERAL (
-         SELECT COUNT(*)::int AS product_count
-         FROM product p
-         WHERE p.shop_uid = s.shop_uid
-       ) pc ON true
-       LEFT JOIN LATERAL (
-         SELECT COUNT(*)::int AS followers_count
-         FROM shop_follow fs
-         WHERE fs.shop_uid = s.shop_uid
-       ) fc ON true
-       WHERE s.status = 'approved'
-       ORDER BY s.created_at DESC
-       LIMIT 50`,
-      [currentUid]
-    );
+    let queryText = `
+      SELECT s.shop_uid,
+             s.owner_uid,
+             s.shop_name,
+             s.shop_location,
+             s.shop_description,
+             s.cover_photo_url,
+             s.profile_photo_url,
+             s.avg_rating,
+             s.follower_count,
+             sju.university_uid,
+             pu.university_name,
+             u.username AS owner_name,
+             COALESCE(pc.product_count, 0)::int AS product_count,
+             CASE WHEN $1::text IS NOT NULL AND sf.user_uid IS NOT NULL THEN TRUE ELSE FALSE END AS is_following
+      FROM shop s
+      JOIN users u ON u.uid = s.owner_uid
+      LEFT JOIN shop_join_university sju ON sju.shop_uid = s.shop_uid AND sju.status = 'approved'
+      LEFT JOIN partner_university pu ON pu.university_uid = sju.university_uid
+      LEFT JOIN shop_follow sf ON sf.shop_uid = s.shop_uid AND sf.user_uid = $1
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::int AS product_count
+        FROM product p
+        WHERE p.shop_uid = s.shop_uid AND p.status = 'active'
+      ) pc ON true
+      WHERE s.status = 'approved' AND s.is_blocked = FALSE
+    `;
 
-    shops = shopRes.rows
-      .map((shop) => ({ ...shop, is_own_shop: currentUid ? shop.owner_uid === currentUid : false }))
-      .filter((shop) => matchesQuery(shop, q));
+    const params: any[] = [currentUid];
+
+    if (q.trim()) {
+      queryText += ` AND (s.shop_name ILIKE $2 OR s.shop_description ILIKE $2 OR pu.university_name ILIKE $2 OR u.username ILIKE $2)`;
+      params.push(`%${q}%`);
+    }
+
+    const shopRes = await pool.query(queryText, params);
+    shops = shopRes.rows;
+
+    // Sort: Followed shops first, then suggested (unfollowed) shops
+    shops.sort((a, b) => {
+      if (a.is_following && !b.is_following) return -1;
+      if (!a.is_following && b.is_following) return 1;
+      return b.follower_count - a.follower_count;
+    });
+
   } catch (error) {
     console.error("Error fetching shops page data:", error);
   }
 
-  const allShops = shops.slice(0, 24);
-  const myUniversityShops = profile?.university_uid
-    ? shops.filter((shop) => shop.university_uid === profile.university_uid).slice(0, 24)
-    : [];
-  const hasUniversityScope = Boolean(profile?.university_uid && profile?.university_name);
-  const canFollow = Boolean(user?.uid);
+  const followedShops = shops.filter((s) => s.is_following);
+  const suggestedShops = shops.filter((s) => !s.is_following);
+  const canFollow = !!user;
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto bg-[#f6f4f2] px-0 py-0 sm:px-0 lg:px-0">
-      <div className="mx-auto flex min-h-full w-full max-w-none flex-col bg-white shadow-[0_10px_30px_rgba(120,150,146,0.08)]">
-        <div className="border-b border-[#f0f0f0] px-6 py-5 sm:px-8 lg:px-10">
-          <p className="text-sm uppercase tracking-[0.25em] text-[#9aa6a3]">shops</p>
-          <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl">
-              <h1 className="text-3xl font-semibold tracking-tight text-[#232323] sm:text-4xl">Discover shops from your university</h1>
-              <p className="mt-2 text-sm leading-relaxed text-[#7b7b7b]">
-                {hasUniversityScope
-                  ? `You are browsing ${profile?.university_name}.`
-                  : "Browse approved shops. Add your university on profile to see campus-only section."}
+    <div className="flex-1 overflow-y-auto bg-[#f2f4f7] px-4 py-6 custom-scrollbar min-h-full">
+      <div className="max-w-4xl mx-auto bg-white border border-[#e2e2e2] rounded-xl shadow-xs overflow-hidden">
+        {/* Header section */}
+        <div className="border-b border-[#f0f0f0] px-6 py-6 sm:px-8">
+          <p className="text-[10px] uppercase font-bold tracking-widest text-[#BA5B55]">Shops Directory</p>
+          <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-xl">
+              <h1 className="text-2xl font-bold tracking-tight text-[#1a1a1a]">Discover Campus Shops</h1>
+              <p className="mt-1 text-xs text-gray-500">
+                Explore student-led initiatives, handcrafted creations, and campus-only services.
               </p>
             </div>
 
-            <form className="w-full max-w-xl" action="/shops" method="get">
-              <label className="flex items-center gap-3 rounded-full border border-[#eadfdb] bg-[#fffaf8] px-4 py-3 text-sm text-[#8e5a52] shadow-sm focus-within:border-[#ba5b55]">
-                <Search size={16} />
+            <form className="w-full max-w-xs" action="/shops" method="get">
+              <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-[#f4f4f4] px-3.5 py-1.5 focus-within:border-[#ba5b55] focus-within:bg-white transition-all duration-200">
+                <Search size={14} className="text-gray-400 shrink-0" />
                 <input
                   name="q"
                   defaultValue={q}
-                  placeholder="Search shops, locations, or owners"
-                  className="w-full bg-transparent outline-none placeholder:text-[#b79690]"
+                  placeholder="Search shops, owners..."
+                  className="w-full bg-transparent outline-none text-xs text-[#1a1a1a] placeholder:text-gray-400"
                 />
-              </label>
+              </div>
             </form>
           </div>
         </div>
 
-        <div className="flex-1 space-y-10 px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
-          <section className="space-y-5">
-            <div className="flex items-end justify-between gap-3">
-              <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-[#9a9a9a]">All shops</p>
-                <h2 className="mt-1 text-lg font-semibold text-[#222222]">All approved shops</h2>
+        <div className="p-6 sm:p-8 flex flex-col gap-8">
+          {/* Followed shops */}
+          {followedShops.length > 0 && (
+            <section className="space-y-4">
+              <h2 className="text-sm font-bold text-[#1a1a1a] flex items-center gap-1.5">
+                <span>❤️</span> Followed Shops
+              </h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                {followedShops.map((shop) => (
+                  <ShopCard key={shop.shop_uid} shop={shop} canFollow={canFollow} currentUid={user?.uid} />
+                ))}
               </div>
-              <span className="hidden text-xs text-[#ba5b55] sm:inline-flex">{allShops.length} results</span>
-            </div>
+            </section>
+          )}
 
-            {allShops.length > 0 ? (
-              <div className="grid gap-6 xl:grid-cols-2">
-                {allShops.map((shop, index) => (
-                  <ShopCard
-                    key={shop.shop_uid}
-                    shop={shop}
-                    canFollow={canFollow}
-                  />
+          {/* Suggested shops */}
+          <section className="space-y-4">
+            <h2 className="text-sm font-bold text-[#1a1a1a] flex items-center gap-1.5">
+              <span>💡</span> Suggested Shops
+            </h2>
+            {suggestedShops.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {suggestedShops.map((shop) => (
+                  <ShopCard key={shop.shop_uid} shop={shop} canFollow={canFollow} currentUid={user?.uid} />
                 ))}
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-[#e5e5e5] bg-[#fcfcfc] p-8 text-sm text-[#8a8a8a]">
-                No shops matched your search.
+              <div className="border border-dashed border-gray-200 rounded-xl p-8 text-center text-xs text-gray-500 bg-gray-50/50">
+                No suggested shops found.
               </div>
             )}
           </section>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-          <section className="space-y-5">
-            <div className="flex items-end justify-between gap-3">
-              <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-[#9a9a9a]">My university shops</p>
-                <h2 className="mt-1 text-lg font-semibold text-[#222222]">Shops from your university</h2>
-              </div>
-              <span className="hidden text-xs text-[#ba5b55] sm:inline-flex">{hasUniversityScope ? profile?.university_name : "Set university"}</span>
-            </div>
-
-            <div className="grid gap-6 xl:grid-cols-2">
-              {myUniversityShops.length > 0 ? (
-                myUniversityShops.map((shop, index) => (
-                  <ShopCard
-                    key={shop.shop_uid}
-                    shop={shop}
-                    canFollow={canFollow}
-                  />
-                ))
-              ) : (
-                <div className="rounded-2xl border border-dashed border-[#e5e5e5] bg-[#fcfcfc] p-8 text-sm text-[#8a8a8a]">
-                  {hasUniversityScope
-                    ? "No university shops matched your search yet."
-                    : "Set your university in profile to show this section."}
-                </div>
-              )}
-            </div>
-          </section>
-
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#f2f2f2] pt-5 text-xs text-[#8a8a8a]">
-            <span className="inline-flex items-center gap-2">
-              <ShoppingBag size={14} className="text-[#ba5b55]" />
-              Follow any shop from this list or from the shop profile page.
-            </span>
-            <span>{shops.length} shops loaded</span>
+function ShopCard({
+  shop,
+  canFollow,
+  currentUid,
+}: {
+  shop: ShopRow;
+  canFollow: boolean;
+  currentUid?: string;
+}) {
+  const isOwnShop = currentUid ? shop.owner_uid === currentUid : false;
+  return (
+    <div className="flex items-start gap-3.5 rounded-xl border border-gray-200 px-4 py-4 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xs hover:border-[#BA5B55]/20">
+      <Link href={`/shop/${shop.shop_uid}`} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
+        {shop.profile_photo_url ? (
+          <Image src={shop.profile_photo_url} alt={shop.shop_name} fill className="object-cover animate-fade-in" />
+        ) : (
+          <div className="text-[#BA5B55] flex items-center justify-center font-bold text-2xl">
+            {shop.shop_name[0]?.toUpperCase()}
           </div>
+        )}
+      </Link>
+
+      <div className="min-w-0 flex-1 flex flex-col">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <Link href={`/shop/${shop.shop_uid}`} className="block truncate text-xs font-bold text-[#1a1a1a] hover:text-[#BA5B55] transition-colors leading-normal">
+              {shop.shop_name}
+            </Link>
+            <p className="text-[10px] text-gray-400 mt-0.5 font-medium truncate">By {shop.owner_name}</p>
+          </div>
+
+          <div className="shrink-0 flex items-center gap-1.5 mt-0.5">
+              <FollowShopButton
+                shopUid={shop.shop_uid}
+                initialIsFollowing={shop.is_following}
+                canFollow={canFollow}
+                className="px-2 py-1 rounded"
+              />
+          </div>
+        </div>
+
+        <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-gray-400 font-semibold">
+          {shop.university_name && <span className="text-[#BA5B55]">{shop.university_name}</span>}
+          {shop.university_name && <span>•</span>}
+          <span className="inline-flex items-center gap-0.5">
+            <Pin size={11} className="text-gray-400" />
+            {shop.shop_location}
+          </span>
+        </div>
+
+        <p className="mt-1.5 line-clamp-2 text-[10px] leading-relaxed text-gray-500 font-medium">
+          {shop.shop_description}
+        </p>
+
+        <div className="mt-2 flex flex-wrap items-center gap-3 text-[10px] text-gray-400 font-bold">
+          <span className="flex items-center gap-1"><Users size={12} /> {shop.follower_count} Followers</span>
+          <span>•</span>
+          <span>{shop.product_count} Products</span>
         </div>
       </div>
     </div>
