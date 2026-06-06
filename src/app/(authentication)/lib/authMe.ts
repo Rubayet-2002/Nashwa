@@ -60,7 +60,12 @@ export const authMe = cache(async (): Promise<AuthMeResult> => {
 
     const userRes = await pool.query(
       `SELECT uid, username, email, role, is_verified,
-              profile_photo_url, cover_photo_url, bio, phone, address, city
+              profile_photo_url,
+              NULL::text AS cover_photo_url,
+              NULL::text AS bio,
+              phone,
+              NULL::text AS address,
+              NULL::text AS city
        FROM users WHERE uid = $1`,
       [uid],
     );

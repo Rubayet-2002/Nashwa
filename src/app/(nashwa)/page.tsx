@@ -27,21 +27,25 @@ export default async function Homepage() {
     const [shopsRes, eventsRes, comRes, productsRes] = await Promise.all([
       pool.query(`
         SELECT s.shop_uid, s.shop_name, s.shop_location, s.profile_photo_url,
-               s.avg_rating, s.follower_count, pu.university_name,
+               NULL::numeric AS avg_rating,
+               0::int AS follower_count,
+               pu.university_name,
                u.username AS owner_name
         FROM shop s
         JOIN users u ON s.owner_uid = u.uid
         LEFT JOIN shop_join_university sju ON sju.shop_uid = s.shop_uid AND sju.status = 'approved'
         LEFT JOIN partner_university pu ON pu.university_uid = sju.university_uid
-        WHERE s.status = 'approved' AND s.is_blocked = FALSE
-        ORDER BY s.follower_count DESC NULLS LAST, s.avg_rating DESC NULLS LAST
+        WHERE s.status = 'approved'
+        ORDER BY s.created_at DESC
         LIMIT 8
       `),
       pool.query(`
-        SELECT event_uid, title, description, image_url, venue, start_at, ends_at
+        SELECT event_uid, title, description, image_url, venue,
+               COALESCE(created_at, ends_at) AS start_at,
+               ends_at
         FROM campus_event
-        WHERE ends_at > NOW() AND is_active = TRUE
-        ORDER BY start_at ASC
+        WHERE ends_at > NOW()
+        ORDER BY ends_at ASC
         LIMIT 4
       `),
       pool.query(`
@@ -50,24 +54,33 @@ export default async function Homepage() {
         ORDER BY university_name ASC
       `),
       pool.query(`
-        SELECT p.product_uid, p.title, p.description, p.price, p.original_price,
-               p.discount_percent, p.currency, p.category, p.product_type,
-               p.inside_delivery_charge, p.outside_delivery_charge, p.free_on_campus_delivery,
-               p.sold_count, p.like_count, p.avg_rating, p.variants, p.created_at,
-               (SELECT pi.image_url FROM product_image pi WHERE pi.product_uid = p.product_uid ORDER BY pi.position ASC, pi.id ASC LIMIT 1) AS image_url,
-               COALESCE((SELECT json_agg(pi.image_url ORDER BY pi.position ASC, pi.id ASC) FROM product_image pi WHERE pi.product_uid = p.product_uid), '[]') AS image_urls,
-               (SELECT COUNT(*)::int FROM product_comment pc WHERE pc.product_uid = p.product_uid) AS comment_count,
+        SELECT p.product_uid, p.title, p.description, p.price,
+               NULL::numeric AS original_price,
+               NULL::numeric AS discount_percent,
+               COALESCE(p.currency, 'BDT') AS currency,
+               NULL::text AS category,
+               'regular'::text AS product_type,
+               0::numeric AS inside_delivery_charge,
+               0::numeric AS outside_delivery_charge,
+               FALSE AS free_on_campus_delivery,
+               0::int AS sold_count,
+               0::int AS like_count,
+               NULL::numeric AS avg_rating,
+               '[]'::jsonb AS variants,
+               p.created_at,
+               NULL::text AS image_url,
+               '[]'::json AS image_urls,
+               0::int AS comment_count,
                s.shop_uid, s.shop_name, s.shop_location, s.profile_photo_url AS shop_profile_photo_url,
-               s.avg_rating AS shop_avg_rating, s.is_blocked AS shop_blocked,
+               NULL::numeric AS shop_avg_rating,
+               FALSE AS shop_blocked,
                pu.university_name AS shop_university_name,
-               ep.status AS event_status
+               NULL::text AS event_status
         FROM product p
         JOIN shop s ON s.shop_uid = p.shop_uid
         LEFT JOIN shop_join_university sju ON sju.shop_uid = s.shop_uid AND sju.status = 'approved'
         LEFT JOIN partner_university pu ON pu.university_uid = sju.university_uid
-        LEFT JOIN event_product ep ON ep.product_uid = p.product_uid
-        WHERE s.status = 'approved' AND s.is_blocked = FALSE
-          AND p.status = 'active'
+        WHERE s.status = 'approved'
         ORDER BY p.created_at DESC
         LIMIT 20
       `),
