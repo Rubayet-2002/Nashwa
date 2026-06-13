@@ -38,14 +38,16 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL("/email", request.url));
     }
 
-    // Verify ownership and approval status
+    
+
     const shopRes = await pool.query(
       "SELECT shop_uid FROM shop WHERE shop_uid = $1 AND owner_uid = $2 AND status = 'approved'",
       [shopUid, uid],
     );
 
     if ((shopRes.rowCount ?? 0) === 0) {
-      // If they don't own it or it's not approved, take them to the public shop profile
+      
+
       return NextResponse.redirect(new URL(`/shop/${shopUid}`, request.url));
     }
 
@@ -60,7 +62,8 @@ export async function GET(request: Request) {
 
     const user = userRes.rows[0];
 
-    // Update session active_shop_uid
+    
+
     await pool.query(
       "UPDATE session SET active_shop_uid = $1 WHERE session_id = $2",
       [shopUid, sessionId],

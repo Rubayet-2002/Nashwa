@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import ProductCard from "@/app/(nashwa)/home/ProductCard";
 import type { FeedProduct } from "@/app/(nashwa)/home/HomeFeedClient";
 import { Filter } from "@mynaui/icons-react";
@@ -146,6 +146,7 @@ export default function ShopProductsClient({
   initialSavedProducts,
   initialReactedProducts,
 }: ShopProductsClientProps) {
+  const [categories, setCategories] = useState<string[]>(CATEGORIES);
   const maxProductPrice = products.reduce((max, p) => Math.max(max, Number(p.price) || 0), 10000);
   const maxRangeLimit = Math.max(10000, Math.ceil(maxProductPrice / 1000) * 1000);
 
@@ -153,11 +154,23 @@ export default function ShopProductsClient({
   const [savedProducts, setSavedProducts] = useState<Set<string>>(new Set(initialSavedProducts));
   const [reactedProducts, setReactedProducts] = useState<Set<string>>(new Set(initialReactedProducts));
 
-  // In-memory Filter States
+  
+
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(maxRangeLimit);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && Array.isArray(data.categories)) {
+          setCategories(data.categories);
+        }
+      })
+      .catch((err) => console.error("Error fetching categories:", err));
+  }, []);
 
   const handleFollowChange = useCallback((shopUid: string, following: boolean) => {
     setFollowedShops((prev) => {
@@ -186,7 +199,8 @@ export default function ShopProductsClient({
     });
   }, []);
 
-  // Filter in-memory products
+  
+
   const filteredProducts = products.filter((p) => {
     const priceNum = Number(p.price);
     const categoryMatch = selectedCategory.length === 0 || selectedCategory.includes(p.category || "");
@@ -196,7 +210,7 @@ export default function ShopProductsClient({
 
   const hasActive = selectedCategory.length > 0 || minPrice > 0 || maxPrice < maxRangeLimit;
 
-  const categoryOptions = CATEGORIES.map((cat) => ({ value: cat, label: cat }));
+  const categoryOptions = categories.map((cat) => ({ value: cat, label: cat }));
 
   return (
     <div className="flex flex-col gap-6 overflow-visible w-full">

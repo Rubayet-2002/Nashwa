@@ -1,11 +1,17 @@
-// ============================================================
-// NASHWA — Full Database Schema
-// Run: npm run db  (drops all, creates all, seeds admin + universities)
-// ============================================================
 
-// ---- DROP ORDER (reverse dependency) ----
+
+
+
+
+
+
+
+
+
+
 export const DropAll = `
   DROP TABLE IF EXISTS comment_reaction CASCADE;
+  DROP TABLE IF EXISTS product_category CASCADE;
   DROP TABLE IF EXISTS product_review CASCADE;
   DROP TABLE IF EXISTS product_save CASCADE;
   DROP TABLE IF EXISTS report CASCADE;
@@ -29,7 +35,8 @@ export const DropAll = `
   DROP TABLE IF EXISTS users CASCADE;
 `;
 
-// ---- USERS ----
+
+
 export const Users = `
 CREATE TABLE IF NOT EXISTS users (
   uid               VARCHAR(50) PRIMARY KEY,
@@ -58,7 +65,8 @@ CREATE TABLE IF NOT EXISTS users (
 );
 `;
 
-// ---- SESSION ----
+
+
 export const Session = `
 CREATE TABLE IF NOT EXISTS session (
   session_id        VARCHAR(50) PRIMARY KEY,
@@ -78,7 +86,8 @@ CREATE TABLE IF NOT EXISTS session (
 );
 `;
 
-// ---- OTP ----
+
+
 export const OTP = `
 CREATE TABLE IF NOT EXISTS otp (
   otp_id            SERIAL PRIMARY KEY,
@@ -90,7 +99,8 @@ CREATE TABLE IF NOT EXISTS otp (
 );
 `;
 
-// ---- PARTNER UNIVERSITY (Community) ----
+
+
 export const PartnerUniversity = `
 CREATE TABLE IF NOT EXISTS partner_university (
   university_uid    VARCHAR(50) PRIMARY KEY,
@@ -103,7 +113,17 @@ CREATE TABLE IF NOT EXISTS partner_university (
 );
 `;
 
-// ---- SHOP ----
+
+
+export const ProductCategory = `
+CREATE TABLE IF NOT EXISTS product_category (
+  category_name     VARCHAR(100) PRIMARY KEY,
+  created_at        TIMESTAMPTZ DEFAULT NOW()
+);
+`;
+
+
+
 export const Shop = `
 CREATE TABLE IF NOT EXISTS shop (
   shop_uid            VARCHAR(50) PRIMARY KEY,
@@ -141,7 +161,8 @@ CREATE TABLE IF NOT EXISTS shop (
 );
 `;
 
-// ---- SHOP FOLLOW ----
+
+
 export const ShopFollow = `
 CREATE TABLE IF NOT EXISTS shop_follow (
   shop_uid      VARCHAR(50) REFERENCES shop(shop_uid) ON DELETE CASCADE,
@@ -151,7 +172,8 @@ CREATE TABLE IF NOT EXISTS shop_follow (
 );
 `;
 
-// ---- SHOP JOIN UNIVERSITY ----
+
+
 export const ShopJoinUniversity = `
 CREATE TABLE IF NOT EXISTS shop_join_university (
   id              SERIAL PRIMARY KEY,
@@ -166,7 +188,8 @@ CREATE TABLE IF NOT EXISTS shop_join_university (
 );
 `;
 
-// ---- UNIVERSITY FAVORITE (users add universities to favorites) ----
+
+
 export const UniversityFavorite = `
 CREATE TABLE IF NOT EXISTS university_favorite (
   university_uid  VARCHAR(50) REFERENCES partner_university(university_uid) ON DELETE CASCADE,
@@ -176,7 +199,8 @@ CREATE TABLE IF NOT EXISTS university_favorite (
 );
 `;
 
-// ---- PRODUCT ----
+
+
 export const Product = `
 CREATE TABLE IF NOT EXISTS product (
   product_uid             VARCHAR(50) PRIMARY KEY,
@@ -213,7 +237,8 @@ CREATE TABLE IF NOT EXISTS product (
 );
 `;
 
-// ---- PRODUCT IMAGE ----
+
+
 export const ProductImage = `
 CREATE TABLE IF NOT EXISTS product_image (
   id            SERIAL PRIMARY KEY,
@@ -223,7 +248,8 @@ CREATE TABLE IF NOT EXISTS product_image (
 );
 `;
 
-// ---- PRODUCT REACTION (likes) ----
+
+
 export const ProductReaction = `
 CREATE TABLE IF NOT EXISTS product_reaction (
   reaction_uid  VARCHAR(50) PRIMARY KEY,
@@ -235,7 +261,8 @@ CREATE TABLE IF NOT EXISTS product_reaction (
 );
 `;
 
-// ---- PRODUCT SAVE ----
+
+
 export const ProductSave = `
 CREATE TABLE IF NOT EXISTS product_save (
   product_uid   VARCHAR(50) REFERENCES product(product_uid) ON DELETE CASCADE,
@@ -245,7 +272,8 @@ CREATE TABLE IF NOT EXISTS product_save (
 );
 `;
 
-// ---- PRODUCT COMMENT ----
+
+
 export const ProductComment = `
 CREATE TABLE IF NOT EXISTS product_comment (
   comment_uid         VARCHAR(50) PRIMARY KEY,
@@ -262,7 +290,8 @@ CREATE TABLE IF NOT EXISTS product_comment (
 );
 `;
 
-// ---- COMMENT REACTION (likes on comments) ----
+
+
 export const CommentReaction = `
 CREATE TABLE IF NOT EXISTS comment_reaction (
   comment_uid   VARCHAR(50) REFERENCES product_comment(comment_uid) ON DELETE CASCADE,
@@ -272,7 +301,8 @@ CREATE TABLE IF NOT EXISTS comment_reaction (
 );
 `;
 
-// ---- PRODUCT REVIEW (post-purchase) ----
+
+
 export const ProductReview = `
 CREATE TABLE IF NOT EXISTS product_review (
   review_uid    VARCHAR(50) PRIMARY KEY,
@@ -285,7 +315,8 @@ CREATE TABLE IF NOT EXISTS product_review (
 );
 `;
 
-// ---- ORDER REQUEST ----
+
+
 export const OrderRequest = `
 CREATE TABLE IF NOT EXISTS order_request (
   order_uid         VARCHAR(50) PRIMARY KEY,
@@ -319,7 +350,8 @@ CREATE TABLE IF NOT EXISTS order_request (
 );
 `;
 
-// ---- ORDER REQUEST ITEM ----
+
+
 export const OrderRequestItem = `
 CREATE TABLE IF NOT EXISTS order_request_item (
   id              SERIAL PRIMARY KEY,
@@ -333,7 +365,8 @@ CREATE TABLE IF NOT EXISTS order_request_item (
 );
 `;
 
-// ---- CHAT MESSAGE (user ↔ shop only) ----
+
+
 export const ChatMessage = `
 CREATE TABLE IF NOT EXISTS chat_message (
   message_uid       VARCHAR(50) PRIMARY KEY,
@@ -354,7 +387,8 @@ CREATE TABLE IF NOT EXISTS chat_message (
 );
 `;
 
-// ---- NOTIFICATION ----
+
+
 export const Notification = `
 CREATE TABLE IF NOT EXISTS notification (
   notif_uid     VARCHAR(50) PRIMARY KEY,
@@ -370,7 +404,8 @@ CREATE TABLE IF NOT EXISTS notification (
 );
 `;
 
-// ---- CAMPUS EVENT (admin-created or shop-hosted) ----
+
+
 export const CampusEvent = `
 CREATE TABLE IF NOT EXISTS campus_event (
   event_uid     VARCHAR(50) PRIMARY KEY,
@@ -388,7 +423,8 @@ CREATE TABLE IF NOT EXISTS campus_event (
 );
 `;
 
-// ---- EVENT PRODUCT (products submitted to an event) ----
+
+
 export const EventProduct = `
 CREATE TABLE IF NOT EXISTS event_product (
   id            SERIAL PRIMARY KEY,
@@ -403,7 +439,8 @@ CREATE TABLE IF NOT EXISTS event_product (
 );
 `;
 
-// ---- REPORT ----
+
+
 export const Report = `
 CREATE TABLE IF NOT EXISTS report (
   report_uid    VARCHAR(50) PRIMARY KEY,

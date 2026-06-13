@@ -1,8 +1,11 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
+
 const { createServer } = require("http");
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
+
 const next = require("next");
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
+
 const { Server } = require("socket.io");
 
 const dev = process.env.NODE_ENV !== "production";
@@ -25,7 +28,6 @@ app.prepare().then(() => {
     },
   });
 
-  // Attach io to global so API routes can access it
   global.io = io;
 
   io.on("connection", (socket) => {
@@ -40,7 +42,6 @@ app.prepare().then(() => {
       }
     });
 
-    // ── Product rooms (real-time likes / comments) ──────────────
     socket.on("join:product", ({ productId }) => {
       socket.join(`product:${productId}`);
     });
@@ -49,7 +50,6 @@ app.prepare().then(() => {
       socket.leave(`product:${productId}`);
     });
 
-    // ── Chat rooms (user ↔ shop) ────────────────────────────────
     socket.on("join:chat", ({ shopId, userId }) => {
       const room = `chat:${shopId}:${userId}`;
       socket.join(room);
@@ -60,7 +60,8 @@ app.prepare().then(() => {
     });
 
     socket.on("disconnect", () => {
-      // cleanup handled automatically by socket.io
+      
+
     });
   });
 

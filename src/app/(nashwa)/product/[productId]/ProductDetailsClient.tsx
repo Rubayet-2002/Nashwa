@@ -521,6 +521,96 @@ export default function ProductDetailsClient({
     }
   };
 
+  const renderShopCard = () => (
+    <div className="bg-white border border-[#e8e8e8] rounded-xl overflow-hidden shadow-xs flex flex-col font-sans">
+      {/* Cover Banner */}
+      <div className="h-24 w-full bg-gradient-to-br from-[#fcf7f6] to-[#f4ece9] relative shrink-0" />
+
+      <div className="px-5 pb-5 relative flex flex-col gap-4">
+        {/* Profile Photo Overlapping cover */}
+        <div className="flex items-end gap-3 -mt-8 relative z-10">
+          <Link href={`/shop/${product.shop_uid}`}>
+            <div className="relative w-16 h-16 rounded-full overflow-hidden border-4 border-white bg-white flex items-center justify-center shrink-0 shadow-sm">
+              {product.shop_profile_photo_url ? (
+                <Image src={product.shop_profile_photo_url} alt={product.shop_name} fill className="object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-[#fdf0ef] text-[#BA5B55] font-bold text-xl uppercase">
+                  {product.shop_name.slice(0, 2)}
+                </div>
+              )}
+            </div>
+          </Link>
+          <div className="min-w-0 pb-1">
+            <Link href={`/shop/${product.shop_uid}`} className="text-sm font-bold text-[#1a1a1a] hover:text-[#BA5B55] transition-colors truncate block leading-tight">
+              {product.shop_name}
+            </Link>
+            <span className="text-[10px] text-gray-500 block mt-0.5 font-light">
+              @{product.owner_name}
+            </span>
+          </div>
+        </div>
+
+        {/* Location & University */}
+        <div className="flex flex-col gap-1 text-xs text-gray-500 font-light mt-1">
+          {product.shop_university_name && (
+            <div className="flex items-center gap-1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#BA5B55]">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
+              </svg>
+              <span>{product.shop_university_name}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-1.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#BA5B55]">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span>{product.shop_location}</span>
+          </div>
+        </div>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-2 gap-4 border-y border-gray-100 py-3 mt-1 text-center">
+          <div className="flex flex-col border-r border-gray-100">
+            <span className="text-xs font-bold text-[#BA5B55]">{product.shop_follower_count ?? 0}</span>
+            <span className="text-[9px] text-[#787878] uppercase font-semibold tracking-wider mt-0.5">Followers</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-bold text-[#BA5B55] flex items-center justify-center gap-0.5">
+              {product.shop_rating ? Number(product.shop_rating).toFixed(1) : "—"}
+              <svg width="10" height="10" viewBox="0 0 24 24" fill={product.shop_rating ? "#BA5B55" : "none"} stroke="#BA5B55" strokeWidth="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </span>
+            <span className="text-[9px] text-[#787878] uppercase font-semibold tracking-wider mt-0.5">Rating</span>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2 mt-1 w-full">
+          <button
+            onClick={handleFollow}
+            className={`flex-1 text-center py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+              isFollowing
+                ? "bg-[#BA5B55] text-white border-[#BA5B55]"
+                : "border-gray-200 text-[#555] hover:border-[#BA5B55] hover:text-[#BA5B55]"
+            }`}
+          >
+            {isFollowing ? "Following" : "Follow Shop"}
+          </button>
+
+          <ContactSellerWidget
+            shopUid={product.shop_uid}
+            shopName={product.shop_name}
+            shopOwnerUid={product.owner_uid}
+            shopAvatar={product.shop_profile_photo_url}
+            currentUser={currentUserId ? { uid: currentUserId, username: "" } : null}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
   const discountedPrice = Number(product.price);
   const originalPrice = product.original_price ? Number(product.original_price) : null;
   const hasDiscount = product.discount_percent && Number(product.discount_percent) > 0;
@@ -531,31 +621,26 @@ export default function ProductDetailsClient({
   const totalCost = (discountedPrice * quantity) + deliveryCharge;
 
   return (
-    <div className="flex-1 flex flex-col gap-6 min-h-0 h-full">
-      {/* Back button */}
-      <div className="shrink-0">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1 text-xs text-[#787878] hover:text-[#BA5B55] font-semibold transition-colors"
-        >
-          &larr; Back to home feed
-        </Link>
-      </div>
-
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* Split column grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start lg:items-stretch min-h-0 lg:h-full lg:overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start lg:items-stretch min-h-0 lg:h-full overflow-y-auto lg:overflow-hidden">
         
         {/* LEFT COLUMN (2/3 width) */}
         <div className="lg:col-span-2 flex flex-col gap-6 min-h-0 lg:h-full lg:overflow-y-auto custom-scrollbar pr-1">
           
+          {/* Mobile Shop Card (shown only on mobile/tablet) */}
+          <div className="lg:hidden shrink-0">
+            {renderShopCard()}
+          </div>
+
           {/* Main Info Block */}
-          <div className="bg-white border border-[#e8e8e8] rounded-3xl p-6 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white border border-[#e8e8e8] rounded-xl p-6 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* Gallery (Left half of block) */}
             <div className="flex flex-col gap-4">
               <div
                 onClick={() => allImages[activeImg] && setLightboxSrc(allImages[activeImg])}
-                className="relative w-full aspect-square bg-[#fafafa] rounded-2xl overflow-hidden border border-[#f0f0f0] cursor-pointer group"
+                className="relative w-full aspect-square bg-[#fafafa] rounded-xl overflow-hidden border border-[#f0f0f0] cursor-pointer group"
               >
                 {allImages[activeImg] ? (
                   <Image
@@ -731,7 +816,7 @@ export default function ProductDetailsClient({
                 )}
 
                 {/* Delivery charges */}
-                <div className="bg-[#fcf8f7] border border-[#f7e6e3] rounded-2xl p-4 mt-1">
+                <div className="bg-[#fcf8f7] border border-[#f7e6e3] rounded-xl p-4 mt-1">
                   <h3 className="text-xs font-bold text-[#BA5B55] uppercase tracking-wider mb-2">Delivery Charge</h3>
                   <div className="text-xs font-light text-[#555]">
                     <span className="font-semibold block text-[#1a1a1a]">Standard Shipping</span>
@@ -750,14 +835,14 @@ export default function ProductDetailsClient({
                 {!currentUserId ? (
                   <Link
                     href="/email"
-                    className="w-full text-center block text-xs bg-[#BA5B55] border border-[#BA5B55] hover:bg-white hover:text-[#BA5B55] transition-all py-3 text-white font-bold rounded-2xl cursor-pointer shadow-xs"
+                    className="w-full text-center block text-xs bg-[#BA5B55] border border-[#BA5B55] hover:bg-white hover:text-[#BA5B55] transition-all py-3 text-white font-bold rounded-xl cursor-pointer shadow-xs"
                   >
                     Sign in to Purchase
                   </Link>
                 ) : (
                   <button
                     onClick={() => setIsPurchaseModalOpen(true)}
-                    className="w-full text-center text-xs bg-[#BA5B55] border border-[#BA5B55] hover:bg-white hover:text-[#BA5B55] transition-all py-3 text-white font-bold rounded-2xl cursor-pointer shadow-xs"
+                    className="w-full text-center text-xs bg-[#BA5B55] border border-[#BA5B55] hover:bg-white hover:text-[#BA5B55] transition-all py-3 text-white font-bold rounded-xl cursor-pointer shadow-xs"
                   >
                     Purchase Product
                   </button>
@@ -769,7 +854,7 @@ export default function ProductDetailsClient({
           </div>
 
           {/* TABS CONTAINER */}
-          <div className="bg-white border border-[#e8e8e8] rounded-3xl overflow-hidden shadow-xs flex flex-col">
+          <div className="bg-white border border-[#e8e8e8] rounded-xl overflow-hidden shadow-xs flex flex-col">
             
             {/* Tabs Header */}
             <div className="flex bg-[#fafafa] border-b border-[#e8e8e8] px-6 py-3.5 gap-6 text-xs font-semibold shrink-0">
@@ -814,7 +899,7 @@ export default function ProductDetailsClient({
               {activeTab === "reviews" && (
                 <div className="flex flex-col gap-4">
                   {currentUserId && canUserReview && (
-                    <form onSubmit={handleSubmitProductReview} className="bg-white border border-gray-150 p-4 rounded-2xl flex flex-col gap-3.5 mb-4 shadow-3xs">
+                    <form onSubmit={handleSubmitProductReview} className="bg-white border border-gray-150 p-4 rounded-xl flex flex-col gap-3.5 mb-4 shadow-3xs">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-[#BA5B55] uppercase tracking-wider">Leave a Review</span>
                         <div className="flex gap-1.5">
@@ -865,7 +950,7 @@ export default function ProductDetailsClient({
                       {reviews.map((r) => {
                         const isEditing = editingReviewUid === r.review_uid;
                         return (
-                          <div key={r.review_uid} className="bg-[#fdfdfd] border border-gray-100 p-4 rounded-2xl shadow-3xs flex flex-col gap-2">
+                          <div key={r.review_uid} className="bg-[#fdfdfd] border border-gray-100 p-4 rounded-xl shadow-3xs flex flex-col gap-2">
                             {isEditing ? (
                               <div className="flex flex-col gap-3">
                                 <div className="flex items-center justify-between">
@@ -1002,7 +1087,7 @@ export default function ProductDetailsClient({
               {activeTab === "ratings" && (
                 <div className="flex flex-col md:flex-row gap-8 items-center py-4">
                   {/* Big Score Card */}
-                  <div className="flex flex-col items-center justify-center text-center p-6 border border-gray-100 bg-[#fafafa]/50 rounded-2xl shrink-0 w-full md:w-44 shadow-2xs">
+                  <div className="flex flex-col items-center justify-center text-center p-6 border border-gray-100 bg-[#fafafa]/50 rounded-xl shrink-0 w-full md:w-44 shadow-2xs">
                     <span className="text-4xl font-extrabold text-[#BA5B55] leading-none">
                       {product.avg_rating ? Number(product.avg_rating).toFixed(1) : "0.0"}
                     </span>
@@ -1065,92 +1150,8 @@ export default function ProductDetailsClient({
         <div className="lg:col-span-1 flex flex-col gap-6 min-h-0 lg:h-full lg:overflow-y-auto custom-scrollbar pr-1">
           
           {/* Shop Card */}
-          <div className="bg-white border border-[#e8e8e8] rounded-3xl overflow-hidden shadow-xs flex flex-col font-sans">
-            {/* Cover Banner */}
-            <div className="h-24 w-full bg-gradient-to-br from-[#fcf7f6] to-[#f4ece9] relative shrink-0" />
-
-            <div className="px-5 pb-5 relative flex flex-col gap-4">
-              {/* Profile Photo Overlapping cover */}
-              <div className="flex items-end gap-3 -mt-8 relative z-10">
-                <Link href={`/shop/${product.shop_uid}`}>
-                  <div className="relative w-16 h-16 rounded-full overflow-hidden border-4 border-white bg-white flex items-center justify-center shrink-0 shadow-sm">
-                    {product.shop_profile_photo_url ? (
-                      <Image src={product.shop_profile_photo_url} alt={product.shop_name} fill className="object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-[#fdf0ef] text-[#BA5B55] font-bold text-xl uppercase">
-                        {product.shop_name.slice(0, 2)}
-                      </div>
-                    )}
-                  </div>
-                </Link>
-                <div className="min-w-0 pb-1">
-                  <Link href={`/shop/${product.shop_uid}`} className="text-sm font-bold text-[#1a1a1a] hover:text-[#BA5B55] transition-colors truncate block leading-tight">
-                    {product.shop_name}
-                  </Link>
-                  <span className="text-[10px] text-gray-500 block mt-0.5 font-light">
-                    @{product.owner_name}
-                  </span>
-                </div>
-              </div>
-
-              {/* Location & University */}
-              <div className="flex flex-col gap-1 text-xs text-gray-500 font-light mt-1">
-                {product.shop_university_name && (
-                  <div className="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#BA5B55]">
-                      <path d="M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
-                    </svg>
-                    <span>{product.shop_university_name}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1.5">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#BA5B55]">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
-                  <span>{product.shop_location}</span>
-                </div>
-              </div>
-
-              {/* Stats Row */}
-              <div className="grid grid-cols-2 gap-4 border-y border-gray-100 py-3 mt-1 text-center">
-                <div className="flex flex-col border-r border-gray-100">
-                  <span className="text-xs font-bold text-[#BA5B55]">{product.shop_follower_count ?? 0}</span>
-                  <span className="text-[9px] text-[#787878] uppercase font-semibold tracking-wider mt-0.5">Followers</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-[#BA5B55] flex items-center justify-center gap-0.5">
-                    {product.shop_rating ? Number(product.shop_rating).toFixed(1) : "—"}
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill={product.shop_rating ? "#BA5B55" : "none"} stroke="#BA5B55" strokeWidth="2">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                  </span>
-                  <span className="text-[9px] text-[#787878] uppercase font-semibold tracking-wider mt-0.5">Rating</span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 mt-1 w-full">
-                <button
-                  onClick={handleFollow}
-                  className={`flex-1 text-center py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
-                    isFollowing
-                      ? "bg-[#BA5B55] text-white border-[#BA5B55]"
-                      : "border-gray-200 text-[#555] hover:border-[#BA5B55] hover:text-[#BA5B55]"
-                  }`}
-                >
-                  {isFollowing ? "Following" : "Follow Shop"}
-                </button>
-
-                <ContactSellerWidget
-                  shopUid={product.shop_uid}
-                  shopName={product.shop_name}
-                  shopOwnerUid={product.owner_uid}
-                  shopAvatar={product.shop_profile_photo_url}
-                  currentUser={currentUserId ? { uid: currentUserId, username: "" } : null}
-                />
-              </div>
-            </div>
+          <div className="hidden lg:block shrink-0">
+            {renderShopCard()}
           </div>
 
           {/* Shop Posts Stream */}
@@ -1174,12 +1175,12 @@ export default function ProductDetailsClient({
                     onSaveChange={handleSaveChange}
                     onReactChange={handleReactChange}
                     hideFollowButton={true}
-                    compact={true}
+                    compact={false}
                   />
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6 text-xs text-gray-400 font-light bg-white border border-gray-150 rounded-3xl">
+              <div className="text-center py-6 text-xs text-gray-400 font-light bg-white border border-gray-150 rounded-xl">
                 No other posts from this shop.
               </div>
             )}

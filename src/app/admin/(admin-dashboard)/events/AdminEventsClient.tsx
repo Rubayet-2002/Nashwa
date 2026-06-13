@@ -47,7 +47,8 @@ export default function AdminEventsClient({
   const addToast = useToastStore((s) => s.addToast);
   const [isPending, startTransition] = useTransition();
 
-  // Create Event Form State
+  
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [venue, setVenue] = useState("");
@@ -55,10 +56,12 @@ export default function AdminEventsClient({
   const [endsAt, setEndsAt] = useState("");
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
 
-  // Lightbox Preview State
+  
+
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
-  // Handle adding event
+  
+
   const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !venue.trim() || !startAt || !endsAt) {
@@ -108,7 +111,8 @@ export default function AdminEventsClient({
     });
   };
 
-  // Handle submission actions (approve/reject)
+  
+
   const handleSubmissionAction = (eventUid: string, productUid: string, action: "approve" | "reject") => {
     startTransition(async () => {
       try {
@@ -202,7 +206,8 @@ export default function AdminEventsClient({
                       onClick={() => ev.image_url && setLightboxSrc(ev.image_url)}
                     >
                       {ev.image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                        
+
                         <img src={ev.image_url} alt={ev.title} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold bg-neutral-800">
@@ -357,7 +362,8 @@ export default function AdminEventsClient({
                     onClick={() => sub.product_image && setLightboxSrc(sub.product_image)}
                   >
                     {sub.product_image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
+                      
+
                       <img src={sub.product_image} alt={sub.product_title} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-neutral-900 flex items-center justify-center text-xs font-semibold text-[#BA5B55]">

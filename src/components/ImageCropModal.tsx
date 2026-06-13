@@ -84,11 +84,13 @@ export default function ImageCropModal({
       const resultDataUrl = await getCroppedImage(activeSrc, croppedAreaPixels, outputW, outputH);
       
       if (imageSrc !== undefined) {
-        // Caller used imageSrc (expects Blob)
+        
+
         const blob = dataURLtoBlob(resultDataUrl);
         onCropComplete(blob);
       } else {
-        // Caller used src (expects base64 data URL string)
+        
+
         onCropComplete(resultDataUrl);
       }
       onClose();

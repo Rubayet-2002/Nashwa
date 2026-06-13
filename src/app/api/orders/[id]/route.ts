@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/database/pool";
 import { authMe } from "@/app/(authentication)/lib/authMe";
 
-// PATCH — update order status (shop owner only)
+
+
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { user } = await authMe();
@@ -14,7 +15,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    // Verify shop ownership
+    
+
     const orderRes = await pool.query(`
       SELECT o.*, s.owner_uid FROM order_request o
       JOIN shop s ON s.shop_uid = o.shop_uid
@@ -27,19 +29,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     await pool.query(`UPDATE order_request SET status = $1, updated_at = NOW() WHERE order_uid = $2`, [status, id]);
 
-    // If completed: add platform debt to shop, update sold counts
+    
+
     if (status === "completed") {
       const order = orderRes.rows[0];
       await pool.query(`UPDATE shop SET platform_debt = platform_debt + $1, total_revenue = total_revenue + $2, total_sales = total_sales + 1 WHERE shop_uid = $3`, [order.platform_fee, order.total_amount, order.shop_uid]);
 
-      // Update sold counts per item
+      
+
       const itemsRes = await pool.query(`SELECT product_uid, quantity FROM order_request_item WHERE order_uid = $1`, [id]);
       for (const item of itemsRes.rows) {
         await pool.query(`UPDATE product SET sold_count = sold_count + $1 WHERE product_uid = $2`, [item.quantity, item.product_uid]);
       }
     }
 
-    // If messageUid is provided, update the chat message form_data status
+    
+
     if (messageUid) {
       const msgRes = await pool.query(`SELECT form_data FROM chat_message WHERE message_uid = $1`, [messageUid]);
       if (msgRes.rows[0] && msgRes.rows[0].form_data) {
@@ -48,7 +53,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           fd.status = status;
           await pool.query(`UPDATE chat_message SET form_data = $1 WHERE message_uid = $2`, [JSON.stringify(fd), messageUid]);
 
-          // Emit Socket update to chat room
+          
+
           if (global.io) {
             const updatedMsgRes = await pool.query(
               `SELECT m.message_uid, m.sender_uid, m.receiver_uid, m.shop_uid, m.message_text,
@@ -68,7 +74,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }
     }
 
-    // Notify buyer
+    
+
     const statusMessages: Record<string, string> = {
       confirmed: "Your order has been confirmed! 🎉",
       cancelled: "Your order was cancelled.",

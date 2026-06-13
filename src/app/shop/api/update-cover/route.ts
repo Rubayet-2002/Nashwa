@@ -14,7 +14,8 @@ export async function POST(request: Request) {
     const { user } = await authMe();
     if (!user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-    // Verify ownership
+    
+
     const shopRes = await pool.query("SELECT owner_uid FROM shop WHERE shop_uid = $1", [shopUid]);
     if (shopRes.rowCount === 0 || shopRes.rows[0].owner_uid !== user.uid) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });

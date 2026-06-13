@@ -30,12 +30,14 @@ interface VariantField {
 
 export default function AddProductModal({
   shopUid,
+  eventUid,
   onClose,
   onCreated,
 }: {
   shopUid: string;
+  eventUid?: string;
   onClose: () => void;
-  onCreated?: () => void;
+  onCreated?: (newProductUid?: string, details?: { title: string; price: string }) => void;
 }) {
   const addToast = useToastStore((s) => s.addToast);
   const [isSubmitting, setSubmitting] = useState(false);
@@ -177,7 +179,8 @@ export default function AddProductModal({
           outsideDeliveryCharge: parsedDeliveryCharge,
           freeOnCampusDelivery: false,
           category,
-          productType: "regular",
+          productType: eventUid ? "event" : "regular",
+          eventUid,
           images: uploadedUrls,
           productDetails: processedOptions,
           variants: processedVariants,
@@ -186,8 +189,13 @@ export default function AddProductModal({
 
       const j = await res.json();
       if (res.ok) {
-        addToast("Product created successfully!", "success");
-        onCreated?.();
+        addToast(
+          eventUid
+            ? "Product created and submitted for event review!"
+            : "Product created successfully!",
+          "success"
+        );
+        onCreated?.(j.productUid, { title, price });
         onClose();
       } else {
         addToast(j.message || "Failed to create product", "error");

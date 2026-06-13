@@ -21,7 +21,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Username and Email are required." }, { status: 400 });
     }
 
-    // 1. Verify email uniqueness
+    
+
     const emailCheck = await pool.query(
       "SELECT 1 FROM users WHERE email = $1 AND uid != $2",
       [email.trim().toLowerCase(), user.uid]
@@ -30,7 +31,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Email is already in use by another account." }, { status: 409 });
     }
 
-    // 2. Verify phone uniqueness if provided
+    
+
     const trimmedPhone = phone?.trim() || null;
     if (trimmedPhone) {
       const phoneCheck = await pool.query(
@@ -42,7 +44,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // 3. Perform update
+    
+
     await pool.query(
       `UPDATE users
        SET username = $1, email = $2, phone = $3

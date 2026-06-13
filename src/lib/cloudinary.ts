@@ -8,10 +8,7 @@ cloudinary.config({
 
 export { cloudinary };
 
-/**
- * Upload a base64 or URL string to Cloudinary.
- * Returns the secure URL.
- */
+
 export async function uploadToCloudinary(
   data: string,
   folder: string,
@@ -42,16 +39,12 @@ export async function uploadToCloudinary(
   return { url: result.secure_url, public_id: result.public_id };
 }
 
-/**
- * Delete a resource from Cloudinary by its public_id.
- */
+
 export async function deleteFromCloudinary(publicId: string): Promise<void> {
   await cloudinary.uploader.destroy(publicId);
 }
 
-/**
- * Generate a signed upload preset for direct browser → Cloudinary upload.
- */
+
 export function generateSignature(
   params: Record<string, string | number>
 ): { signature: string; timestamp: number; api_key: string; cloud_name: string } {

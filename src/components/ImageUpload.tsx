@@ -36,7 +36,8 @@ export default function ImageUpload({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
-  // Crop Queue state for multi-cropping
+  
+
   const [cropQueue, setCropQueue] = useState<File[]>([]);
   const [cropIdx, setCropIdx] = useState(0);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -46,12 +47,14 @@ export default function ImageUpload({
     const selectedArr = Array.from(selected);
 
     if (crop) {
-      // Initialize cropping queue
+      
+
       setCropQueue(selectedArr);
       setCropIdx(0);
       loadCropSource(selectedArr[0]);
     } else {
-      // Normal direct upload flow
+      
+
       const next = multiple ? [...files, ...selectedArr] : [selectedArr[0]];
       const filtered = next.filter(Boolean);
       setFiles(filtered);
@@ -67,7 +70,8 @@ export default function ImageUpload({
     reader.readAsDataURL(file);
   };
 
-  // Convert base64 dataUrl (which react-easy-crop returns) to File/Blob
+  
+
   const dataURLtoFile = (dataurl: string, filename: string): File => {
     const arr = dataurl.split(",");
     const mime = arr[0].match(/:(.*?);/)?.[1] || "image/jpeg";
@@ -88,13 +92,15 @@ export default function ImageUpload({
     setFiles(nextFiles);
     setPreviews(nextFiles.map((f) => URL.createObjectURL(f)));
 
-    // Proceed to next file in queue
+    
+
     const nextIdx = cropIdx + 1;
     if (nextIdx < cropQueue.length) {
       setCropIdx(nextIdx);
       loadCropSource(cropQueue[nextIdx]);
     } else {
-      // Completed queue
+      
+
       setCropQueue([]);
       setCropSrc(null);
     }

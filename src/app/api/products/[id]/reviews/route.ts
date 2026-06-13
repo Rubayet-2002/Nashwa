@@ -46,7 +46,8 @@ export async function POST(
       return NextResponse.json({ error: "Invalid rating" }, { status: 400 });
     }
 
-    // Enforce that the user has a completed/fulfilled order for this product
+    
+
     const orderCheck = await pool.query(
       `SELECT 1 FROM order_request o
        JOIN order_request_item oi ON oi.order_uid = o.order_uid
@@ -65,14 +66,16 @@ export async function POST(
 
     await pool.query("BEGIN");
 
-    // 1. Insert review (no constraint since UNIQUE constraint has been dropped)
+    
+
     await pool.query(
       `INSERT INTO product_review (review_uid, product_uid, user_uid, rating, review_text)
        VALUES ($1, $2, $3, $4, $5)`,
       [reviewUid, productUid, user.uid, rating, reviewText || null]
     );
 
-    // 2. Update product avg_rating
+    
+
     await pool.query(
       `UPDATE product 
        SET avg_rating = (
@@ -84,7 +87,8 @@ export async function POST(
       [productUid]
     );
 
-    // 3. Update shop avg_rating
+    
+
     await pool.query(
       `UPDATE shop 
        SET avg_rating = (
@@ -99,7 +103,8 @@ export async function POST(
 
     await pool.query("COMMIT");
 
-    // Fetch product details for returning enriched data to frontend
+    
+
     const productInfo = await pool.query(
       `SELECT title, (SELECT image_url FROM product_image pi WHERE pi.product_uid = p.product_uid ORDER BY position ASC LIMIT 1) AS image_url
        FROM product p

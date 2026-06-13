@@ -20,13 +20,15 @@ export default async function AdminUniversitiesPage() {
   let joinRequests: any[] = [];
 
   try {
-    // 1. Fetch universities
+    
+
     const uniRes = await pool.query(
       "SELECT * FROM partner_university ORDER BY created_at DESC"
     );
     universities = uniRes.rows;
 
-    // 2. Fetch pending and processed shop join requests
+    
+
     const reqRes = await pool.query(`
       SELECT sju.id, sju.shop_uid, sju.university_uid, sju.student_id, sju.sid_pdf_url, sju.status, sju.created_at,
              s.shop_name, s.shop_email, s.shop_phone, s.owner_uid,

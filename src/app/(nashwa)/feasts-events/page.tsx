@@ -27,7 +27,7 @@ export default async function FeastsEventsPage() {
       `SELECT e.event_uid, e.shop_uid, e.title, e.description, e.image_url, e.host_name, e.venue, e.ends_at,
               s.shop_name, s.profile_photo_url AS shop_avatar
        FROM campus_event e
-       JOIN shop s ON s.shop_uid = e.shop_uid
+       LEFT JOIN shop s ON s.shop_uid = e.shop_uid
        ORDER BY e.ends_at ASC`
     );
 
@@ -48,14 +48,6 @@ export default async function FeastsEventsPage() {
           <p className="mt-3 text-sm text-[#787878] max-w-xl mx-auto font-light leading-relaxed">
             Discover and join active university festivals, winter food circles, pitha feasts, and grand campus events run by student entrepreneur businesses.
           </p>
-          <div className="mt-6 flex justify-center">
-            <Link
-              href="/shop/dashboard"
-              className="mt-5 inline-flex items-center gap-2 px-6 py-2.5 rounded-sm text-xs font-semibold text-[#BA5B55] bg-white border border-[#eaeaea] hover:bg-[#fbfbfb] transition-all shadow-sm"
-            >
-              Host an Event
-            </Link>
-          </div>
         </div>
 
         {/* Events Section */}
@@ -69,9 +61,6 @@ export default async function FeastsEventsPage() {
             <div className="text-center py-16 bg-white border border-[#eaeaea] rounded-sm">
               <Calendar stroke={1} size={48} className="mx-auto text-[#787878]/50 mb-3" />
               <p className="text-[#787878] text-sm">No events or feasts scheduled at the moment.</p>
-              <Link href="/shop/dashboard" className="text-xs text-[#BA5B55] hover:underline mt-2 inline-block">
-                Be the first to host an event &rarr;
-              </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -90,25 +79,27 @@ export default async function FeastsEventsPage() {
                     className="group bg-white border border-[#eaeaea] shadow-sm hover:shadow-md hover:border-[#BA5B55]/40 transition-all duration-300 flex flex-col overflow-hidden rounded-sm"
                   >
                     {/* Cover Photo */}
-                    <div className="relative h-48 w-full bg-[#f3f4f6] overflow-hidden">
-                      {event.image_url ? (
-                        <img
-                          src={event.image_url}
-                          alt="Event Cover"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#f7f1f0] to-[#eceff3] text-[#BA5B55] text-xs font-medium uppercase tracking-[0.2em]">
-                          Event Cover
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors duration-300" />
-                    </div>
+                    <Link href={`/feasts-events/${event.event_uid}`}>
+                      <div className="relative h-48 w-full bg-[#f3f4f6] overflow-hidden cursor-pointer">
+                        {event.image_url ? (
+                          <img
+                            src={event.image_url}
+                            alt="Event Cover"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#f7f1f0] to-[#eceff3] text-[#BA5B55] text-xs font-medium uppercase tracking-[0.2em]">
+                            Event Cover
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors duration-300" />
+                      </div>
+                    </Link>
 
                     {/* Event Details */}
                     <div className="p-5 flex-1 flex flex-col">
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="relative w-6 h-6 rounded-full border border-[#eaeaea] bg-white overflow-hidden flex justify-center items-center shrink-0">
+                        <div className="relative w-6 h-6 rounded-full border border-[#eaeaea] bg-white overflow-hidden flex justify-center items-center shrink-0 bg-[#fdf0ef]">
                           {event.shop_avatar ? (
                             <img
                               src={event.shop_avatar}
@@ -116,19 +107,26 @@ export default async function FeastsEventsPage() {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-[#f1f1f1] text-[#BA5B55] text-[8px] font-semibold uppercase tracking-[0.2em]">
-                              S
-                            </div>
+                            <span className="text-[10px] font-bold text-[#BA5B55] uppercase">A</span>
                           )}
                         </div>
                         <span className="text-xs text-[#787878] truncate">
-                          Organized by <Link href={`/shop/${event.shop_uid}`} className="font-medium text-[#1a1a1a] hover:text-[#BA5B55] transition-colors">{event.shop_name}</Link>
+                          Organized by{" "}
+                          {event.shop_uid ? (
+                            <Link href={`/shop/${event.shop_uid}`} className="font-medium text-[#1a1a1a] hover:text-[#BA5B55] transition-colors">
+                              {event.shop_name}
+                            </Link>
+                          ) : (
+                            <span className="font-semibold text-[#1a1a1a]">Campus Admin</span>
+                          )}
                         </span>
                       </div>
 
-                      <h3 className="font-semibold text-base text-[#1a1a1a] group-hover:text-[#BA5B55] transition-colors leading-tight mb-2">
-                        {event.title}
-                      </h3>
+                      <Link href={`/feasts-events/${event.event_uid}`}>
+                        <h3 className="font-semibold text-base text-[#1a1a1a] group-hover:text-[#BA5B55] transition-colors leading-tight mb-2 cursor-pointer">
+                          {event.title}
+                        </h3>
+                      </Link>
 
                       <p className="text-xs text-[#787878] font-light leading-relaxed line-clamp-3 mb-4 flex-1">
                         {event.description}
@@ -138,7 +136,7 @@ export default async function FeastsEventsPage() {
                         <Bookmark size={14} className="text-[#BA5B55] mt-0.5" />
                         <div>
                           <span className="font-medium text-[#1a1a1a]">Host: </span>
-                          <span className="font-light">{event.host_name}</span>
+                          <span className="font-light">{event.host_name || "Campus Administrator"}</span>
                         </div>
                         <Pin size={14} className="text-[#BA5B55] mt-0.5" />
                         <div>
@@ -155,24 +153,35 @@ export default async function FeastsEventsPage() {
                       <div className="mt-4 border-t border-[#f4f4f4] pt-4 flex flex-col gap-3">
                         <EventCountdown endsAt={event.ends_at} />
                         
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex flex-col gap-2 mt-1">
+                          <div className="flex gap-2">
+                            <Link
+                              href={`/feasts-events/${event.event_uid}`}
+                              className="flex-1 flex justify-center items-center gap-1.5 px-3 py-2 bg-[#BA5B55] border border-[#BA5B55] text-white text-xs font-semibold hover:bg-white hover:text-[#BA5B55] transition-all duration-300 rounded-sm"
+                            >
+                              <Store size={14} />
+                              Visit Event
+                            </Link>
+                            
+                            {event.shop_uid && (
+                              <Link
+                                href={`/shop/${event.shop_uid}`}
+                                className="flex-1 flex justify-center items-center gap-1.5 px-3 py-2 border border-[#eaeaea] text-[#787878] text-xs font-medium hover:border-[#BA5B55] hover:text-[#BA5B55] transition-all duration-300 rounded-sm"
+                              >
+                                Visit Shop
+                              </Link>
+                            )}
+                          </div>
+                          
                           <a
                             href={gCalUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 flex justify-center items-center gap-1.5 px-3 py-2 border border-[#eaeaea] text-[#787878] text-xs font-medium hover:border-[#BA5B55] hover:text-[#BA5B55] transition-all duration-300 rounded-sm"
+                            className="flex justify-center items-center gap-1.5 px-3 py-1.5 border border-[#eaeaea] text-[#787878] text-[11px] font-light hover:border-[#BA5B55] hover:text-[#BA5B55] transition-all duration-300 rounded-sm"
                           >
-                            <Calendar size={14} />
-                            Add to Calendar
+                            <Calendar size={12} />
+                            Add to Google Calendar
                           </a>
-                          
-                          <Link
-                            href={`/shop/${event.shop_uid}`}
-                            className="flex-1 flex justify-center items-center gap-1.5 px-3 py-2 bg-[#BA5B55] border border-[#BA5B55] text-white text-xs font-medium hover:bg-white hover:text-[#BA5B55] transition-all duration-300 rounded-sm"
-                          >
-                            <Store size={14} />
-                            Visit Shop
-                          </Link>
                         </div>
                       </div>
                     </div>

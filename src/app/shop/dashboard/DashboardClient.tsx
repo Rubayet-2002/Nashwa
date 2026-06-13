@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToastStore } from "@/zustand/toastStore";
 import { useAuthStore } from "@/zustand/authStore";
+import { useNotificationStore } from "@/zustand/notificationStore";
+import { connectSocket } from "@/lib/socket-client";
 import { updateShopBio, updateShopInfo } from "./actions";
 import ImageUpload from "@/components/ImageUpload";
 import ImageCropModal from "@/components/ImageCropModal";
@@ -13,7 +15,6 @@ import Lightbox from "@/components/Lightbox";
 import { uploadImageToCloudinary } from "@/lib/cloudinary-upload";
 import AddProductModal from "./AddProductModal";
 import EditProductModal from "./EditProductModal";
-import AddEventModal from "./AddEventModal";
 import ProductCommentThread from "@/app/(nashwa)/home/ProductCommentThread";
 import ProductReactionButton from "@/components/ProductReactionButton";
 import EventCountdown from "@/components/EventCountdown";
@@ -54,6 +55,7 @@ interface DashboardClientProps {
     shop_bio: string | null;
     cover_photo_url?: string | null;
     university_name?: string | null;
+    university_status?: string | null;
     profile_photo_url?: string | null;
     platform_debt?: string | number | null;
     is_blocked?: boolean | null;
@@ -156,6 +158,44 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
   const [isPending, startTransition] = useTransition();
   const [payingDebt, setPayingDebt] = useState(false);
 
+  const { shopUnreadCount, setShopUnreadCount, resetShopNotifications } = useNotificationStore();
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await fetch(`/api/notifications?unread_only=true&shopUid=${encodeURIComponent(shop.shop_uid)}`, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setShopUnreadCount(data.total_unread || 0);
+      }
+    } catch (err) {
+      console.error("Error fetching shop unread count:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadCount();
+
+    const handleRead = () => {
+      resetShopNotifications();
+    };
+    window.addEventListener("shop-notifications:read", handleRead);
+
+    const socket = connectSocket();
+    const handleNewNotif = (notif?: { shopUid?: string }) => {
+      if (notif && notif.shopUid && notif.shopUid === shop.shop_uid) {
+        fetchUnreadCount();
+      }
+    };
+    socket.on("notification:new", handleNewNotif);
+
+    return () => {
+      window.removeEventListener("shop-notifications:read", handleRead);
+      socket.off("notification:new", handleNewNotif);
+    };
+  }, [shop.shop_uid]);
+
   const handlePayDebt = async () => {
     if (payingDebt) return;
     setPayingDebt(true);
@@ -183,7 +223,8 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
     }
   };
 
-  // Image Upload / Cropping / Lightbox States
+  
+
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [cropType, setCropType] = useState<"cover" | "profile" | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -304,7 +345,8 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
     }
   };
 
-  // Tab State
+  
+
   const [activeTab, setActiveTab] = useState<"posts" | "events" | "messages" | "settings" | "orders" | "notifications">("posts");
 
   const [ordersList, setOrdersList] = useState(recentOrders);
@@ -403,7 +445,8 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
     }
   };
 
-  // Profile / settings state
+  
+
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bioText, setBioText] = useState(shop.shop_bio || "");
 
@@ -416,14 +459,18 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
 
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [isAddEventOpen, setIsAddEventOpen] = useState(false);
   const [showAssignUniversity, setShowAssignUniversity] = useState(false);
+  const [uploadEventUid, setUploadEventUid] = useState<string | null>(null);
 
-  // Feasts & Events state
+  
+
   const [myEvents, setMyEvents] = useState<CampusEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
+  const [mySubmissions, setMySubmissions] = useState<any[]>([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
 
-  // Chat Messages state
+  
+
   const [threads, setThreads] = useState<ChatThread[]>([]);
   const [loadingThreads, setLoadingThreads] = useState(false);
   const [activeThreadUid, setActiveThreadUid] = useState<string | null>(null);
@@ -432,7 +479,8 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
   const [sendingReply, setSendingReply] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Order Form Creator State
+  
+
   const [showOrderFormCreator, setShowOrderFormCreator] = useState(false);
   const [selectedProductUid, setSelectedProductUid] = useState("");
   const [orderFormQty, setOrderFormQty] = useState(1);
@@ -440,28 +488,41 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
 
 
 
-  // Load events when Event tab is activated
-  useEffect(() => {
-    if (activeTab !== "events") return;
+  
 
-    const fetchEvents = async () => {
-      setLoadingEvents(true);
-      try {
-        const res = await fetch(`/api/events?shopUid=${encodeURIComponent(shop.shop_uid)}`);
-        const data = await res.json();
-        if (res.ok && data.success) {
-          setMyEvents(data.events || []);
-        }
-      } catch (err) {
-        console.error("Error fetching events:", err);
-      } finally {
-        setLoadingEvents(false);
+  const fetchEventsAndSubmissions = async () => {
+    setLoadingEvents(true);
+    setLoadingSubmissions(true);
+    try {
+      // Fetch all campus events
+      const eventsResponse = await fetch("/api/events");
+      const eventsData = await eventsResponse.json();
+      if (eventsResponse.ok && eventsData.success) {
+        setMyEvents(eventsData.events || []);
       }
-    };
-    fetchEvents();
+
+      // Fetch submissions for this shop
+      const subResponse = await fetch(`/api/events/submissions?shopUid=${encodeURIComponent(shop.shop_uid)}`);
+      const subData = await subResponse.json();
+      if (subResponse.ok && subData.success) {
+        setMySubmissions(subData.submissions || []);
+      }
+    } catch (err) {
+      console.error("Error fetching events & submissions:", err);
+    } finally {
+      setLoadingEvents(false);
+      setLoadingSubmissions(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "events") {
+      fetchEventsAndSubmissions();
+    }
   }, [activeTab, shop.shop_uid]);
 
-  // Update order form price when a product is selected
+  
+
   useEffect(() => {
     if (selectedProductUid && products) {
       const selectedProduct = products.find((p) => p.product_uid === selectedProductUid);
@@ -486,13 +547,15 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
     }
   };
 
-  // Load chat threads when Messages tab is activated
+  
+
   useEffect(() => {
     if (activeTab !== "messages") return;
     fetchThreads(true);
   }, [activeTab, shop.shop_uid]);
 
-  // Listen to global socket notifications to re-fetch threads in real-time
+  
+
   useEffect(() => {
     if (activeTab !== "messages") return;
 
@@ -512,7 +575,8 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
     };
   }, [activeTab, shop.shop_uid]);
 
-  // Fetch messages log when a chat thread is selected
+  
+
   useEffect(() => {
     if (activeTab !== "messages" || !activeThreadUid) return;
 
@@ -563,7 +627,8 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
     };
   }, [activeTab, activeThreadUid, shop.shop_uid]);
 
-  // Scroll to bottom when messages list updates
+  
+
   useEffect(() => {
     if (activeTab === "messages" && activeThreadUid) {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -686,9 +751,11 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
 
       const data = await res.json();
       if (res.ok && data.success) {
-        // Relying on Socket.io for adding the message to the chat
         
-        // Update threads list locally to show the last reply
+
+        
+        
+
         setThreads((prev) =>
           prev.map((t) =>
             t.customer_uid === activeThreadUid
@@ -752,9 +819,11 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
 
       const data = await res.json();
       if (res.ok && data.success) {
-        // Relying on Socket.io for adding the message to the chat
         
-        // Update threads list locally
+
+        
+        
+
         setThreads((prev) =>
           prev.map((t) =>
             t.customer_uid === activeThreadUid
@@ -777,11 +846,11 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
 
   return (
     <>
-    <div className="flex h-full w-full bg-[#fbfbfb] text-[#1a1a1a] overflow-y-auto justify-center px-4 py-6 custom-scrollbar">
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+    <div className="flex h-full w-full bg-[#fbfbfb] text-[#1a1a1a] overflow-y-auto lg:overflow-hidden justify-center px-4 py-6 custom-scrollbar">
+      <div className="w-full max-w-6xl h-full grid grid-cols-1 lg:grid-cols-4 gap-6 items-start lg:items-stretch lg:overflow-hidden">
         
         {/* Left Column (Profile info & quick actions) */}
-        <div className="lg:col-span-1 flex flex-col gap-5 shrink-0">
+        <div className="lg:col-span-1 flex flex-col gap-5 shrink-0 lg:h-full lg:overflow-y-auto custom-scrollbar pb-6">
           
           {/* Cover & Profile Branding */}
           <div className="bg-white border border-[#e2e2e2] rounded-3xl overflow-hidden shadow-xs relative">
@@ -816,7 +885,7 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
               )}
             </div>
 
-            <div className="flex flex-col items-center pb-6 pt-12 relative -mt-12">
+            <div className="flex flex-col items-center pb-6 pt-12 relative -mt-18">
               <div className="relative h-24 w-24 rounded-full overflow-hidden border-4 border-white shadow-md bg-white group">
                 {shop.profile_photo_url ? (
                   <>
@@ -854,7 +923,7 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
             <input ref={profileInputRef} type="file" accept="image/*" onChange={(e) => handlePhotoSelected(e, "profile")} className="hidden" />
           </div>
 
-          <div className="bg-white border border-[#e2e2e2] rounded-3xl p-4 shadow-xs flex flex-col gap-2">
+          <div className="bg-white border border-[#e2e2e2] rounded-3xl p-4 shadow-xs flex flex-col gap-1">
             <button onClick={() => setIsAddProductOpen(true)} className="flex items-center gap-3 px-4 py-3 text-xs font-semibold rounded-2xl transition-all text-left cursor-pointer text-[#4f4f4f] hover:bg-[#BA5B55]/5 hover:text-[#BA5B55]"><PlusCircle size={16} /> Add Post</button>
             <button onClick={() => setIsEditingBio(true)} className="flex items-center gap-3 px-4 py-3 text-xs font-semibold rounded-2xl transition-all text-left cursor-pointer text-[#4f4f4f] hover:bg-[#BA5B55]/5 hover:text-[#BA5B55]"><EditOne size={16} /> Add/Edit Bio</button>
             <button onClick={() => setIsEditingInfo(true)} className="flex items-center gap-3 px-4 py-3 text-xs font-semibold rounded-2xl transition-all text-left cursor-pointer text-[#4f4f4f] hover:bg-[#BA5B55]/5 hover:text-[#BA5B55]"><Cog size={16} /> Edit Info</button>
@@ -871,19 +940,20 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
         </div>
 
         {/* Right Column */}
-        <div className="lg:col-span-3 flex flex-col bg-white border border-[#e2e2e2] rounded-3xl overflow-hidden shadow-xs">
+        <div className="lg:col-span-3 flex flex-col bg-white border border-[#e2e2e2] rounded-3xl overflow-hidden shadow-xs lg:h-full">
           
           <div className="flex justify-between items-center bg-[#fafafa] border-b border-[#e2e2e2] py-3 px-5 flex-wrap gap-4 shrink-0">
             <div className="flex gap-6 items-center text-xs">
               <button onClick={() => setActiveTab("posts")} className={`pb-1 border-b-2 font-bold cursor-pointer transition-all flex items-center gap-1.5 ${activeTab === "posts" ? "border-[#BA5B55] text-[#BA5B55]" : "border-transparent text-[#787878] hover:text-[#BA5B55]"}`}><Package size={16} /> My Posts</button>
               <button onClick={() => setActiveTab("orders")} className={`pb-1 border-b-2 font-bold cursor-pointer transition-all flex items-center gap-1.5 ${activeTab === "orders" ? "border-[#BA5B55] text-[#BA5B55]" : "border-transparent text-[#787878] hover:text-[#BA5B55]"}`}><ListCheck size={16} /> Orders</button>
               <button onClick={() => setActiveTab("events")} className={`pb-1 border-b-2 font-bold cursor-pointer transition-all flex items-center gap-1.5 ${activeTab === "events" ? "border-[#BA5B55] text-[#BA5B55]" : "border-transparent text-[#787878] hover:text-[#BA5B55]"}`}><CalendarArrowDown size={16} /> Feasts & Events</button>
-              <button onClick={() => setActiveTab("messages")} className={`pb-1 border-b-2 font-bold cursor-pointer transition-all flex items-center gap-1.5 ${activeTab === "messages" ? "border-[#BA5B55] text-[#BA5B55]" : "border-transparent text-[#787878] hover:text-[#BA5B55]"}`}><ChatMessages size={16} /> Messages</button>
+              <button onClick={() => setActiveTab("notifications")} className={`pb-1 border-b-2 font-bold cursor-pointer transition-all flex items-center gap-1.5 ${activeTab === "notifications" ? "border-[#BA5B55] text-[#BA5B55]" : "border-transparent text-[#787878] hover:text-[#BA5B55]"}`}><Bell size={16} /> Notifications ({shopUnreadCount})</button>
+              <button onClick={() => setActiveTab("messages")} className={`pb-1 border-b-2 font-bold cursor-pointer transition-all flex items-center gap-1.5 ${activeTab === "messages" ? "border-[#BA5B55] text-[#BA5B55]" : "border-transparent text-[#787878] hover:text-[#BA5B55]"}`}><ChatMessages size={16} /> Messages ({threads.reduce((acc, t) => acc + (t.unread_count || 0), 0)})</button>
               <button onClick={() => setActiveTab("settings")} className={`pb-1 border-b-2 font-bold cursor-pointer transition-all flex items-center gap-1.5 ${activeTab === "settings" ? "border-[#BA5B55] text-[#BA5B55]" : "border-transparent text-[#787878] hover:text-[#BA5B55]"}`}><Cog size={16} /> Account Settings</button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 custom-scrollbar">
+          <div className={`flex-1 flex flex-col min-h-0 ${activeTab !== "messages" ? "overflow-y-auto p-6 gap-6 custom-scrollbar" : "overflow-hidden"}`}>
           
           {shop.is_blocked && (
             <div className="bg-red-50 border border-red-200 p-5 rounded-3xl flex items-center justify-between text-xs text-red-800 gap-4 shrink-0 shadow-sm">
@@ -1071,83 +1141,142 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
 
           {/* TAB 2: FEASTS & EVENTS */}
           {activeTab === "events" && (
-            <div className="bg-white border border-[#eadfdb] p-6 rounded-3xl shadow-sm flex flex-col gap-6">
-              <div className="flex items-center justify-between gap-3 border-b border-[#f4ecea] pb-4">
-                <div>
-                  <h3 className="text-base font-bold text-[#1a1a1a]">Campus Events Management</h3>
-                  <p className="text-xs text-[#787878] mt-0.5">Advertise winter feasts, student food stalls, and active carnivals.</p>
+            <div className="flex flex-col lg:flex-row gap-6 min-h-0">
+              
+              {/* Active Events Pane (2/3 width) */}
+              <div className="lg:w-2/3 bg-white border border-[#eadfdb] p-6 rounded-3xl shadow-sm flex flex-col gap-5">
+                <div className="border-b border-[#f4ecea] pb-4">
+                  <h3 className="text-base font-bold text-[#1a1a1a]">Active Campus Events</h3>
+                  <p className="text-xs text-[#787878] mt-0.5">Explore active festivals and feasts hosted by university administrators where you can showcase your products.</p>
                 </div>
-                <button
-                  onClick={() => setIsAddEventOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 border border-[#eadfdb] hover:border-[#BA5B55] hover:text-[#BA5B55] transition-all text-xs font-semibold bg-white rounded-xl shadow-sm cursor-pointer"
-                >
-                  <PlusCircle size={15} className="text-[#BA5B55]" />
-                  <span>Schedule Event</span>
-                </button>
+
+                {loadingEvents ? (
+                  <div className="text-center py-12 text-xs text-[#787878] font-light">Loading events...</div>
+                ) : myEvents.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
+                    {myEvents.map((event) => (
+                      <div
+                        key={event.event_uid}
+                        className="group border border-[#eadfdb] bg-[#fdfdfc] rounded-2xl overflow-hidden shadow-sm flex flex-col"
+                      >
+                        <div className="relative h-32 w-full bg-[#fcf8f6]">
+                          {event.image_url ? (
+                            <img src={event.image_url} alt={event.title} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-[#BA5B55]/40 bg-gradient-to-br from-[#fcf7f6] to-[#f4ecea]">
+                              <Store size={24} />
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="p-4 flex-1 flex flex-col justify-between gap-2.5">
+                          <div>
+                            <h4 className="font-bold text-sm text-[#1a1a1a] line-clamp-1">{event.title}</h4>
+                            <p className="text-[11px] text-[#787878] mt-0.5 font-light line-clamp-2">{event.description}</p>
+                          </div>
+
+                          <div className="border-t border-[#f4ecea] pt-2 flex flex-col gap-1 text-[11px] text-[#555] font-light">
+                            <div><span className="font-semibold text-[#BA5B55]">Campus:</span> {event.host_name || "Campus Admin"}</div>
+                            <div><span className="font-semibold text-[#BA5B55]">Venue:</span> {event.venue}</div>
+                          </div>
+
+                          <div className="border-t border-[#fcf8f6] pt-2 flex flex-col gap-2 mt-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] text-gray-400">Ends in:</span>
+                              <EventCountdown endsAt={event.ends_at} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 mt-1">
+                              <Link
+                                href={`/feasts-events/${event.event_uid}`}
+                                className="px-3 py-1.5 bg-[#BA5B55] border border-[#BA5B55] text-white hover:bg-white hover:text-[#BA5B55] text-[10px] font-bold rounded-xl shadow-xs transition-all cursor-pointer text-center inline-block"
+                              >
+                                View Event
+                              </Link>
+                              <button
+                                type="button"
+                                onClick={() => setUploadEventUid(event.event_uid)}
+                                className="px-3 py-1.5 bg-white border border-[#BA5B55] text-[#BA5B55] hover:bg-[#BA5B55] hover:text-white text-[10px] font-bold rounded-xl shadow-xs transition-all cursor-pointer text-center"
+                              >
+                                Upload Product
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16 border border-dashed border-[#eadfdb] rounded-2xl bg-[#fafafa]">
+                    <Store stroke={1} size={40} className="mx-auto text-gray-300 mb-3" />
+                    <p className="text-sm text-[#787878] font-light">No active campus events listed at the moment.</p>
+                  </div>
+                )}
               </div>
 
-              {loadingEvents ? (
-                <div className="text-center py-12 text-xs text-[#787878] font-light">Loading events...</div>
-              ) : myEvents.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {myEvents.map((event) => (
-                    <div
-                      key={event.event_uid}
-                      className="group border border-[#eadfdb] bg-[#fdfdfc] rounded-3xl overflow-hidden shadow-sm flex flex-col"
-                    >
-                      <div className="relative h-40 w-full bg-[#fcf8f6]">
-                        {event.image_url ? (
-                          <img src={event.image_url} alt={event.title} className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-[#BA5B55]/40 bg-gradient-to-br from-[#fcf7f6] to-[#f4ecea]">
-                            <Store size={32} />
+              {/* Product Submissions Pane (1/3 width) */}
+              <div className="lg:w-1/3 bg-white border border-[#eadfdb] p-6 rounded-3xl shadow-sm flex flex-col gap-5">
+                <div className="border-b border-[#f4ecea] pb-4">
+                  <h3 className="text-base font-bold text-[#1a1a1a]">Event Submissions</h3>
+                  <p className="text-xs text-[#787878] mt-0.5">Track your product participation requests and admin approvals.</p>
+                </div>
+
+                {loadingSubmissions ? (
+                  <div className="text-center py-12 text-xs text-[#787878] font-light">Loading submissions...</div>
+                ) : mySubmissions.length > 0 ? (
+                  <div className="flex flex-col gap-3 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
+                    {mySubmissions.map((sub: any) => (
+                      <div
+                        key={`${sub.event_uid}-${sub.product_uid}`}
+                        className="flex flex-col gap-2 p-3 border border-gray-100 rounded-2xl bg-gray-50/50 text-xs"
+                      >
+                        <div className="flex gap-2.5 items-start">
+                          <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-150 bg-white shrink-0">
+                            {sub.product_image ? (
+                              <img src={sub.product_image} alt="" className="object-cover w-full h-full" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-300">Pic</div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      
-                      <div className="p-4 flex-1 flex flex-col justify-between gap-3">
-                        <div>
-                          <h4 className="font-bold text-base text-[#1a1a1a] line-clamp-1">{event.title}</h4>
-                          <p className="text-xs text-[#787878] mt-1 font-light line-clamp-2">{event.description}</p>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-bold text-[#1a1a1a] truncate" title={sub.product_title}>{sub.product_title}</h4>
+                            <p className="text-[10px] text-[#BA5B55] font-semibold mt-0.5">৳{Number(sub.product_price).toFixed(0)}</p>
+                          </div>
                         </div>
 
-                        <div className="border-t border-[#f4ecea] pt-3 flex flex-col gap-1 text-xs text-[#555] font-light">
-                          <div><span className="font-semibold text-[#BA5B55]">Campus:</span> {event.host_name}</div>
-                          <div><span className="font-semibold text-[#BA5B55]">Venue:</span> {event.venue}</div>
-                        </div>
-
-                        <div className="border-t border-[#fcf8f6] pt-3 flex items-center justify-between mt-1">
-                          <EventCountdown endsAt={event.ends_at} />
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteEvent(event.event_uid)}
-                            className="px-3.5 py-1.5 border border-[#eadfdb] hover:border-red-500 hover:text-red-500 text-xs font-semibold bg-white rounded-xl shadow-sm transition-all cursor-pointer"
+                        <div className="border-t border-gray-100 pt-2 mt-1.5 flex items-center justify-between text-[10px]">
+                          <span className="text-gray-400 font-light truncate max-w-[140px]" title={sub.event_title}>
+                            Event: <strong className="text-gray-600 font-medium">{sub.event_title}</strong>
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 border text-[9px] font-bold uppercase tracking-wider rounded-full shrink-0 ${
+                              sub.status === "approved"
+                                ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                                : sub.status === "rejected"
+                                ? "bg-red-50 text-red-600 border-red-200"
+                                : "bg-amber-50 text-amber-600 border-amber-200"
+                            }`}
                           >
-                            Cancel Event
-                          </button>
+                            {sub.status}
+                          </span>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16 border border-dashed border-[#eadfdb] rounded-2xl bg-[#fafafa]">
-                  <PlusCircle stroke={1} size={44} className="mx-auto text-gray-300 mb-3" />
-                  <p className="text-sm text-[#787878] font-light">No campus events listed by your shop.</p>
-                  <button
-                    onClick={() => setIsAddEventOpen(true)}
-                    className="text-xs text-[#BA5B55] font-semibold hover:underline mt-1"
-                  >
-                    Schedule your first winter carnival event &rarr;
-                  </button>
-                </div>
-              )}
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16 border border-dashed border-[#eadfdb] rounded-2xl bg-[#fafafa]/50 flex flex-col justify-center items-center gap-2">
+                    <Store stroke={1} size={32} className="text-gray-300" />
+                    <p className="text-xs text-[#787878] font-light">No event submissions yet.</p>
+                    <p className="text-[10px] text-gray-400 font-light text-center max-w-[180px]">Visit an active event page to request adding your products.</p>
+                  </div>
+                )}
+              </div>
+
             </div>
           )}
 
           {/* TAB 3: CUSTOMER MESSAGES (DUAL PANE CHAT WINDOW) */}
           {activeTab === "messages" && (
-            <div className="bg-white flex flex-1 overflow-hidden h-[calc(100vh-12rem)] rounded-none">
+            <div className="bg-white flex flex-1 overflow-hidden h-full rounded-none">
               
               {/* Left Pane: Customer Threads list */}
               <div className="w-80 border-r border-gray-100 flex flex-col overflow-hidden shrink-0">
@@ -1172,7 +1301,8 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
                             } else {
                               setActiveThreadUid(thread.customer_uid);
                               setChatMessages([]);
-                              // Clear unread count locally when thread is clicked
+                              
+
                               setThreads((prev) =>
                                 prev.map((t) =>
                                   t.customer_uid === thread.customer_uid
@@ -1618,21 +1748,64 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
                   )}
                 </div>
 
-                {/* About Info & Contact Details */}
+                {/* Campus Association */}
                 <div className="bg-white border border-[#eadfdb] rounded-3xl p-6 shadow-sm">
                   <h3 className="text-xs font-semibold text-[#BA5B55] uppercase tracking-wider mb-1">Campus Association</h3>
                   <div className="mt-4 p-4 border border-[#eadfdb] rounded-2xl bg-[#fafafa]">
-                    {shop.university_name ? (
+                    {shop.university_status === 'approved' ? (
+                      /* APPROVED: show verified badge */
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#BA5B55]/10 flex items-center justify-center text-[#BA5B55]">
+                        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
                           <Building size={20} stroke={1.5} />
                         </div>
                         <div>
                           <p className="text-sm font-bold text-gray-800">{shop.university_name}</p>
-                          <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">Verified Campus Community</p>
+                          <p className="text-[10px] text-emerald-600 font-semibold mt-0.5 flex items-center gap-1">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none"/><circle cx="12" cy="12" r="11" fill="#10b981" opacity="0.15"/></svg>
+                            Verified Campus Community
+                          </p>
                         </div>
                       </div>
+                    ) : shop.university_status === 'pending' ? (
+                      /* PENDING: show amber waiting state */
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                          <Building size={20} stroke={1.5} />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <p className="text-sm font-bold text-gray-800">{shop.university_name}</p>
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1 w-fit">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            Pending Admin Review
+                          </span>
+                          <p className="text-[10px] text-gray-500 font-light leading-relaxed">
+                            Your campus join request has been submitted. An admin will review your student ID document shortly.
+                          </p>
+                        </div>
+                      </div>
+                    ) : shop.university_status === 'rejected' ? (
+                      /* REJECTED: show rejection note + join button again */
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-500 shrink-0">
+                            <Building size={20} stroke={1.5} />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <p className="text-xs font-bold text-red-700">Campus Request Rejected</p>
+                            <p className="text-[10px] text-gray-500 font-light leading-relaxed">
+                              Your previous campus join request was rejected by the admin. You may resubmit with valid documents.
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setShowAssignUniversity(true)}
+                          className="self-start px-4 py-2 bg-[#BA5B55] hover:bg-[#a34e48] text-white text-xs font-bold rounded-xl transition-colors shadow-sm"
+                        >
+                          Resubmit Campus Request
+                        </button>
+                      </div>
                     ) : (
+                      /* NO REQUEST: show join button */
                       <div className="flex flex-col gap-3">
                         <p className="text-xs text-gray-600 font-light">Your shop is not currently associated with a campus. Join a university community to be visible to local students.</p>
                         <button
@@ -1820,67 +1993,17 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
         />
       )}
 
-      {/* ADD EVENT MODAL */}
-      {isAddEventOpen && (
-        <AddEventModal
+      {/* EVENT PRODUCT UPLOAD MODAL */}
+      {uploadEventUid && (
+        <AddProductModal
           shopUid={shop.shop_uid}
-          onClose={() => setIsAddEventOpen(false)}
+          eventUid={uploadEventUid}
+          onClose={() => setUploadEventUid(null)}
           onCreated={() => {
-            // Force active events tab to reload
-            setActiveTab("events");
+            fetchEventsAndSubmissions();
+            router.refresh();
           }}
         />
-      )}
-
-      {/* Assign University modal for legacy shops */}
-      {(!shop.university_name || shop.university_name === null) && showAssignUniversity && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAssignUniversity(false)} />
-          <div className="relative z-10 w-full max-w-md overflow-hidden border border-[#eadfdb] bg-white shadow-2xl rounded-3xl">
-            <div className="border-b border-[#eadfdb] px-6 py-5 bg-[#fdfcfb]">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#BA5B55]">University</p>
-              <h3 className="mt-1 text-xl font-bold tracking-tight text-[#1a1a1a]">Select your university</h3>
-            </div>
-
-            <div className="p-4 max-h-80 overflow-y-auto">
-              <div className="grid gap-2">
-                {UNI_LIST.map((u) => (
-                  <button
-                    key={u.uid}
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        const res = await fetch('/shop/api/set-shop-university', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                          body: JSON.stringify({ shopUid: shop.shop_uid, universityUid: u.uid }),
-                        });
-                        const j = await res.json();
-                        if (res.ok) {
-                          addToast('University assigned successfully!', 'success');
-                          router.refresh();
-                        } else {
-                          addToast(j.message || 'Failed to assign university', 'error');
-                        }
-                      } catch (err) {
-                        addToast('Network error', 'error');
-                      } finally {
-                        setShowAssignUniversity(false);
-                      }
-                    }}
-                    className="w-full text-left px-4 py-2.5 border border-[#eadfdb] hover:border-[#BA5B55] hover:text-[#BA5B55] text-xs font-semibold rounded-xl bg-white shadow-sm transition-all"
-                  >
-                    {u.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 border-t border-[#eadfdb] bg-white px-6 py-4">
-              <button type="button" onClick={() => setShowAssignUniversity(false)} className="px-4 py-2 border border-[#eadfdb] hover:bg-gray-50 text-xs font-semibold text-[#787878] rounded-xl cursor-pointer">Cancel</button>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Interactive Crop Modal */}
@@ -1951,7 +2074,10 @@ export default function DashboardClient({ shop, user, products = [], recentOrder
       {showAssignUniversity && (
         <JoinUniversityModal
           shopUid={shop.shop_uid}
-          onClose={() => setShowAssignUniversity(false)}
+          onClose={() => {
+            setShowAssignUniversity(false);
+            router.refresh();
+          }}
         />
       )}
 

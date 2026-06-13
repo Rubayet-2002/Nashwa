@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/database/pool";
 import { authMe } from "@/app/(authentication)/lib/authMe";
 
-// GET — load chat messages or list threads
+
+
 export async function GET(req: NextRequest) {
   const { user } = await authMe();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -22,10 +23,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, unread_count: countRes.rows[0].unread_count });
     }
 
-    // ── Case 1: List threads ───────────────────────────────────
+    
+
     if (listThreads) {
       if (!shopUid) {
-        // Customer threads (conversations they had with different shops)
+        
+
         const threadsRes = await pool.query(
           `WITH user_chats AS (
              SELECT DISTINCT ON (shop_uid)
@@ -46,7 +49,8 @@ export async function GET(req: NextRequest) {
         );
         return NextResponse.json({ success: true, threads: threadsRes.rows });
       } else {
-        // Merchant threads (conversations a shop owner had with customers)
+        
+
         const shopRes = await pool.query(`SELECT owner_uid FROM shop WHERE shop_uid = $1`, [shopUid]);
         if (!shopRes.rows[0]) return NextResponse.json({ error: "Shop not found" }, { status: 404 });
         if (shopRes.rows[0].owner_uid !== user.uid) {
@@ -79,7 +83,8 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // ── Case 2: Fetch message history ──────────────────────────
+    
+
     if (!shopUid) {
       return NextResponse.json({ error: "shopUid required" }, { status: 400 });
     }
@@ -113,7 +118,8 @@ export async function GET(req: NextRequest) {
 
     const isSellerViewParam = searchParams.get("isSellerView") === "true";
 
-    // Mark messages as read
+    
+
     if (isSellerViewParam) {
       await pool.query(
         `UPDATE chat_message SET is_read = TRUE 
@@ -139,7 +145,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST — send a message
+
+
 export async function POST(req: NextRequest) {
   const { user } = await authMe();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -160,7 +167,8 @@ export async function POST(req: NextRequest) {
     }
 
     if (actualReceiverUid === user.uid && !isShopMode && user.uid !== shopOwnerUid) {
-      // Allow user to message their own shop, but otherwise block self-messaging
+      
+
       return NextResponse.json({ error: "You cannot message yourself." }, { status: 400 });
     }
 
@@ -173,7 +181,8 @@ export async function POST(req: NextRequest) {
       [msgUid, user.uid, actualReceiverUid, shopUid, senderRole, messageType, messageText.trim(), imageUrl, productRefUid]
     );
 
-    // Fetch the inserted message with sender metadata
+    
+
     const insertedRes = await pool.query(
       `SELECT m.message_uid, m.sender_uid, m.receiver_uid, m.shop_uid, m.sender_role, m.message_text,
               m.message_type, m.image_url, m.product_ref_uid, m.created_at,
@@ -186,12 +195,14 @@ export async function POST(req: NextRequest) {
 
     const message = insertedRes.rows[0];
 
-    // Emit Socket.io event
+    
+
     if (global.io) {
       const customerUid = user.uid === shopOwnerUid ? actualReceiverUid : user.uid;
       global.io.to(`chat:${shopUid}:${customerUid}`).emit("chat:message", message);
       
-      // Notify the receiver
+      
+
       global.io.to(`user:${actualReceiverUid}`).emit("notification:new", { 
         title: `New message from ${user.uid === shopOwnerUid ? "Shop" : user.username}`, 
         unread: 1 

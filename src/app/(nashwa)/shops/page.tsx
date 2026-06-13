@@ -79,7 +79,8 @@ export default async function ShopsPage({
     const shopRes = await pool.query(queryText, params);
     shops = shopRes.rows;
 
-    // Sort: Followed shops first, then suggested (unfollowed) shops
+    
+
     shops.sort((a, b) => {
       if (a.is_following && !b.is_following) return -1;
       if (!a.is_following && b.is_following) return 1;

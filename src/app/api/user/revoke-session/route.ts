@@ -18,7 +18,8 @@ export async function POST(request: Request) {
     const { sessionId, allOther } = await request.json();
 
     if (allOther) {
-      // Revoke all other sessions (exclude the current user session ID)
+      
+
       await pool.query(
         "UPDATE session SET is_revoked = TRUE WHERE user_uid = $1 AND session_id != $2",
         [user.uid, user.sessionId]
@@ -30,7 +31,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Session ID is required." }, { status: 400 });
     }
 
-    // Revoke specific session ID
+    
+
     const res = await pool.query(
       "UPDATE session SET is_revoked = TRUE WHERE session_id = $1 AND user_uid = $2",
       [sessionId, user.uid]

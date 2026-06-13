@@ -22,7 +22,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Password must be at least 6 characters long." }, { status: 400 });
     }
 
-    // 1. Fetch user's current password hash
+    
+
     const userRes = await pool.query("SELECT password_hash FROM users WHERE uid = $1", [user.uid]);
     if (userRes.rowCount === 0) {
       return NextResponse.json({ message: "User not found." }, { status: 404 });
@@ -30,7 +31,8 @@ export async function POST(request: Request) {
 
     const dbHash = userRes.rows[0].password_hash;
 
-    // 2. If a password exists, verify current password
+    
+
     if (dbHash) {
       if (!currentPassword) {
         return NextResponse.json({ message: "Current password is required." }, { status: 400 });
@@ -41,7 +43,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // 3. Hash and update
+    
+
     const hashed = await bcrypt.hash(newPassword, 12);
     await pool.query("UPDATE users SET password_hash = $1 WHERE uid = $2", [hashed, user.uid]);
 

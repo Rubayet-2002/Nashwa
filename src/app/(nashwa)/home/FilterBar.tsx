@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Filter } from "@mynaui/icons-react";
 
 export interface FilterState {
@@ -141,6 +141,7 @@ function SearchableDropdown({
 }
 
 export default function FilterBar({ onFilterChange, communities }: FilterBarProps) {
+  const [categories, setCategories] = useState<string[]>(CATEGORIES);
   const [filters, setFilters] = useState<FilterState>({
     tab: "explore",
     minPrice: 0,
@@ -149,6 +150,17 @@ export default function FilterBar({ onFilterChange, communities }: FilterBarProp
     communityId: [],
   });
   const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && Array.isArray(data.categories)) {
+          setCategories(data.categories);
+        }
+      })
+      .catch((err) => console.error("Error fetching categories:", err));
+  }, []);
 
   const update = (partial: Partial<FilterState>) => {
     const next = { ...filters, ...partial };
@@ -168,7 +180,7 @@ export default function FilterBar({ onFilterChange, communities }: FilterBarProp
     { id: "following", label: "Following" },
   ];
 
-  const categoryOptions = CATEGORIES.map((cat) => ({ value: cat, label: cat }));
+  const categoryOptions = categories.map((cat) => ({ value: cat, label: cat }));
   const universityOptions = communities.map((c) => ({
     value: c.university_uid,
     label: c.university_name,

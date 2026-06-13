@@ -41,7 +41,8 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Check and block shops with platform debt older than 30 days
+    
+
     await pool.query(`
       UPDATE shop
       SET is_blocked = TRUE

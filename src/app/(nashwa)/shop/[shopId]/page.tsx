@@ -21,7 +21,8 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
   let userReactedProducts: string[] = [];
 
   try {
-    // Query shop details, including new social media links and rating/posts counts
+    
+
     const shopRes = await pool.query(
       `SELECT s.shop_uid, s.owner_uid, s.shop_name, s.shop_email, s.shop_phone, s.shop_location, s.shop_description, s.shop_bio, s.created_at,
               s.cover_photo_url, s.profile_photo_url, s.instagram_url, s.facebook_url, s.avg_rating,
@@ -114,7 +115,7 @@ export default async function ShopProfilePage({ params }: ShopProfileProps) {
       <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-6 items-start lg:items-stretch min-h-0 lg:h-full">
         
         {/* Left Section: Info Panel (w-120 = 480px on desktop) */}
-        <div className="w-full lg:w-[480px] shrink-0 lg:h-full lg:overflow-y-auto custom-scrollbar pr-1">
+        <div className="w-full lg:w-120 shrink-0 lg:h-full lg:overflow-y-auto custom-scrollbar pr-1">
           <ShopProfileLeft
             shop={shop}
             currentUser={user ? { uid: user.uid, username: user.username } : null}

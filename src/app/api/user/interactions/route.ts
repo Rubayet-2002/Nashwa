@@ -9,6 +9,8 @@ export async function GET() {
     const { user } = await authMe();
     if (!user) {
       return NextResponse.json({
+        uid: null,
+        role: null,
         followedShops: [],
         savedProducts: [],
         reactedProducts: [],
@@ -22,6 +24,8 @@ export async function GET() {
     ]);
 
     return NextResponse.json({
+      uid: user.uid,
+      role: user.role,
       followedShops: followRes.rows.map((r: any) => r.shop_uid),
       savedProducts: saveRes.rows.map((r: any) => r.product_uid),
       reactedProducts: reactRes.rows.map((r: any) => r.product_uid),

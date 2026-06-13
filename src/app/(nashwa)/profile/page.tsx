@@ -12,7 +12,8 @@ export default async function ProfilePage() {
   }
 
   try {
-    // 1. Fetch user account information
+    
+
     const userRes = await pool.query(
       `SELECT uid, username, email, phone, role, profile_photo_url, cover_photo_url, password_hash, created_at
        FROM users
@@ -45,7 +46,8 @@ export default async function ProfilePage() {
 
     const hasPasswordInitially = userData.password_hash !== null;
 
-    // 2. Fetch owned shops
+    
+
     const ownedShopsRes = await pool.query(
       `SELECT shop_uid, shop_name, status, profile_photo_url
        FROM shop
@@ -55,7 +57,8 @@ export default async function ProfilePage() {
     const ownedShops = ownedShopsRes.rows;
 
 
-    // 4. Fetch orders placed by this user (purchases) along with order items
+    
+
     const ordersRes = await pool.query(
       `SELECT o.order_uid, o.shop_uid, o.customer_name, o.customer_email, o.customer_phone,
               o.delivery_address, o.city, o.postal_code, o.note, o.delivery_type, o.payment_method,
@@ -74,7 +77,8 @@ export default async function ProfilePage() {
     );
     const orders = ordersRes.rows;
 
-    // 5. Fetch active session history
+    
+
     const sessionsRes = await pool.query(
       `SELECT session_id, device_type, device_ip, browser_name, os_name, created_at, expires_at
        FROM session
@@ -84,7 +88,8 @@ export default async function ProfilePage() {
     );
     const sessions = sessionsRes.rows;
 
-    // Fetch user's reviews
+    
+
     const reviewsRes = await pool.query(
       `SELECT pr.review_uid, pr.product_uid, pr.rating, pr.review_text, pr.created_at,
               p.title AS product_title,

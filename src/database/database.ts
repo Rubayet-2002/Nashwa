@@ -7,6 +7,7 @@ import {
   Session,
   OTP,
   PartnerUniversity,
+  ProductCategory,
   Shop,
   ShopFollow,
   ShopJoinUniversity,
@@ -38,6 +39,7 @@ async function run() {
     console.log("🏗  Creating tables...");
     await client.query(Users);
     await client.query(PartnerUniversity);
+    await client.query(ProductCategory);
     await client.query(Shop);
     await client.query(Session);
     await client.query(OTP);
@@ -60,7 +62,8 @@ async function run() {
     await client.query(Report);
     console.log("✅ Tables created.");
 
-    // Seed admin from .env
+    
+
     const adminEmail = process.env.ADMIN_EMAIL || "admin@nashwa.com";
     const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
     const adminHash = await bcrypt.hash(adminPassword, 12);
@@ -77,7 +80,8 @@ async function run() {
     );
     console.log(`👤 Admin seeded: ${adminEmail} / ${adminPassword}`);
 
-    // Seed partner universities
+    
+
     const universities = [
       { uid: "nsu", name: "North South University", subtitle: "NSU Campus Community" },
       { uid: "brac", name: "BRAC University", subtitle: "BRACU Campus Community" },
@@ -97,6 +101,31 @@ async function run() {
       );
     }
     console.log("🏫 Seeded partner universities.");
+
+    
+
+    const categories = [
+      "Food & Beverages",
+      "Fashion & Clothing",
+      "Art & Crafts",
+      "Electronics",
+      "Books & Stationery",
+      "Beauty & Skincare",
+      "Accessories",
+      "Home Decor",
+      "Services",
+      "Other",
+    ];
+
+    for (const cat of categories) {
+      await client.query(
+        `INSERT INTO product_category (category_name)
+         VALUES ($1)
+         ON CONFLICT (category_name) DO NOTHING`,
+        [cat]
+      );
+    }
+    console.log("🏷️ Seeded product categories.");
 
     console.log("🎉 Database ready! Run npm run dev to start.");
   } catch (err) {

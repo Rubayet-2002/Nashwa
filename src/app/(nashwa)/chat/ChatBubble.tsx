@@ -33,10 +33,12 @@ export default function ChatBubble({ msg, currentUserId, isSellerView }: ChatBub
   const { user } = useAuthStore();
   const [isPending, startTransition] = useTransition();
 
-  // Parse Form Data
+  
+
   const formData = typeof msg.form_data === "string" ? JSON.parse(msg.form_data) : msg.form_data;
 
-  // Shipping Autofill state
+  
+
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
@@ -45,7 +47,8 @@ export default function ChatBubble({ msg, currentUserId, isSellerView }: ChatBub
   const [deliveryType, setDeliveryType] = useState<"standard" | "on_campus">("standard");
   const [paymentMethod, setPaymentMethod] = useState<"cod">("cod");
 
-  // Lightbox State
+  
+
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
   const isMe = isSellerView ? msg.sender_role === "seller" : msg.sender_role === "customer";
@@ -54,7 +57,8 @@ export default function ChatBubble({ msg, currentUserId, isSellerView }: ChatBub
 
   useEffect(() => {
     if (isPendingForm && !isSellerView) {
-      // Fetch default shipping details from profile
+      
+
       fetch("/api/user/profile")
         .then((res) => res.json())
         .then((data) => {
@@ -70,7 +74,8 @@ export default function ChatBubble({ msg, currentUserId, isSellerView }: ChatBub
     }
   }, [isPendingForm, isSellerView]);
 
-  // Delivery charge calculations
+  
+
   const unitPrice = Number(formData?.unit_price ?? 0);
   const qty = Number(formData?.quantity ?? 1);
   const subtotal = unitPrice * qty;
@@ -83,7 +88,8 @@ export default function ChatBubble({ msg, currentUserId, isSellerView }: ChatBub
     deliveryType === "on_campus" ? (isFreeCampus ? 0 : insideCharge) : outsideCharge;
   const totalAmount = subtotal + deliveryCharge;
 
-  // Handle Order Submit (Customer Side)
+  
+
   const handleSubmitOrder = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName.trim() || !customerPhone.trim() || !deliveryAddress.trim()) {
@@ -127,7 +133,8 @@ export default function ChatBubble({ msg, currentUserId, isSellerView }: ChatBub
     });
   };
 
-  // Handle Order Status Update (Seller/Buyer Side)
+  
+
   const handleUpdateStatus = (status: "confirmed" | "cancelled" | "completed") => {
     startTransition(async () => {
       try {
@@ -156,7 +163,8 @@ export default function ChatBubble({ msg, currentUserId, isSellerView }: ChatBub
     });
   };
 
-  // 1. Image Message Type
+  
+
   if (msg.message_type === "image" && msg.image_url) {
     return (
       <div className="flex flex-col gap-1">
@@ -172,7 +180,8 @@ export default function ChatBubble({ msg, currentUserId, isSellerView }: ChatBub
     );
   }
 
-  // 2. Product Reference Message Type
+  
+
   if (msg.message_type === "product_ref" && msg.product_ref_uid) {
     const productData = formData || {};
     return (
@@ -183,7 +192,8 @@ export default function ChatBubble({ msg, currentUserId, isSellerView }: ChatBub
             onClick={() => productData.image_url && setLightboxSrc(productData.image_url)}
           >
             {productData.image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
+              
+
               <img src={productData.image_url} alt={productData.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-xs font-bold text-[#BA5B55]">Pic</div>
@@ -207,7 +217,8 @@ export default function ChatBubble({ msg, currentUserId, isSellerView }: ChatBub
     );
   }
 
-  // 3. Interactive Order Form Message Type
+  
+
   if (isOrderForm && formData) {
     const status = formData.status;
 
@@ -479,10 +490,11 @@ export default function ChatBubble({ msg, currentUserId, isSellerView }: ChatBub
     );
   }
 
-  // 4. Fallback Standard Text Message
+  
+
   return (
     <div
-      className={`px-3.5 py-2.5 text-xs leading-relaxed max-w-sm whitespace-pre-wrap break-words text-left ${
+      className={`px-3.5 py-2.5 text-xs leading-relaxed max-w-sm whitespace-pre-wrap wrap-break-word text-left ${
         isMe
           ? "bg-[#BA5B55] text-white rounded-[12px_12px_3px_12px]"
           : "bg-white border border-[#e8e8e8] text-[#1a1a1a] rounded-[12px_12px_12px_3px]"

@@ -22,6 +22,7 @@ interface ContactSellerWidgetProps {
   shopAvatar: string | null;
   currentUser: { uid: string; username: string } | null;
   iconOnly?: boolean;
+  isFloatingBubble?: boolean;
 }
 
 export default function ContactSellerWidget({
@@ -31,6 +32,7 @@ export default function ContactSellerWidget({
   shopAvatar,
   currentUser,
   iconOnly = false,
+  isFloatingBubble = false,
 }: ContactSellerWidgetProps) {
   const addToast = useToastStore((s) => s.addToast);
   const [isOpen, setIsOpen] = useState(false);
@@ -38,6 +40,20 @@ export default function ContactSellerWidget({
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleExternalOpen = () => {
+      if (!currentUser) {
+        addToast("Please log in to contact the seller.", "error");
+        return;
+      }
+      setIsOpen(true);
+    };
+    window.addEventListener("open-chat", handleExternalOpen);
+    return () => {
+      window.removeEventListener("open-chat", handleExternalOpen);
+    };
+  }, [currentUser, addToast]);
 
   // Fetch message history when chat is opened
   useEffect(() => {
@@ -121,7 +137,7 @@ export default function ContactSellerWidget({
   return (
     <>
       {/* Contact Seller Button */}
-      {iconOnly ? (
+      {isFloatingBubble ? null : iconOnly ? (
         <button
           onClick={handleOpenChat}
           type="button"
@@ -143,7 +159,7 @@ export default function ContactSellerWidget({
 
       {/* Slide-out Chat Drawer Popup */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-80 sm:w-96 h-[450px] bg-white border border-[#eadfdb] flex flex-col rounded-none overflow-hidden animate-in slide-in-from-bottom-5 duration-200">
+        <div className={`${isFloatingBubble ? "absolute" : "fixed"} bottom-6 right-6 z-50 w-80 sm:w-96 h-[450px] bg-white border border-[#eadfdb] flex flex-col rounded-none overflow-hidden animate-in slide-in-from-bottom-5 duration-200`}>
           
           {/* Header Row */}
           <div className="bg-[#BA5B55] text-white px-4 py-3.5 flex items-center justify-between">

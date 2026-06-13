@@ -11,7 +11,8 @@ export async function updateShopBio(shopUid: string, bio: string) {
   }
 
   try {
-    // Check ownership
+    
+
     const shopRes = await pool.query(
       "SELECT owner_uid FROM shop WHERE shop_uid = $1",
       [shopUid]
@@ -50,7 +51,8 @@ export async function updateShopInfo(
   }
 
   try {
-    // Check ownership
+    
+
     const shopRes = await pool.query(
       "SELECT owner_uid FROM shop WHERE shop_uid = $1",
       [shopUid]

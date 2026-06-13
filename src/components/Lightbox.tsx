@@ -4,16 +4,19 @@ import { useEffect, useCallback } from "react";
 import Image from "next/image";
 
 interface LightboxProps {
-  // Single image mode
+  
+
   src?: string;
   alt?: string;
 
-  // Multi image mode
+  
+
   images?: string[];
   current?: number;
   onNavigate?: (index: number) => void;
 
-  // Shared
+  
+
   onClose: () => void;
 }
 
@@ -45,11 +48,12 @@ export default function Lightbox({
     };
   }, [handleKey]);
 
-  // Render Single Image Lightbox
+  
+
   if (src) {
     return (
       <div
-        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md"
+        className="fixed inset-0 z-9999 flex items-center justify-center bg-black/90 backdrop-blur-md"
         onClick={onClose}
         style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.9)", backdropFilter: "blur(6px)" }}
       >
@@ -88,7 +92,8 @@ export default function Lightbox({
     );
   }
 
-  // Render Multi-Image Slider Lightbox
+  
+
   if (!images || !onNavigate) return null;
 
   return (

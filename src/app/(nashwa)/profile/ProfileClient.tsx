@@ -112,7 +112,8 @@ export default function ProfileClient({
   const router = useRouter();
   const addToast = useToastStore((s) => s.addToast);
   
-  // Zustand Auth Store
+  
+
   const clearUser = useAuthStore((s) => s.clearUser);
   const storeUser = useAuthStore((s) => s.user);
   const setActiveShop = useAuthStore((s) => s.setActiveShop);
@@ -129,7 +130,8 @@ export default function ProfileClient({
   const [reviewsList, setReviewsList] = useState(initialReviews);
   const [reviewForms, setReviewForms] = useState<Record<string, { rating: number; text: string; submitting?: boolean }>>({});
 
-  // Review Edit/Delete States
+  
+
   const [editingReviewUid, setEditingReviewUid] = useState<string | null>(null);
   const [editRating, setEditRating] = useState<number>(0);
   const [editText, setEditText] = useState<string>("");
@@ -216,22 +218,26 @@ export default function ProfileClient({
     }
   }, [searchParams, activeTab]);
 
-  // Editable Account Info States
+  
+
   const [usernameInput, setUsernameInput] = useState(user.username);
   const [emailInput, setEmailInput] = useState(user.email);
   const [phoneInput, setPhoneInput] = useState(user.phone || "");
   const [updatingInfo, setUpdatingInfo] = useState(false);
 
-  // Password States
+  
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
 
-  // Active Sessions State
+  
+
   const [activeSessions, setActiveSessions] = useState<SessionLog[]>(sessions);
 
-  // Image Upload / Modal States
+  
+
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [cropType, setCropType] = useState<"avatar" | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -240,7 +246,8 @@ export default function ProfileClient({
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  // Helper: dataURL to Blob
+  
+
   const dataURLtoBlob = (dataurl: string) => {
     const arr = dataurl.split(",");
     const mime = arr[0].match(/:(.*?);/)?.[1] || "image/jpeg";
@@ -253,7 +260,8 @@ export default function ProfileClient({
     return new Blob([u8arr], { type: mime });
   };
 
-  // Trigger file select
+  
+
   const handlePhotoSelected = (e: ChangeEvent<HTMLInputElement>, type: "avatar") => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
@@ -266,7 +274,8 @@ export default function ProfileClient({
     }
   };
 
-  // Complete cropping and upload
+  
+
   const handleCropComplete = async (croppedDataUrl: string) => {
     setCropSrc(null);
     const type = cropType;
@@ -303,7 +312,8 @@ export default function ProfileClient({
     }
   };
 
-  // Remove photo helper
+  
+
   const handleRemovePhoto = async (type: "avatar") => {
     if (!confirm(`Are you sure you want to remove your ${type} photo?`)) return;
     setLightboxSrc(null);
@@ -331,7 +341,8 @@ export default function ProfileClient({
     }
   };
 
-  // Save Account Information Updates
+  
+
   const handleSaveInfo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (updatingInfo) return;
@@ -371,7 +382,8 @@ export default function ProfileClient({
     }
   };
 
-  // Save Password Updates
+  
+
   const handleSavePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
@@ -414,7 +426,8 @@ export default function ProfileClient({
     }
   };
 
-  // Revoke active sessions
+  
+
   const handleRevokeSession = async (sessionId: string | null, allOther = false) => {
     if (allOther && !confirm("Are you sure you want to log out of all other devices?")) return;
     if (!allOther && sessionId === user.sessionId && !confirm("This is your current session. Revoking it will log you out immediately. Proceed?")) return;
@@ -449,7 +462,8 @@ export default function ProfileClient({
     }
   };
 
-  // Account deletion
+  
+
   const handleDeleteAccount = () => {
     if (!confirm("CRITICAL WARNING: This will permanently delete your account and all owned shops. This action CANNOT be undone. Are you absolutely sure?")) return;
     startTransition(async () => {

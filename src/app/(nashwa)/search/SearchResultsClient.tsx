@@ -6,6 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useToastStore } from "@/zustand/toastStore";
 import Lightbox from "@/components/Lightbox";
+import ProductCard from "@/app/(nashwa)/home/ProductCard";
+import type { FeedProduct } from "@/app/(nashwa)/home/HomeFeedClient";
 
 interface ShopResult {
   shop_uid: string;
@@ -15,19 +17,6 @@ interface ShopResult {
   avg_rating: string | null;
   follower_count: number;
   university_name: string | null;
-}
-
-interface ProductResult {
-  product_uid: string;
-  title: string;
-  description: string | null;
-  price: string;
-  currency: string;
-  category: string | null;
-  image_url: string | null;
-  shop_uid: string;
-  shop_name: string;
-  shop_profile_photo_url: string | null;
 }
 
 interface EventResult {
@@ -50,7 +39,7 @@ interface CommunityResult {
 
 interface SearchData {
   shops: ShopResult[];
-  products: ProductResult[];
+  products: FeedProduct[];
   events: EventResult[];
   communities: CommunityResult[];
 }
@@ -64,6 +53,29 @@ export default function SearchResultsClient() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<SearchData>({ shops: [], products: [], events: [], communities: [] });
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+
+  
+
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [followedShops, setFollowedShops] = useState<Set<string>>(new Set());
+  const [savedProducts, setSavedProducts] = useState<Set<string>>(new Set());
+  const [reactedProducts, setReactedProducts] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    
+
+    fetch("/api/user/interactions")
+      .then((res) => res.json())
+      .then((d) => {
+        setUserId(d.uid);
+        setUserRole(d.role);
+        setFollowedShops(new Set(d.followedShops || []));
+        setSavedProducts(new Set(d.savedProducts || []));
+        setReactedProducts(new Set(d.reactedProducts || []));
+      })
+      .catch((e) => console.error("Error fetching interactions", e));
+  }, []);
 
   useEffect(() => {
     if (!query) {
@@ -92,7 +104,7 @@ export default function SearchResultsClient() {
 
   if (!query) {
     return (
-      <div className="bg-white rounded-2xl border border-[#e8e8e8] p-12 text-center">
+      <div className="bg-white rounded-none border border-[#e8e8e8] p-12 text-center">
         <p className="text-sm font-semibold text-[#1a1a1a]">Search Nashwa</p>
         <p className="text-xs text-[#787878] mt-1">Type in the search bar above to look for shops, products, events, or universities.</p>
       </div>
@@ -102,10 +114,10 @@ export default function SearchResultsClient() {
   if (loading) {
     return (
       <div className="flex flex-col gap-4 animate-pulse">
-        <div className="h-10 bg-gray-200 rounded-xl w-64" />
+        <div className="h-10 bg-gray-200 rounded-none w-64" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 bg-white border border-[#e8e8e8] rounded-2xl" />
+            <div key={i} className="h-28 bg-white border border-[#e8e8e8] rounded-none" />
           ))}
         </div>
       </div>
@@ -157,7 +169,7 @@ export default function SearchResultsClient() {
 
       {/* Results Container */}
       {totalResults === 0 ? (
-        <div className="bg-white rounded-2xl border border-[#e8e8e8] p-12 text-center">
+        <div className="bg-white rounded-none border border-[#e8e8e8] p-12 text-center">
           <p className="text-sm font-semibold text-[#1a1a1a]">No results found</p>
           <p className="text-xs text-[#787878] mt-1">We couldn&apos;t find anything matching your search. Try using other keywords.</p>
         </div>
@@ -169,10 +181,10 @@ export default function SearchResultsClient() {
               <h2 className="text-xs font-bold uppercase tracking-wider text-[#BA5B55] border-b border-[#f0f0f0] pb-2">Shops</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {data.shops.map((shop) => (
-                  <div key={shop.shop_uid} className="bg-white border border-[#e8e8e8] p-4 rounded-2xl flex items-center gap-3 hover:border-[#BA5B55]/30 transition-all">
+                  <div key={shop.shop_uid} className="bg-white border border-[#e8e8e8] p-4 rounded-none flex items-center gap-3 hover:border-[#BA5B55]/30 transition-all">
                     <div
                       onClick={() => shop.profile_photo_url && setLightboxSrc(shop.profile_photo_url)}
-                      className="relative w-12 h-12 rounded-xl overflow-hidden border border-[#f0f0f0] bg-[#fafafa] shrink-0 cursor-pointer"
+                      className="relative w-12 h-12 rounded-none overflow-hidden border border-[#f0f0f0] bg-[#fafafa] shrink-0 cursor-pointer"
                     >
                       {shop.profile_photo_url ? (
                         <Image src={shop.profile_photo_url} alt={shop.shop_name} fill className="object-cover" />
@@ -209,42 +221,41 @@ export default function SearchResultsClient() {
           {(activeTab === "all" || activeTab === "products") && data.products.length > 0 && (
             <div className="flex flex-col gap-3">
               <h2 className="text-xs font-bold uppercase tracking-wider text-[#BA5B55] border-b border-[#f0f0f0] pb-2">Products</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="flex flex-col gap-4">
                 {data.products.map((product) => (
-                  <div key={product.product_uid} className="bg-white border border-[#e8e8e8] p-3 rounded-2xl flex flex-col gap-3 hover:border-[#BA5B55]/30 transition-all">
-                    <div
-                      onClick={() => product.image_url && setLightboxSrc(product.image_url)}
-                      className="relative w-full aspect-square bg-[#fafafa] rounded-xl overflow-hidden border border-[#f0f0f0] cursor-pointer"
-                    >
-                      {product.image_url ? (
-                        <Image src={product.image_url} alt={product.title} fill className="object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300">
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><polyline points="21 15 16 10 5 21"/>
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        {product.category && (
-                          <span className="text-[9px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium mb-1 inline-block">
-                            {product.category}
-                          </span>
-                        )}
-                        <Link href={`/product/${product.product_uid}`} className="text-xs font-bold text-[#1a1a1a] hover:text-[#BA5B55] transition-colors line-clamp-2 leading-snug">
-                          {product.title}
-                        </Link>
-                      </div>
-                      <div className="mt-2 flex items-baseline justify-between border-t border-[#f5f5f5] pt-2">
-                        <span className="text-xs font-bold text-[#BA5B55]">{product.currency} {Number(product.price).toFixed(0)}</span>
-                        <Link href={`/shop/${product.shop_uid}`} className="text-[10px] text-[#787878] hover:text-[#BA5B55] hover:underline font-light truncate max-w-24">
-                          {product.shop_name}
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
+                  <ProductCard
+                    key={product.product_uid}
+                    product={product}
+                    currentUserId={userId}
+                    currentUserRole={userRole}
+                    isFollowing={followedShops.has(product.shop_uid)}
+                    isSaved={savedProducts.has(product.product_uid)}
+                    hasReacted={reactedProducts.has(product.product_uid)}
+                    onFollowChange={(shopUid, following) => {
+                      setFollowedShops((prev) => {
+                        const next = new Set(prev);
+                        if (following) next.add(shopUid);
+                        else next.delete(shopUid);
+                        return next;
+                      });
+                    }}
+                    onSaveChange={(prodUid, saved) => {
+                      setSavedProducts((prev) => {
+                        const next = new Set(prev);
+                        if (saved) next.add(prodUid);
+                        else next.delete(prodUid);
+                        return next;
+                      });
+                    }}
+                    onReactChange={(prodUid, reacted) => {
+                      setReactedProducts((prev) => {
+                        const next = new Set(prev);
+                        if (reacted) next.add(prodUid);
+                        else next.delete(prodUid);
+                        return next;
+                      });
+                    }}
+                  />
                 ))}
               </div>
             </div>
@@ -256,10 +267,10 @@ export default function SearchResultsClient() {
               <h2 className="text-xs font-bold uppercase tracking-wider text-[#BA5B55] border-b border-[#f0f0f0] pb-2">Events</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {data.events.map((event) => (
-                  <div key={event.event_uid} className="bg-white border border-[#e8e8e8] p-4 rounded-2xl flex gap-3 hover:border-[#BA5B55]/30 transition-all">
+                  <div key={event.event_uid} className="bg-white border border-[#e8e8e8] p-4 rounded-none flex gap-3 hover:border-[#BA5B55]/30 transition-all">
                     <div
                       onClick={() => event.image_url && setLightboxSrc(event.image_url)}
-                      className="relative w-16 h-16 rounded-xl overflow-hidden bg-[#fafafa] border border-[#f0f0f0] shrink-0 cursor-pointer"
+                      className="relative w-16 h-16 rounded-none overflow-hidden bg-[#fafafa] border border-[#f0f0f0] shrink-0 cursor-pointer"
                     >
                       {event.image_url ? (
                         <Image src={event.image_url} alt={event.title} fill className="object-cover" />
@@ -295,10 +306,10 @@ export default function SearchResultsClient() {
               <h2 className="text-xs font-bold uppercase tracking-wider text-[#BA5B55] border-b border-[#f0f0f0] pb-2">Communities</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {data.communities.map((c) => (
-                  <div key={c.university_uid} className="bg-white border border-[#e8e8e8] p-4 rounded-2xl flex items-center gap-3 hover:border-[#BA5B55]/30 transition-all">
+                  <div key={c.university_uid} className="bg-white border border-[#e8e8e8] p-4 rounded-none flex items-center gap-3 hover:border-[#BA5B55]/30 transition-all">
                     <div
                       onClick={() => c.logo_url && setLightboxSrc(c.logo_url)}
-                      className="relative w-12 h-12 rounded-xl overflow-hidden border border-[#f0f0f0] bg-[#fafafa] shrink-0 cursor-pointer"
+                      className="relative w-12 h-12 rounded-none overflow-hidden border border-[#f0f0f0] bg-[#fafafa] shrink-0 cursor-pointer"
                     >
                       {c.logo_url ? (
                         <Image src={c.logo_url} alt={c.university_name} fill className="object-cover" />

@@ -31,13 +31,15 @@ const ShopNavbar = ({ shopName, shopUid }: ShopNavbarProps) => {
   useEffect(() => {
     fetchUnreadCount();
 
-    // Listen for local tab read triggers
+    
+
     const handleRead = () => {
       resetShopNotifications();
     };
     window.addEventListener("shop-notifications:read", handleRead);
 
-    // Listen for real-time order/follow notifications
+    
+
     const socket = connectSocket();
     const handleNewNotif = (notif?: { shopUid?: string }) => {
       if (notif && notif.shopUid && notif.shopUid === shopUid) {

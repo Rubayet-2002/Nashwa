@@ -31,7 +31,6 @@ export default async function UniversityShopsPage({ params }: UniversityShopsPag
   const { user } = await authMe();
   const currentUid = user?.uid ?? null;
 
-  // Fetch university info including description and logo
   const uniRes = await pool.query(
     `SELECT university_uid, university_name, description, logo_url
      FROM partner_university
@@ -53,6 +52,11 @@ export default async function UniversityShopsPage({ params }: UniversityShopsPag
 
   let shops: ShopRow[] = [];
   const shopImagesObj: Record<string, string[]> = {};
+
+  let products: any[] = [];
+  let userFollowedShops: string[] = [];
+  let userSavedProducts: string[] = [];
+  let userReactedProducts: string[] = [];
 
   try {
     const shopRes = await pool.query(
@@ -104,18 +108,59 @@ export default async function UniversityShopsPage({ params }: UniversityShopsPag
         shopImagesObj[row.shop_uid].push(row.image_url);
       }
     }
+
+    const productsRes = await pool.query(
+      `SELECT p.product_uid, p.title, p.description, p.price, p.original_price,
+              p.discount_percent, p.currency, p.category, p.product_type,
+              p.inside_delivery_charge, p.outside_delivery_charge, p.free_on_campus_delivery,
+              p.sold_count, p.like_count, p.avg_rating, p.variants, p.created_at,
+              (SELECT pi.image_url FROM product_image pi WHERE pi.product_uid = p.product_uid ORDER BY pi.position ASC, pi.id ASC LIMIT 1) AS image_url,
+              COALESCE((SELECT json_agg(pi.image_url ORDER BY pi.position ASC, pi.id ASC) FROM product_image pi WHERE pi.product_uid = p.product_uid), '[]') AS image_urls,
+              (SELECT COUNT(*)::int FROM product_comment pc WHERE pc.product_uid = p.product_uid) AS comment_count,
+              s.shop_uid, s.shop_name, s.shop_location, s.profile_photo_url AS shop_profile_photo_url,
+              s.owner_uid AS shop_owner_uid,
+              s.avg_rating AS shop_avg_rating, s.is_blocked AS shop_blocked,
+              pu.university_name AS shop_university_name,
+              ep.status AS event_status
+       FROM product p
+       JOIN shop s ON s.shop_uid = p.shop_uid
+       JOIN shop_join_university sju ON sju.shop_uid = s.shop_uid AND sju.status = 'approved'
+       LEFT JOIN partner_university pu ON pu.university_uid = sju.university_uid
+       LEFT JOIN event_product ep ON ep.product_uid = p.product_uid AND ep.status = 'approved'
+       WHERE s.status = 'approved' AND s.is_blocked = FALSE
+         AND p.status = 'active'
+         AND sju.university_uid = $1
+       ORDER BY p.created_at DESC`,
+      [university_uid]
+    );
+
+    products = productsRes.rows;
+
+    if (currentUid) {
+      const [followRes, saveRes, reactRes] = await Promise.all([
+        pool.query(`SELECT shop_uid FROM shop_follow WHERE user_uid = $1`, [currentUid]),
+        pool.query(`SELECT product_uid FROM product_save WHERE user_uid = $1`, [currentUid]),
+        pool.query(`SELECT product_uid FROM product_reaction WHERE user_uid = $1`, [currentUid]),
+      ]);
+      userFollowedShops = followRes.rows.map((r: any) => r.shop_uid);
+      userSavedProducts = saveRes.rows.map((r: any) => r.product_uid);
+      userReactedProducts = reactRes.rows.map((r: any) => r.product_uid);
+    }
   } catch (error) {
-    console.error("Error loading university shops:", error);
+    console.error("Error loading university shops and products:", error);
   }
 
-  // Remove custom label prefix
   return (
-    <div className="h-full overflow-y-auto custom-scrollbar bg-[#f2f4f7] py-6 px-4">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       <UniversityShopsClient
         university={university}
         shops={shops}
         shopImages={shopImagesObj}
         currentUid={currentUid}
+        initialProducts={products}
+        initialFollowedShops={userFollowedShops}
+        initialSavedProducts={userSavedProducts}
+        initialReactedProducts={userReactedProducts}
       />
     </div>
   );

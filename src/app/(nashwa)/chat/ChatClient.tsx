@@ -93,7 +93,8 @@ export default function ChatClient({
       if (res.ok && data.success) {
         let fetchedThreads = data.threads || [];
 
-        // If initialShopId is provided, check if it already exists in the fetched threads
+        
+
         if (initialShopId && !fetchedThreads.some((t: Thread) => t.shop_uid === initialShopId)) {
           const tempThread: Thread = {
             shop_uid: initialShopId,
@@ -105,7 +106,8 @@ export default function ChatClient({
             unread_count: 0,
           };
 
-          // Fetch real shop name
+          
+
           fetch(`/api/search?q=${encodeURIComponent(initialShopId)}`)
             .then((r) => r.json())
             .then((sd) => {
@@ -138,18 +140,21 @@ export default function ChatClient({
     }
   };
 
-  // 1. Fetch all customer chat threads
+  
+
   useEffect(() => {
     fetchThreads(true);
   }, [initialShopId]);
 
-  // Update global unread messages count state
+  
+
   useEffect(() => {
     const totalUnread = threads.reduce((sum, t) => sum + (t.unread_count || 0), 0);
     setUnreadMessagesCount(totalUnread);
   }, [threads, setUnreadMessagesCount]);
 
-  // Listen to global socket notifications to re-fetch threads in real-time
+  
+
   useEffect(() => {
     const socket = connectSocket();
 
@@ -166,7 +171,8 @@ export default function ChatClient({
     };
   }, []);
 
-  // 2. Fetch messages & Join Socket.io room when activeShopId changes
+  
+
   useEffect(() => {
     if (!activeShopId) return;
 
@@ -187,7 +193,8 @@ export default function ChatClient({
 
     fetchChatMessages();
 
-    // Socket.io
+    
+
     const socket = connectSocket();
     socket.emit("join:chat", { shopId: activeShopId, userId: currentUserId });
 
@@ -198,7 +205,8 @@ export default function ChatClient({
           return [...prev, message];
         });
 
-        // Update threads preview list
+        
+
         setThreads((prev) =>
           prev.map((t) =>
             t.shop_uid === activeShopId
@@ -223,12 +231,14 @@ export default function ChatClient({
     };
   }, [activeShopId, currentUserId]);
 
-  // Auto-scroll chat window
+  
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
-  // Send message
+  
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessageText.trim() || sendingMessage || !activeShopId) return;
@@ -318,7 +328,8 @@ export default function ChatClient({
                         } else {
                           setActiveShopId(thread.shop_uid);
                           setChatMessages([]);
-                          // Reset unread count locally when thread is clicked
+                          
+
                           setThreads((prev) =>
                             prev.map((t) =>
                               t.shop_uid === thread.shop_uid

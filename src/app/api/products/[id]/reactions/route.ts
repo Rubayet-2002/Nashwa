@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/database/pool";
 import { authMe } from "@/app/(authentication)/lib/authMe";
 
-// GET — fetch reactions count and whether user has reacted
+
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { user } = await authMe();
@@ -28,7 +29,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-// POST — toggle like
+
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { user } = await authMe();
@@ -57,7 +59,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const countRes = await pool.query(`SELECT like_count FROM product WHERE product_uid = $1`, [id]);
     const count = countRes.rows[0]?.like_count || 0;
 
-    // Broadcast via Socket.io
+    
+
     if (global.io) {
       global.io.to(`product:${id}`).emit("product:like", { productId: id, count, reacted, userId: user.uid });
     }

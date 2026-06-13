@@ -71,8 +71,8 @@ export default async function ProductDetailPage({
   }
 
   return (
-    <div className="h-full bg-[#f2f4f7] py-6 px-4 overflow-y-auto custom-scrollbar lg:overflow-hidden lg:h-full flex flex-col justify-start items-center min-h-0">
-      <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col min-h-0">
+    <div className="flex-1 bg-[#f2f4f7] p-4 sm:p-6 lg:p-8 overflow-y-auto custom-scrollbar lg:overflow-hidden h-full min-h-0 flex flex-col items-stretch">
+      <div className="w-full flex-1 flex flex-col min-h-0 h-full">
         <ProductDetailsClient
           product={product}
           images={imageList}

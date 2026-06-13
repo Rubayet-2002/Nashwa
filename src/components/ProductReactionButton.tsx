@@ -38,7 +38,8 @@ export default function ProductReactionButton({ productUid }: ProductReactionBut
   const toggleReaction = async () => {
     try {
       if (isOwner) {
-        // owners should not toggle; show reactors list instead
+        
+
         setShowModal(true);
         try {
           const r = await fetch(`/api/products/${encodeURIComponent(productUid)}/reactors`);

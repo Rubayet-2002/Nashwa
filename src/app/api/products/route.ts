@@ -3,7 +3,8 @@ import pool from "@/database/pool";
 import { authMe } from "@/app/(authentication)/lib/authMe";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
-// GET /api/products — list shop's products (for dashboard)
+
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const shopUid = searchParams.get("shopUid");
@@ -25,7 +26,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/products — create a product
+
+
 export async function POST(req: NextRequest) {
   const { user } = await authMe();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -38,14 +40,16 @@ export async function POST(req: NextRequest) {
       insideDeliveryCharge = 0, outsideDeliveryCharge = 0,
       freeOnCampusDelivery = false, variants = [], productDetails = [],
       eventUid, productType = "regular",
-      images = [], // array of base64 strings (already cropped on client)
+      images = [], 
+
     } = body;
 
     if (!shopUid || !title || !price) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Verify ownership
+    
+
     const shopRes = await pool.query(`SELECT owner_uid, status, is_blocked FROM shop WHERE shop_uid = $1`, [shopUid]);
     if (!shopRes.rows[0] || shopRes.rows[0].owner_uid !== user.uid) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -57,7 +61,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Shop is blocked due to unpaid platform fees" }, { status: 403 });
     }
 
-    // Determine product status
+    
+
     let status: string = "active";
     let finalProductType = productType;
     if (eventUid) {
@@ -79,15 +84,18 @@ export async function POST(req: NextRequest) {
       JSON.stringify(variants), JSON.stringify(productDetails), status,
     ]);
 
-    // Upload images to Cloudinary or save URLs directly
+    
+
     for (let i = 0; i < images.length; i++) {
       try {
         const imgStr = images[i];
         if (imgStr.startsWith("http://") || imgStr.startsWith("https://")) {
-          // Direct URL (already uploaded client-side)
+          
+
           await pool.query(`INSERT INTO product_image (product_uid, image_url, position) VALUES ($1, $2, $3)`, [productUid, imgStr, i]);
         } else {
-          // Base64 string
+          
+
           const { url } = await uploadToCloudinary(imgStr, `nashwa/products/${shopUid}`, { width: 1000, height: 1000, crop: "limit", quality: 85 });
           await pool.query(`INSERT INTO product_image (product_uid, image_url, position) VALUES ($1, $2, $3)`, [productUid, url, i]);
         }
@@ -96,7 +104,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // If event product, create event_product record
+    
+
     if (eventUid) {
       await pool.query(`
         INSERT INTO event_product (event_uid, product_uid, shop_uid, status)

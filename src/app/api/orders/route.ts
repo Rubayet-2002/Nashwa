@@ -4,7 +4,8 @@ import { authMe } from "@/app/(authentication)/lib/authMe";
 
 const PLATFORM_FEE_PERCENT = 0.05;
 
-// POST — create an order
+
+
 export async function POST(req: NextRequest) {
   const { user } = await authMe();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -15,19 +16,22 @@ export async function POST(req: NextRequest) {
       shopUid, items, customerName, customerEmail, customerPhone,
       deliveryAddress, city, postalCode, note = null,
       deliveryType = "standard", paymentMethod = "cod",
-      messageUid = null, // from chat order form
+      messageUid = null, 
+
     } = body;
 
     if (!shopUid || !items?.length || !customerName || !customerEmail || !customerPhone || !deliveryAddress) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Verify shop is approved and not blocked
+    
+
     const shopRes = await pool.query(`SELECT owner_uid, shop_name, is_blocked FROM shop WHERE shop_uid = $1 AND status = 'approved'`, [shopUid]);
     if (!shopRes.rows[0]) return NextResponse.json({ error: "Shop not available" }, { status: 400 });
     if (shopRes.rows[0].is_blocked) return NextResponse.json({ error: "This shop is currently unavailable" }, { status: 400 });
 
-    // Calculate totals
+    
+
     let subtotal = 0;
     const enrichedItems: any[] = [];
 
@@ -42,7 +46,8 @@ export async function POST(req: NextRequest) {
       enrichedItems.push({ productUid: p.product_uid, productTitle: p.title, unitPrice: Number(p.price), quantity: item.quantity, variant: item.variant || null, lineTotal });
     }
 
-    // Assuming single-product order or first product dictates delivery for now
+    
+
     const firstProductRes = await pool.query(`SELECT free_on_campus_delivery, inside_delivery_charge FROM product WHERE product_uid = $1`, [items[0].productUid]);
     const pDelivery = firstProductRes.rows[0];
     const deliveryCharge = pDelivery?.free_on_campus_delivery ? 0 : Number(pDelivery?.inside_delivery_charge || 0);
@@ -59,7 +64,8 @@ export async function POST(req: NextRequest) {
       await pool.query(`INSERT INTO order_request_item (order_uid, product_uid, product_title, variant, unit_price, quantity, line_total) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [orderUid, item.productUid, item.productTitle, item.variant, item.unitPrice, item.quantity, item.lineTotal]);
     }
 
-    // If placed from chat order form, update the chat message's form_data
+    
+
     if (messageUid) {
       const mainItem = enrichedItems[0];
       const updatedFormData = {
@@ -85,7 +91,8 @@ export async function POST(req: NextRequest) {
         [JSON.stringify(updatedFormData), messageUid]
       );
 
-      // Emit updated message via socket
+      
+
       if (global.io) {
         const updatedMsgRes = await pool.query(
           `SELECT m.message_uid, m.sender_uid, m.receiver_uid, m.shop_uid, m.message_text,
@@ -102,7 +109,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Notify shop owner
+    
+
     const notifUid = crypto.randomUUID();
     await pool.query(`INSERT INTO notification (notif_uid, user_uid, shop_uid, type, title, body, link) VALUES ($1,$2,$3,'order','New Order Request',$4,$5)`,
       [notifUid, shopRes.rows[0].owner_uid, shopUid, `New order request for ৳${totalAmount.toFixed(0)}`, `/shop/dashboard`]);
@@ -118,7 +126,8 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET — user's orders
+
+
 export async function GET(req: NextRequest) {
   const { user } = await authMe();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

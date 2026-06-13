@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
     const updateRes = await pool.query(
       `UPDATE shop_join_university 
-       SET status = $1, approved_at = CASE WHEN $1 = 'approved' THEN NOW() ELSE NULL END
+       SET status = $1::varchar, approved_at = CASE WHEN $1::varchar = 'approved'::varchar THEN NOW() ELSE NULL END
        WHERE id = $2 
        RETURNING shop_uid, university_uid`,
       [statusVal, request_id]
@@ -64,7 +64,8 @@ export async function POST(request: Request) {
 
     const { shop_uid, university_uid } = updateRes.rows[0];
 
-    // Fetch owner and shop info
+    
+
     const shopRes = await pool.query(
       "SELECT owner_uid, shop_name FROM shop WHERE shop_uid = $1",
       [shop_uid]

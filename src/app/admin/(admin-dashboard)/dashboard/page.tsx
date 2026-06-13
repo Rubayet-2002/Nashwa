@@ -26,7 +26,8 @@ export default async function AdminDashboardPage() {
   let approvedShops: any[] = [];
 
   try {
-    // 1. Get counts
+    
+
     const customerRes = await pool.query("SELECT COUNT(*)::int as count FROM users WHERE role = 'customer'");
     const sellerRes = await pool.query("SELECT COUNT(*)::int as count FROM users WHERE role = 'seller'");
     const shopRes = await pool.query("SELECT COUNT(*)::int as count FROM shop WHERE status = 'approved'");
@@ -37,7 +38,8 @@ export default async function AdminDashboardPage() {
       shop_count: shopRes.rows[0]?.count || 0,
     };
 
-    // 2. Get pending requests
+    
+
     const pendingRes = await pool.query(
       `SELECT s.shop_uid, s.owner_uid, s.shop_name, s.shop_email, s.shop_phone, s.shop_location, s.shop_description, s.nid_pdf_url, s.created_at,
               u.username, u.email as user_email, u.phone as user_phone
@@ -48,7 +50,8 @@ export default async function AdminDashboardPage() {
     );
     pendingRequests = pendingRes.rows;
 
-    // 3. Get approved shops
+    
+
     const approvedRes = await pool.query(
       `SELECT s.shop_uid, s.owner_uid, s.shop_name, s.shop_email, s.shop_phone, s.shop_location, s.shop_description, s.nid_pdf_url, s.created_at, s.approved_at,
               u.username, u.email as user_email, u.phone as user_phone

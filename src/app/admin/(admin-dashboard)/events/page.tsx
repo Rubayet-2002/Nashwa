@@ -20,13 +20,15 @@ export default async function AdminEventsPage() {
   let submissions: any[] = [];
 
   try {
-    // 1. Fetch events
+    
+
     const eventRes = await pool.query(
       "SELECT * FROM campus_event ORDER BY created_at DESC"
     );
     events = eventRes.rows;
 
-    // 2. Fetch event product submissions
+    
+
     const subRes = await pool.query(`
       SELECT ep.event_uid, ep.product_uid, ep.shop_uid, ep.status, ep.reviewed_at,
              p.title AS product_title, p.price AS product_price,

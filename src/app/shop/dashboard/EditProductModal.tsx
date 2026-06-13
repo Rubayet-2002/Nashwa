@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToastStore } from "@/zustand/toastStore";
 import { PlusCircle, Trash, Plus } from "@mynaui/icons-react";
 import { uploadImageToCloudinary } from "@/lib/cloudinary-upload";
@@ -55,10 +55,23 @@ export default function EditProductModal({
   onUpdated,
 }: EditProductModalProps) {
   const addToast = useToastStore((s) => s.addToast);
+  const [categories, setCategories] = useState<string[]>(CATEGORIES);
   const [isSubmitting, setSubmitting] = useState(false);
   const [uploadProgressText, setUploadProgressText] = useState("");
 
-  // Parse existing options & variants:
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && Array.isArray(data.categories)) {
+          setCategories(data.categories);
+        }
+      })
+      .catch((err) => console.error("Error fetching categories:", err));
+  }, []);
+
+  
+
   const initialOptions: OptionField[] = (() => {
     try {
       const parsed = typeof product.product_details === "string" ? JSON.parse(product.product_details) : product.product_details;
@@ -89,23 +102,28 @@ export default function EditProductModal({
     return [];
   })();
 
-  // Form states:
+  
+
   const [title, setTitle] = useState(product.title);
   const [description, setDescription] = useState(product.description || "");
   const [price, setPrice] = useState(product.original_price !== null ? String(product.original_price) : String(product.price));
   const [category, setCategory] = useState(product.category || "");
   
-  // Delivery Charge
+  
+
   const [deliveryCharge, setDeliveryCharge] = useState(product.inside_delivery_charge !== null ? String(product.inside_delivery_charge) : "");
 
-  // Discounts
+  
+
   const [discountPercent, setDiscountPercent] = useState(product.discount_percent !== null ? String(product.discount_percent) : "");
 
-  // Options & Variants
+  
+
   const [options, setOptions] = useState<OptionField[]>(initialOptions);
   const [variants, setVariants] = useState<VariantField[]>(initialVariants);
 
-  // Images state: existing uploaded URLs + newly chosen files
+  
+
   const [existingUrls, setExistingUrls] = useState<string[]>(Array.isArray(product.image_urls) ? product.image_urls : []);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
@@ -189,7 +207,8 @@ export default function EditProductModal({
 
     setSubmitting(true);
     try {
-      // 1. Upload newly selected files
+      
+
       const newUrls: string[] = [];
       for (let i = 0; i < selectedFiles.length; i++) {
         setUploadProgressText(`Uploading new image ${i + 1} of ${selectedFiles.length}...`);
@@ -199,7 +218,8 @@ export default function EditProductModal({
 
       setUploadProgressText("Saving changes...");
 
-      // 2. Call PATCH API to update product
+      
+
       const res = await fetch(`/api/products/${product.product_uid}`, {
         method: "PATCH",
         headers: {
@@ -429,7 +449,7 @@ export default function EditProductModal({
                 className="w-full border border-[#eadfdb] bg-white px-3 py-2 text-xs outline-none transition-colors focus:border-[#BA5B55] text-[#1a1a1a] rounded-none"
               >
                 <option value="" disabled>Select category</option>
-                {CATEGORIES.map((cat) => (
+                {categories.map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
                   </option>

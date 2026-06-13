@@ -65,11 +65,13 @@ export default function JoinUniversityModal({ shopUid, onClose }: JoinUniversity
     setIsSubmitting(true);
 
     try {
-      // 1. Upload to Cloudinary
+      
+
       addToast("Uploading document...", "success");
       const documentUrl = await uploadDocumentToCloudinary(documentFile, "nashwa_university_requests");
 
-      // 2. Submit to API
+      
+
       const res = await fetch("/shop/api/set-shop-university", {
         method: "POST",
         headers: {

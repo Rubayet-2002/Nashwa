@@ -29,7 +29,8 @@ export async function POST(request: Request) {
 
     const actionTaken = action === "remove_post" ? "removed_post" : "dismissed";
 
-    // 1. Fetch report details
+    
+
     const reportRes = await client.query(
       `SELECT r.product_uid, r.reporter_uid, p.title AS product_title, s.owner_uid AS seller_uid
        FROM report r
@@ -48,7 +49,8 @@ export async function POST(request: Request) {
     await client.query("BEGIN");
     transactionActive = true;
 
-    // 2. Update report status
+    
+
     await client.query(
       `UPDATE report 
        SET status = 'resolved', action_taken = $1
@@ -56,7 +58,8 @@ export async function POST(request: Request) {
       [actionTaken, report_uid]
     );
 
-    // 3. If action is remove_post, mark product as removed
+    
+
     if (action === "remove_post" && product_uid) {
       await client.query(
         `UPDATE product SET status = 'removed' WHERE product_uid = $1`,
@@ -67,7 +70,8 @@ export async function POST(request: Request) {
     await client.query("COMMIT");
     transactionActive = false;
 
-    // 4. Send Notifications
+    
+
     if (action === "remove_post") {
       if (seller_uid) {
         await sendNotification({
@@ -89,7 +93,8 @@ export async function POST(request: Request) {
         });
       }
     } else {
-      // Dismissed
+      
+
       if (reporter_uid) {
         await sendNotification({
           userUid: reporter_uid,

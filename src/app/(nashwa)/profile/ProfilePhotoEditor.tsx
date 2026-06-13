@@ -25,7 +25,8 @@ export default function ProfilePhotoEditor({
   const [isUploading, setIsUploading] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
 
-  // Handle file selection
+  
+
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
@@ -37,23 +38,27 @@ export default function ProfilePhotoEditor({
     }
   };
 
-  // Trigger file selection
+  
+
   const triggerFileSelect = () => {
     fileInputRef.current?.click();
   };
 
-  // Upload cropped image
+  
+
   const handleCropComplete = async (croppedBlob: Blob) => {
     setSelectedImage(null);
     setIsUploading(true);
     try {
-      // 1. Upload to Cloudinary
+      
+
       const secureUrl = await uploadImageToCloudinary(
         croppedBlob,
         "nashwa_profile_photos"
       );
 
-      // 2. Save image URL to user profile
+      
+
       const res = await fetch("/api/user/update-avatar", {
         method: "POST",
         headers: {

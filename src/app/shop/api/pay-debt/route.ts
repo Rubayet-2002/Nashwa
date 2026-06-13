@@ -12,7 +12,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing shopUid" }, { status: 400 });
     }
 
-    // Verify ownership of the shop
+    
+
     const shopRes = await pool.query(
       `SELECT owner_uid, platform_debt FROM shop WHERE shop_uid = $1`,
       [shopUid]
@@ -27,7 +28,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized shop access" }, { status: 403 });
     }
 
-    // Settle the debt
+    
+
     await pool.query(
       `UPDATE shop 
        SET platform_debt = 0, is_blocked = FALSE, last_payment_at = NOW()

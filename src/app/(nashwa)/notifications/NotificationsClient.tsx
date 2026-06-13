@@ -42,7 +42,8 @@ export default function NotificationsClient({ initialNotifications, userId }: Pr
       setNotifications((prev) => [notif, ...prev]);
     });
 
-    // Mark all as read when page opens
+    
+
     fetch("/api/notifications", {
       method: "PATCH",
       headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
@@ -61,7 +62,8 @@ export default function NotificationsClient({ initialNotifications, userId }: Pr
         const data = await res.json();
         setNotifications(data.notifications || []);
         
-        // Also call PATCH to mark any new ones as read
+        
+
         await fetch("/api/notifications", {
           method: "PATCH",
           headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },

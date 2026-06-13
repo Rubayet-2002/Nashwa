@@ -36,7 +36,8 @@ export default function AdminReportsClient({
   const addToast = useToastStore((s) => s.addToast);
   const [isPending, startTransition] = useTransition();
 
-  // Lightbox Preview State
+  
+
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
   const handleResolve = (reportUid: string, action: "remove_post" | "dismiss") => {
@@ -140,7 +141,8 @@ export default function AdminReportsClient({
                   onClick={() => rep.product_image && setLightboxSrc(rep.product_image)}
                 >
                   {rep.product_image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
+                    
+
                     <img src={rep.product_image} alt={rep.product_title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-[#BA5B55]">

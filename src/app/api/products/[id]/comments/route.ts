@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/database/pool";
 import { authMe } from "@/app/(authentication)/lib/authMe";
 
-// GET comments for a product
+
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { user } = await authMe();
@@ -29,7 +30,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-// POST a comment or reply
+
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { user, activeShopUid } = await authMe();
@@ -93,7 +95,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       created_at: new Date().toISOString(),
     };
 
-    // Broadcast real-time
+    
+
     if (global.io) {
       global.io.to(`product:${id}`).emit("comment:new", newComment);
     }

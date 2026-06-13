@@ -4,7 +4,7 @@ import { useState, useTransition, useRef, ChangeEvent } from "react";
 import ImageUpload from "@/components/ImageUpload";
 import Lightbox from "@/components/Lightbox";
 import { useToastStore } from "@/zustand/toastStore";
-import { Check, X, Eye, Download, Store, Plus } from "@mynaui/icons-react";
+import { Check, X, Eye, Download, Store, Plus, Trash } from "@mynaui/icons-react";
 import ImageCropModal from "@/components/ImageCropModal";
 import { uploadImageToCloudinary } from "@/lib/cloudinary-upload";
 
@@ -46,18 +46,22 @@ export default function AdminUniversitiesClient({
   const addToast = useToastStore((s) => s.addToast);
   const [isPending, startTransition] = useTransition();
 
-  // Create University Form State
+  
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
-  // Lightbox Preview State
+  
+
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
-  // PDF Preview State
+  
+
   const [pdfPreviewId, setPdfPreviewId] = useState<number | null>(null);
 
-  // Editing Logo States
+  
+
   const [editingUniUid, setEditingUniUid] = useState<string | null>(null);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -113,15 +117,12 @@ export default function AdminUniversitiesClient({
     }
   };
 
-  // Handle adding university
+  
+
   const handleAddUniversity = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       addToast("University name is required", "error");
-      return;
-    }
-    if (!logoUrl) {
-      addToast("Please upload and crop a university logo", "error");
       return;
     }
 
@@ -157,7 +158,38 @@ export default function AdminUniversitiesClient({
     });
   };
 
-  // Handle join request actions (approve/reject)
+  const handleDeleteUniversity = (uniUid: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete the university "${name}"? This will also remove all shop connections.`)) return;
+
+    startTransition(async () => {
+      try {
+        const response = await fetch("/admin/api/universities", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: JSON.stringify({
+            university_uid: uniUid,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          addToast(data.message, "success");
+          setUniversities(universities.filter((u) => u.university_uid !== uniUid));
+        } else {
+          addToast(data.message || "Failed to delete university", "error");
+        }
+      } catch (err) {
+        addToast("Error deleting university", "error");
+      }
+    });
+  };
+
+  
+
   const handleRequestAction = (requestId: number, action: "approve" | "reject") => {
     startTransition(async () => {
       try {
@@ -245,7 +277,8 @@ export default function AdminUniversitiesClient({
                   <div key={uni.university_uid} className="bg-[#1e1e1e] border border-[#333] p-5 rounded-2xl flex items-start gap-4">
                     <div className="relative group/avatar shrink-0 w-14 h-14 rounded-full overflow-hidden border border-[#444] bg-[#141414]">
                       {uni.logo_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                        
+
                         <img
                           src={uni.logo_url}
                           alt={uni.university_name}
@@ -278,9 +311,19 @@ export default function AdminUniversitiesClient({
                       <p className="text-xs text-[#999] line-clamp-2 mt-1 leading-normal">
                         {uni.description || "No description provided."}
                       </p>
-                      <span className="inline-block text-[10px] text-gray-500 mt-2">
-                        Added: {new Date(uni.created_at).toLocaleDateString()}
-                      </span>
+                      <div className="flex justify-between items-center mt-3 border-t border-[#333] pt-2">
+                        <span className="inline-block text-[10px] text-gray-500">
+                          Added: {new Date(uni.created_at).toLocaleDateString()}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUniversity(uni.university_uid, uni.university_name)}
+                          className="text-red-500 hover:text-red-400 transition-colors text-[10px] font-semibold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash size={12} />
+                          <span>Remove</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}

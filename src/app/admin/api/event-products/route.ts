@@ -65,9 +65,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Submission not found." }, { status: 404 });
     }
 
+    if (action === "approve") {
+      await pool.query(
+        `UPDATE product SET status = 'active' WHERE product_uid = $1`,
+        [product_uid]
+      );
+    }
+
     const { shop_uid } = updateRes.rows[0];
 
-    // Fetch shop details to notify the owner
     const shopRes = await pool.query(
       "SELECT owner_uid, shop_name FROM shop WHERE shop_uid = $1",
       [shop_uid]

@@ -66,7 +66,8 @@ export default function ProductCard({
   const hasDiscount = product.discount_percent && Number(product.discount_percent) > 0;
   const isPreorder = product.product_type === "preorder";
 
-  // Real-time like sync
+  
+
   useEffect(() => {
     const socket = connectSocket();
     socket.emit("join:product", { productId: product.product_uid });

@@ -20,7 +20,8 @@ export default async function ShopDashboardPage() {
     redirect("/profile");
   }
 
-  // Fetch active shop details
+  
+
   let shop = null;
   let products: Array<{
     product_uid: string;
@@ -64,7 +65,8 @@ export default async function ShopDashboardPage() {
   }> = [];
   
   try {
-    // Run blocking update check before loading stats
+    
+
     await pool.query(`
       UPDATE shop
       SET is_blocked = TRUE
@@ -83,7 +85,7 @@ export default async function ShopDashboardPage() {
               s.shop_description, s.shop_bio, s.cover_photo_url, s.profile_photo_url,
               s.platform_debt, s.is_blocked, s.total_revenue,
               s.instagram_url, s.facebook_url,
-              pu.university_name
+              pu.university_name, sju.status AS university_status
        FROM shop s
        LEFT JOIN shop_join_university sju ON sju.shop_uid = s.shop_uid
        LEFT JOIN partner_university pu ON pu.university_uid = sju.university_uid

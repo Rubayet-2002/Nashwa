@@ -32,8 +32,8 @@ export async function POST(request: Request) {
 
     const { name, description, logo_url } = await request.json();
 
-    if (!name || !logo_url) {
-      return NextResponse.json({ message: "Name and Logo URL are required." }, { status: 400 });
+    if (!name) {
+      return NextResponse.json({ message: "Name is required." }, { status: 400 });
     }
 
     const universityUid = crypto.randomUUID();
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     await pool.query(
       `INSERT INTO partner_university (university_uid, university_name, description, logo_url, created_at)
        VALUES ($1, $2, $3, $4, NOW())`,
-      [universityUid, name, description || null, logo_url]
+      [universityUid, name, description || null, logo_url || null]
     );
 
     return NextResponse.json({
@@ -77,7 +77,8 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ message: "University UID is required." }, { status: 400 });
     }
 
-    // Build update dynamic query parts
+    
+
     const updates: string[] = [];
     const values: any[] = [];
     let counter = 1;
@@ -120,6 +121,42 @@ export async function PATCH(request: Request) {
     });
   } catch (error) {
     console.error("Admin Universities PATCH error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    if (request.headers.get("x-requested-with") !== "XMLHttpRequest") {
+      return NextResponse.json({ message: "Security check failed." }, { status: 403 });
+    }
+
+    const { admin } = await adminAuthMe();
+    if (!admin) {
+      return NextResponse.json({ message: "Unauthorized admin access." }, { status: 401 });
+    }
+
+    const { university_uid } = await request.json();
+
+    if (!university_uid) {
+      return NextResponse.json({ message: "University UID is required." }, { status: 400 });
+    }
+
+    const res = await pool.query(
+      "DELETE FROM partner_university WHERE university_uid = $1 RETURNING *",
+      [university_uid]
+    );
+
+    if ((res.rowCount ?? 0) === 0) {
+      return NextResponse.json({ message: "University not found." }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Community "${res.rows[0].university_name}" deleted successfully.`,
+    });
+  } catch (error) {
+    console.error("Admin Universities DELETE error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }

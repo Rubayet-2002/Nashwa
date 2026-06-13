@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/database/pool";
 import { authMe } from "@/app/(authentication)/lib/authMe";
 
-// POST — submit a report
+
+
 export async function POST(req: NextRequest) {
   const { user } = await authMe();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

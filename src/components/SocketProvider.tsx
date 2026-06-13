@@ -11,11 +11,11 @@ export default function SocketProvider({ children }: { children: React.ReactNode
     if (!user) return;
     const socket = connectSocket();
 
-    // Identify this user to socket server
     socket.emit("identify", { uid: user.uid });
 
     return () => {
-      // Do not disconnect on unmount (keep persistent connection)
+      
+
     };
   }, [user]);
 

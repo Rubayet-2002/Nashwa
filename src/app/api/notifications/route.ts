@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/database/pool";
 import { authMe } from "@/app/(authentication)/lib/authMe";
 
-// GET notifications for current user or shop
+
+
 export async function GET(req: NextRequest) {
   const { user } = await authMe();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -19,7 +20,8 @@ export async function GET(req: NextRequest) {
     let queryParams: any[] = [];
 
     if (shopUid) {
-      // Verify shop ownership
+      
+
       const shopCheck = await pool.query(
         "SELECT 1 FROM shop WHERE shop_uid = $1 AND owner_uid = $2",
         [shopUid, user.uid]
@@ -61,7 +63,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// PATCH — mark all as read for user or shop
+
+
 export async function PATCH(req: NextRequest) {
   const { user } = await authMe();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -70,7 +73,8 @@ export async function PATCH(req: NextRequest) {
     const { shopUid } = await req.json().catch(() => ({ shopUid: null }));
 
     if (shopUid) {
-      // Verify shop ownership
+      
+
       const shopCheck = await pool.query(
         "SELECT 1 FROM shop WHERE shop_uid = $1 AND owner_uid = $2",
         [shopUid, user.uid]

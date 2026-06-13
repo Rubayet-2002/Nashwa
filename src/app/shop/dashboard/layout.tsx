@@ -28,7 +28,6 @@ export default async function ShopDashboardLayout({
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[#f5f5f5]">
-      <ShopNavbar shopName={shopName} shopUid={activeShopUid} />
       <main className="flex-1 flex min-h-0 p-6 max-w-7xl w-full mx-auto">{children}</main>
     </div>
   );

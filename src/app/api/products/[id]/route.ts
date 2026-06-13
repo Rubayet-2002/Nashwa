@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/database/pool";
 import { authMe } from "@/app/(authentication)/lib/authMe";
 
-// GET /api/products/[id]
+
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
@@ -37,7 +38,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   }
 }
 
-// PATCH /api/products/[id] — update product details & images
+
+
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { user } = await authMe();
@@ -57,10 +59,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       freeOnCampusDelivery,
       variants = [],
       productDetails = [],
-      images = [], // full list of remaining/new image URLs
+      images = [], 
+
     } = body;
 
-    // Verify ownership
+    
+
     const checkRes = await pool.query(
       `SELECT s.owner_uid
        FROM product p
@@ -76,7 +80,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    // Update product info
+    
+
     await pool.query(
       `UPDATE product
        SET title = $1, description = $2, category = $3, price = $4,
@@ -100,7 +105,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ]
     );
 
-    // Sync product images: delete existing and insert new position list
+    
+
     await pool.query(`DELETE FROM product_image WHERE product_uid = $1`, [id]);
     for (let i = 0; i < images.length; i++) {
       await pool.query(
@@ -117,14 +123,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 }
 
-// DELETE /api/products/[id] — soft delete product
+
+
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { user } = await authMe();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    // Verify ownership
+    
+
     const checkRes = await pool.query(
       `SELECT s.owner_uid
        FROM product p
@@ -140,7 +148,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    // Soft delete product by setting status to removed
+    
+
     await pool.query(
       `UPDATE product SET status = 'removed' WHERE product_uid = $1`,
       [id]

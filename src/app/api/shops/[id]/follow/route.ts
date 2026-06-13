@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/database/pool";
 import { authMe } from "@/app/(authentication)/lib/authMe";
 
-// POST — toggle follow
+
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { user } = await authMe();
@@ -18,7 +19,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       await pool.query(`INSERT INTO shop_follow (shop_uid, user_uid) VALUES ($1, $2)`, [id, user.uid]);
       await pool.query(`UPDATE shop SET follower_count = follower_count + 1 WHERE shop_uid = $1`, [id]);
 
-      // Notification to shop owner
+      
+
       const shopRes = await pool.query(`SELECT owner_uid, shop_name FROM shop WHERE shop_uid = $1`, [id]);
       if (shopRes.rows[0]) {
         const notifUid = crypto.randomUUID();
@@ -42,7 +44,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 }
 
-// GET — check follow status
+
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { user } = await authMe();

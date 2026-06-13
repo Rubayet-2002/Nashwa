@@ -4,7 +4,8 @@ import { authMe } from "@/app/(authentication)/lib/authMe";
 
 export const dynamic = "force-dynamic";
 
-// PATCH - edit a review
+
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ reviewId: string }> }
@@ -21,7 +22,8 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid rating" }, { status: 400 });
     }
 
-    // Verify ownership of the review
+    
+
     const reviewRes = await pool.query(
       "SELECT user_uid, product_uid FROM product_review WHERE review_uid = $1",
       [reviewId]
@@ -38,7 +40,8 @@ export async function PATCH(
 
     await pool.query("BEGIN");
 
-    // 1. Update review
+    
+
     await pool.query(
       `UPDATE product_review
        SET rating = $1, review_text = $2, created_at = NOW()
@@ -46,7 +49,8 @@ export async function PATCH(
       [rating, reviewText || null, reviewId]
     );
 
-    // 2. Update product avg_rating
+    
+
     await pool.query(
       `UPDATE product 
        SET avg_rating = (
@@ -58,7 +62,8 @@ export async function PATCH(
       [review.product_uid]
     );
 
-    // 3. Update shop avg_rating
+    
+
     await pool.query(
       `UPDATE shop 
        SET avg_rating = (
@@ -84,7 +89,8 @@ export async function PATCH(
   }
 }
 
-// DELETE - delete a review
+
+
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ reviewId: string }> }
@@ -96,7 +102,8 @@ export async function DELETE(
   }
 
   try {
-    // Verify ownership of the review
+    
+
     const reviewRes = await pool.query(
       "SELECT user_uid, product_uid FROM product_review WHERE review_uid = $1",
       [reviewId]
@@ -113,10 +120,12 @@ export async function DELETE(
 
     await pool.query("BEGIN");
 
-    // 1. Delete review
+    
+
     await pool.query("DELETE FROM product_review WHERE review_uid = $1", [reviewId]);
 
-    // 2. Update product avg_rating
+    
+
     await pool.query(
       `UPDATE product 
        SET avg_rating = (
@@ -128,7 +137,8 @@ export async function DELETE(
       [review.product_uid]
     );
 
-    // 3. Update shop avg_rating
+    
+
     await pool.query(
       `UPDATE shop 
        SET avg_rating = (
